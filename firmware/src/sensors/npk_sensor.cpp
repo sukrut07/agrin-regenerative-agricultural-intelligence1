@@ -71,8 +71,9 @@ bool NpkSensor::queryRegister(uint16_t reg_addr, float& out_val) {
     delayMicroseconds(50);
     g_rs485Serial.write(request, sizeof(request));
     g_rs485Serial.flush();
-    delayMicroseconds(50);
-    digitalWrite(m_de_re_pin, LOW);  // Back to RX
+    // 1 character at 9600 baud is ~1042 us. Ensure stop bit exits shift register before releasing DE:
+    delayMicroseconds(1050);
+    digitalWrite(m_de_re_pin, LOW);  // Back to RX listening mode
 
     // Await 7-byte response: [SlaveID, FuncCode, ByteCount(2), DataHigh, DataLow, CRCLow, CRCHigh]
     uint32_t start_time = millis();

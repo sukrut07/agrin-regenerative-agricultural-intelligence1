@@ -30,7 +30,11 @@
 // Default hardware UART2 pins on ESP32
 #define PIN_RS485_RX                (16)    // UART2 RX (Connected to MAX3485 RO)
 #define PIN_RS485_TX                (17)    // UART2 TX (Connected to MAX3485 DI)
-#define PIN_RS485_DE_RE             (5)     // Transmit/Receive Direction Control (HIGH = TX, LOW = RX)
+// ELECTRICAL SAFETY NOTE:
+// GPIO 5 is an ESP32 strapping pin with internal pull-up and boot PWM.
+// Using GPIO 5 for DE/RE forces MAX3485 into transmit mode during boot, causing bus contention.
+// Reassigned to GPIO 27 (clean non-strapping output). Requires 10 kΩ pull-down to GND.
+#define PIN_RS485_DE_RE             (27)    // Transmit/Receive Direction Control (HIGH = TX, LOW = RX)
 
 // Battery & Power Monitoring (Direct internal ADC channel with 1:2 voltage divider)
 #define PIN_BATTERY_ADC             (34)    // GPIO 34 (ADC1_CH6 - Input only)

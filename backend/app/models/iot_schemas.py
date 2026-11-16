@@ -196,11 +196,14 @@ class SensorMeasurementSchema(BaseModel):
         param = info.data.get("parameter_name", "")
         if param in SENSOR_VALID_RANGES:
             lo, hi = SENSOR_VALID_RANGES[param]
-            # Allow ±20 % tolerance on raw value (before calibration)
+            # Allow ±20 % tolerance on raw engineering value, OR
+            # allow raw hardware ADC counts / millivolts (0.0 to 33000.0) for physical sensors
             margin = (hi - lo) * 0.20
-            if not ((lo - margin) <= v <= (hi + margin)):
+            in_eng_range = ((lo - margin) <= v <= (hi + margin))
+            in_hardware_adc_range = (0.0 <= v <= 33000.0)
+            if not (in_eng_range or in_hardware_adc_range):
                 raise ValueError(
-                    f"raw_value {v} implausible for '{param}' (expected roughly [{lo}, {hi}])"
+                    f"raw_value {v} implausible for '{param}' (expected [{lo}, {hi}] or raw hardware counts [0, 33000])"
                 )
         return v
 

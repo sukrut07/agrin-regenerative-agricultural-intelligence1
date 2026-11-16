@@ -9,7 +9,7 @@
 
 class TelemetryBuffer {
 public:
-    explicit TelemetryBuffer(size_t max_capacity = 120);
+    explicit TelemetryBuffer(size_t max_capacity = 120, const std::string& storage_path = "telemetry_queue.dat");
 
     bool init();
     bool push(const TelemetryPacket& packet);
@@ -21,8 +21,16 @@ public:
     bool isEmpty() const;
     void clear();
 
+    // Verification & Testing Helpers
+    void persist();
+    bool reloadFromStorage();
+
 private:
+    void syncToPersistentStorage();
+    void loadFromPersistentStorage();
+
     size_t m_max_capacity;
+    std::string m_storage_path;
     std::deque<TelemetryPacket> m_queue;
 };
 

@@ -1,4 +1,5 @@
 #include "temperature_sensor.h"
+#include <cmath>
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -71,7 +72,7 @@ SensorMeasurement TemperatureSensor::sample(float /*unused*/) {
     // DS18B20 Fault Detection:
     // -127.0°C indicates disconnected OneWire data line or missing pull-up resistor.
     // +85.0°C indicates reading before conversion completed (power-on state).
-    if (tempC <= -120.0f || (std::abs(tempC - 85.0f) < 0.01f && m_fault_count > 0) || tempC > 65.0f) {
+    if (tempC <= -120.0f || (std::fabs(tempC - 85.0f) < 0.01f && m_fault_count > 0) || tempC > 65.0f) {
         m_fault_count++;
         m.calibrated_value = m_last_valid_temp;
         m.quality = MeasurementQuality::INVALID;

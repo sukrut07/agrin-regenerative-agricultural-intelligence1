@@ -6,6 +6,13 @@
 #include <algorithm>
 #include <cmath>
 
+namespace agrisense_util {
+    template <typename T>
+    inline T clamp(T v, T lo, T hi) {
+        return (v < lo) ? lo : ((v > hi) ? hi : v);
+    }
+}
+
 /**
  * Soil Moisture Calibration Parameters (Capacitive Dielectric)
  */
@@ -50,7 +57,7 @@ public:
         }
         // In capacitive probes, higher voltage/ADC count = DRY, lower = WET
         float moisture = ((cal.raw_dry - raw_adc) / (cal.raw_dry - cal.raw_wet)) * 100.0f;
-        return std::clamp(moisture, 0.0f, 100.0f);
+        return agrisense_util::clamp(moisture, 0.0f, 100.0f);
     }
 
     /**
@@ -59,23 +66,28 @@ public:
      * Slope adjusts proportionally to absolute temperature (Kelvin).
      */
     static float voltageToPh(float voltage, const PhCalibration& cal, float soil_temp_c = 25.0f) {
+        // Zero-division safeguard against uncalibrated identical buffer points
+        if (std::fabs(cal.v_ph7 - cal.v_ph4) < 0.05f) {
+            return 7.0f; // Safe neutral fallback
+        }
+
         float kelvin_ref = 298.15f; // 25°C
-        float kelvin_actual = 273.15f + std::clamp(soil_temp_c, 0.0f, 60.0f);
+        float kelvin_actual = 273.15f + agrisense_util::clamp(soil_temp_c, 0.0f, 60.0f);
         float temp_factor = kelvin_actual / kelvin_ref;
 
-        if (cal.use_three_point) {
+        if (cal.use_three_point && std::fabs(cal.v_ph10 - cal.v_ph7) >= 0.05f) {
             if (voltage >= cal.v_ph7) {
                 // Acidic range (pH 4 - 7)
                 float base_slope = (7.0f - 4.01f) / (cal.v_ph7 - cal.v_ph4);
                 float slope = base_slope * temp_factor;
                 float ph = 7.0f + (voltage - cal.v_ph7) * slope;
-                return std::clamp(ph, 3.0f, 10.0f);
+                return agrisense_util::clamp(ph, 3.0f, 10.0f);
             } else {
                 // Alkaline range (pH 7 - 10)
                 float base_slope = (10.0f - 7.0f) / (cal.v_ph10 - cal.v_ph7);
                 float slope = base_slope * temp_factor;
                 float ph = 7.0f + (voltage - cal.v_ph7) * slope;
-                return std::clamp(ph, 3.0f, 10.0f);
+                return agrisense_util::clamp(ph, 3.0f, 10.0f);
             }
         }
 
@@ -83,7 +95,7 @@ public:
         float base_slope = (7.0f - 4.01f) / (cal.v_ph7 - cal.v_ph4);
         float slope = base_slope * temp_factor;
         float ph = 7.0f + (voltage - cal.v_ph7) * slope;
-        return std::clamp(ph, 3.0f, 10.0f);
+        return agrisense_util::clamp(ph, 3.0f, 10.0f);
     }
 
     /**
@@ -95,12 +107,49 @@ public:
             return 0.0f;
         }
         float raw_ec = (voltage / cal.v_calib_1413) * cal.standard_ec_dsm;
-        float temp_correction = 1.0f + cal.temp_coefficient * (soil_temp_c - 25.0f);
+        float safe_temp = agrisense_util::clamp(soil_temp_c, 0.0f, 50.0f);
+        float temp_correction = 1.0f + cal.temp_coefficient * (safe_temp - 25.0f);
         if (temp_correction <= 0.1f) {
             temp_correction = 0.1f;
         }
         float ec_25 = raw_ec / temp_correction;
-        return std::clamp(ec_25, 0.0f, 20.0f);
+        return agrisense_util::clamp(ec_25, 0.0f, 20.0f);
+    }
+
+    /**
+     * Piecewise-linear Lithium-Ion (18650 / LiPo) OCV discharge model.
+     * Accurately models the 3.65V-3.85V capacity plateau rather than a crude straight line.
+     */
+    static float batteryVoltageToPercent(float voltage) {
+        if (voltage >= 4.18f) return 100.0f;
+        if (voltage <= 3.20f) return 0.0f;
+
+        struct OcvPoint { float v; float pct; };
+        static const OcvPoint ocv_table[] = {
+            {4.18f, 100.0f},
+            {4.05f,  90.0f},
+            {3.95f,  80.0f},
+            {3.86f,  70.0f},
+            {3.80f,  60.0f},
+            {3.76f,  50.0f},
+            {3.72f,  40.0f},
+            {3.68f,  30.0f},
+            {3.64f,  20.0f},
+            {3.55f,  10.0f},
+            {3.40f,   5.0f},
+            {3.20f,   0.0f}
+        };
+        constexpr size_t n_points = sizeof(ocv_table) / sizeof(ocv_table[0]);
+
+        for (size_t i = 0; i < n_points - 1; ++i) {
+            if (voltage >= ocv_table[i + 1].v) {
+                float v_span = ocv_table[i].v - ocv_table[i + 1].v;
+                float pct_span = ocv_table[i].pct - ocv_table[i + 1].pct;
+                float factor = (voltage - ocv_table[i + 1].v) / v_span;
+                return ocv_table[i + 1].pct + factor * pct_span;
+            }
+        }
+        return 0.0f;
     }
 
     /**
@@ -108,9 +157,7 @@ public:
      */
     static void computeBattery(float adc_volts, float divider_ratio, float& out_voltage, float& out_pct) {
         out_voltage = adc_volts * divider_ratio;
-        // Lithium-ion standard curve (3.2V = 0%, 4.2V = 100%)
-        float pct = ((out_voltage - 3.20f) / (4.20f - 3.20f)) * 100.0f;
-        out_pct = std::clamp(pct, 0.0f, 100.0f);
+        out_pct = batteryVoltageToPercent(out_voltage);
     }
 };
 

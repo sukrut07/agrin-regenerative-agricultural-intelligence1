@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-11-16T19:47:17.430919+00:00",
+  "device_id": "43fd98cc-e9ac-4de3-a19d-2b25ac08ad17",
+  "total_tests": 12,
+  "passed": 5,
+  "failed": 0,
+  "not_tested": 7,
+  "results": [
+    {
+      "test_id": "HIL-01",
+      "description": "Normal Multi-Sensor Acquisition & Ingestion",
+      "category": "Telemetry Ingestion",
+      "status": "PASS",
+      "timestamp": "2026-11-16T19:47:17.400364+00:00",
+      "details": "4 measurements saved; intelligence queued"
+    },
+    {
+      "test_id": "HIL-02",
+      "description": "Sensor Disconnection / Offline Handling",
+      "category": "Sensor Fault",
+      "status": "PASS",
+      "timestamp": "2026-11-16T19:47:17.407534+00:00",
+      "details": "Disconnected sensor recorded with quality MISSING"
+    },
+    {
+      "test_id": "HIL-03",
+      "description": "Impossible Sensor Reading Boundary Check",
+      "category": "Boundary Validation",
+      "status": "PASS",
+      "timestamp": "2026-11-16T19:47:17.409485+00:00",
+      "details": "HTTP 422 Unprocessable Entity returned"
+    },
+    {
+      "test_id": "HIL-04",
+      "description": "Duplicate Packet Detection & Replay Prevention",
+      "category": "Deduplication",
+      "status": "PASS",
+      "timestamp": "2026-11-16T19:47:17.418150+00:00",
+      "details": "Duplicate hash identified; 0 rows re-saved"
+    },
+    {
+      "test_id": "HIL-05",
+      "description": "Heartbeat Processing & Status Transition",
+      "category": "Device Health",
+      "status": "PASS",
+      "timestamp": "2026-11-16T19:47:17.430759+00:00",
+      "details": "Heartbeat logged; device status marked ONLINE"
+    },
+    {
+      "test_id": "HIL-06",
+      "description": "Physical Oscilloscope GPIO 27 Boot Pin Low-State",
+      "category": "Electrical Bench",
+      "status": "NOT TESTED",
+      "timestamp": "2026-11-16T19:47:17.430794+00:00",
+      "details": "Awaiting physical hardware assembly & test bench equipment"
+    },
+    {
+      "test_id": "HIL-07",
+      "description": "Physical ADS1115 VDD 3.3V Multimeter Check",
+      "category": "Electrical Bench",
+      "status": "NOT TESTED",
+      "timestamp": "2026-11-16T19:47:17.430816+00:00",
+      "details": "Awaiting physical hardware assembly & test bench equipment"
+    },
+    {
+      "test_id": "HIL-08",
+      "description": "Physical Certified pH 4.01/7.00 Buffer Probe Dip",
+      "category": "Sensor Metrology",
+      "status": "NOT TESTED",
+      "timestamp": "2026-11-16T19:47:17.430834+00:00",
+      "details": "Awaiting physical hardware assembly & test bench equipment"
+    },
+    {
+      "test_id": "HIL-09",
+      "description": "Physical Certified 1413 uS/cm EC Solution Dip",
+      "category": "Sensor Metrology",
+      "status": "NOT TESTED",
+      "timestamp": "2026-11-16T19:47:17.430849+00:00",
+      "details": "Awaiting physical hardware assembly & test bench equipment"
+    },
+    {
+      "test_id": "HIL-10",
+      "description": "Physical CN3065 Solar Charging Cutoff at 4.20V",
+      "category": "Power System",
+      "status": "NOT TESTED",
+      "timestamp": "2026-11-16T19:47:17.430863+00:00",
+      "details": "Awaiting physical hardware assembly & test bench equipment"
+    },
+    {
+      "test_id": "HIL-11",
+      "description": "Physical Li-ion Deep-Sleep Wakeup Cycle",
+      "category": "Power System",
+      "status": "NOT TESTED",
+      "timestamp": "2026-11-16T19:47:17.430876+00:00",
+      "details": "Awaiting physical hardware assembly & test bench equipment"
+    },
+    {
+      "test_id": "HIL-12",
+      "description": "Physical RS485 Modbus NPK Register Interrogation",
+      "category": "Field Bus",
+      "status": "NOT TESTED",
+      "timestamp": "2026-11-16T19:47:17.430888+00:00",
+      "details": "Awaiting physical hardware assembly & test bench equipment"
+    }
+  ]
+}

@@ -20,9 +20,9 @@ bool BatteryMonitor::init() {
 
 void BatteryMonitor::sample(float& out_voltage, float& out_percent) {
 #ifdef ARDUINO
-    // Read ESP32 12-bit ADC (0 - 4095 over 0 - 3.3V reference)
-    int raw = analogRead(m_adc_pin);
-    float adc_volts = (raw / 4095.0f) * 3.3f;
+    // Use ESP32 eFuse factory calibration curve to avoid non-linear ADC attenuation errors
+    uint32_t mv = analogReadMilliVolts(m_adc_pin);
+    float adc_volts = mv / 1000.0f;
     CalibrationMath::computeBattery(adc_volts, m_divider_ratio, out_voltage, out_percent);
 #else
     out_voltage = 3.92f;
