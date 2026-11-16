@@ -308,6 +308,70 @@ void test_telemetry_json_serialization() {
     std::cout << "  -> Telemetry JSON Serialization tests PASSED!" << std::endl;
 }
 
+#include "../include/diagnostics/hardware_bringup.h"
+
+void test_diagnostics_hardware_bringup() {
+    std::cout << "[TEST] Running Hardware Bring-Up & Diagnostic Tests..." << std::endl;
+
+    auto& diag = AgriSenseDiagnostics::HardwareBringup::getInstance();
+    diag.init();
+
+    // 1. Diagnostic initialization
+    auto info = diag.getSystemInfo();
+    assert(std::string(info.firmware_version) == AGRISENSE_FW_VERSION);
+    assert(info.free_heap_bytes > 0);
+
+    // 2. Safe default sensor state (All sensors must be DISABLED and unverified by default)
+    for (size_t i = 0; i < static_cast<size_t>(AgriSenseDiagnostics::SensorType::SENSOR_TYPE_COUNT); ++i) {
+        auto type = static_cast<AgriSenseDiagnostics::SensorType>(i);
+        assert(!diag.isSensorEnabled(type));
+        const auto& status = diag.getSensorStatus(type);
+        assert(!status.enabled);
+        assert(!status.hardware_verified);
+        assert(status.fault_state == AgriSenseDiagnostics::SensorFaultState::AWAITING_VOLTAGE_VERIFICATION);
+    }
+
+    // 3. Controlled Sensor Activation & Permission Safety Interlock
+    // Enabling WITHOUT verification token must fail
+    bool enable_no_token = diag.enableSensor(AgriSenseDiagnostics::SensorType::SOIL_MOISTURE, "WRONG_TOKEN");
+    assert(!enable_no_token);
+    assert(!diag.isSensorEnabled(AgriSenseDiagnostics::SensorType::SOIL_MOISTURE));
+
+    // Enabling without hardware verification must fail
+    bool enable_unverified = diag.enableSensor(AgriSenseDiagnostics::SensorType::SOIL_MOISTURE, "CONFIRM_VOLTAGE_VERIFIED");
+    assert(!enable_unverified);
+
+    // Perform hardware safety verification first, THEN enable
+    diag.verifyHardwareSafety(AgriSenseDiagnostics::SensorType::SOIL_MOISTURE, true);
+    bool enable_success = diag.enableSensor(AgriSenseDiagnostics::SensorType::SOIL_MOISTURE, "CONFIRM_VOLTAGE_VERIFIED");
+    assert(enable_success);
+    assert(diag.isSensorEnabled(AgriSenseDiagnostics::SensorType::SOIL_MOISTURE));
+
+    // 4. Command interface validation
+    std::string help_resp = diag.executeCommand("HELP");
+    assert(help_resp.find("Available Diagnostic Commands") != std::string::npos);
+
+    std::string info_resp = diag.executeCommand("INFO");
+    assert(info_resp.find("System Hardware Info") != std::string::npos);
+
+    std::string status_resp = diag.executeCommand("STATUS");
+    assert(status_resp.find("SOIL_MOISTURE") != std::string::npos);
+
+    std::string ads_resp = diag.executeCommand("ADS_STATUS");
+    assert(ads_resp.find("ADS1115 External ADC") != std::string::npos);
+
+    std::string unknown_resp = diag.executeCommand("INVALID_CMD_XYZ");
+    assert(unknown_resp.find("Unknown command") != std::string::npos);
+
+    // 5. Secret Masking Utility
+    std::string masked_token = AgriSenseDiagnostics::HardwareBringup::maskSecret("agr-token-secret-998877");
+    assert(masked_token.find("secret") == std::string::npos);
+    assert(masked_token.front() == 'a');
+    assert(masked_token.back() == '7');
+
+    std::cout << "  -> Hardware Bring-Up & Diagnostic tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "==================================================================" << std::endl;
     std::cout << "AgriSense Firmware C++ Unit Tests (Host Native Verification)" << std::endl;
@@ -320,6 +384,7 @@ int main() {
     test_offline_queue_power_loss_recovery();
     test_corrupted_packet_handling();
     test_telemetry_json_serialization();
+    test_diagnostics_hardware_bringup();
 
     std::cout << "==================================================================" << std::endl;
     std::cout << "ALL FIRMWARE UNIT TESTS PASSED!" << std::endl;

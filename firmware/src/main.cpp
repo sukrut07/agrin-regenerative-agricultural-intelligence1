@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "config.h"
 #include "core/device_manager.h"
+#include "diagnostics/hardware_bringup.h"
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -15,12 +16,9 @@ void setup() {
     Serial.begin(SERIAL_DEBUG_BAUD);
     delay(1000);
 
-    Serial.println();
-    Serial.println("==================================================================");
-    Serial.println("🌾 AgriSense IoT — ESP32 DevKit V1 Native Firmware");
-    Serial.println("Platform: AgriN — Regenerative Agricultural Intelligence Network");
-    Serial.printf ("Firmware Version: %s | Hardware Profile: %s\n", AGRISENSE_FW_VERSION, HARDWARE_PROFILE_NAME);
-    Serial.println("==================================================================");
+    // Initialize bring-up diagnostics harness & print safety banner
+    AgriSenseDiagnostics::HardwareBringup::getInstance().init();
+    AgriSenseDiagnostics::HardwareBringup::getInstance().printStartupBanner();
 
     // Run hardware & subsystem setup
     if (g_deviceManager.setup()) {
@@ -37,6 +35,7 @@ void setup() {
 }
 
 void loop() {
+    AgriSenseDiagnostics::HardwareBringup::getInstance().processSerialCommands();
     g_deviceManager.loop();
     delay(10); // Yield to FreeRTOS scheduler
 }
@@ -45,7 +44,11 @@ void loop() {
 #include <iostream>
 
 int main(int argc, char** argv) {
+    (void)argc;
+    (void)argv;
     std::cout << "AgriSense Native Host Test Executable v" << AGRISENSE_FW_VERSION << std::endl;
+    AgriSenseDiagnostics::HardwareBringup::getInstance().init();
+    std::cout << AgriSenseDiagnostics::HardwareBringup::getInstance().executeCommand("HELP");
     g_deviceManager.setup();
     g_deviceManager.triggerSensorSample();
     g_deviceManager.triggerTelemetryTransmit();
