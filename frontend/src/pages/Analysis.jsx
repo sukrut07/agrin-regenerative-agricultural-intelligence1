@@ -1,29 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { runAnalysis } from '../services/api'
 import { Leaf } from 'lucide-react'
 
 const ANALYSIS_STEPS = [
-  { text: 'Validating your soil and farm data...', emoji: '📋' },
-  { text: 'Running ML model prediction...', emoji: '🤖' },
-  { text: 'Applying ICAR/TNAU agricultural rules...', emoji: '📚' },
-  { text: 'Computing suitability scores for 22 crops...', emoji: '🌾' },
-  { text: 'Ranking crops by combined score...', emoji: '📊' },
-  { text: 'Generating analysis explanations...', emoji: '✍️' },
-  { text: 'Preparing your results...', emoji: '✅' },
+  { text: 'Validating soil readings, units & farm parameters...', emoji: '📋' },
+  { text: 'Processing soil characteristics & ICAR thresholds...', emoji: '🧪' },
+  { text: 'Evaluating crop suitability via Random Forest ML (23 crops)...', emoji: '🌱' },
+  { text: 'Calculating suitability rationale, constraints & confidence...', emoji: '📊' },
+  { text: 'Preparing your Crop Suitability Report...', emoji: '✅' },
 ]
 
 export default function Analysis() {
   const navigate = useNavigate()
-  const { getApiPayload, setAnalysisResult, setSessionId } = useApp()
+  const { getApiPayload, setAnalysisResult, setSessionId, dataSource } = useApp()
   const [step, setStep] = useState(0)
   const [error, setError] = useState(null)
+  const submittedRef = useRef(false)
 
   useEffect(() => {
+    if (submittedRef.current) return
+    submittedRef.current = true
+
     const interval = setInterval(() => {
       setStep(s => s < ANALYSIS_STEPS.length - 1 ? s + 1 : s)
-    }, 600)
+    }, 550)
 
     const payload = getApiPayload()
     runAnalysis(payload)
@@ -93,11 +95,16 @@ export default function Analysis() {
         </div>
 
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 8 }}>
-          Analysing Your Farm
+          Analysing Your Soil
         </h2>
-        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem', marginBottom: 28 }}>
-          Running ML model + agricultural rules for 22 crops...
+        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem', marginBottom: 12 }}>
+          Evaluating 23 crops using trained Random Forest ML + ICAR agronomic rules
         </p>
+        <div style={{ marginBottom: 22 }}>
+          <span className={`ff-badge ${dataSource === 'sample' ? 'ff-badge-amber' : 'ff-badge-green'}`}>
+            Source: {dataSource === 'sample' ? 'Sample Dataset' : 'Manual Input'}
+          </span>
+        </div>
 
         {/* Current step text */}
         <div style={{

@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { Info, Sprout, FlaskConical, Beaker } from 'lucide-react'
+import { Info, Cpu, AlertCircle } from 'lucide-react'
 import StepLayout from '../components/StepLayout'
+
+const SAMPLE_SOIL_PRESET = {
+  N: '260', P: '18.5', K: '240', S: '12',
+  Zn: '0.85', Fe: '6.2', Cu: '0.5', Mn: '3.1', B: '0.65',
+  ph: '6.9', EC: '0.42', OC: '0.64'
+}
 
 const SOIL_PARAMS = [
   {
@@ -53,10 +59,27 @@ const SOIL_PARAMS = [
 
 export default function SoilTest() {
   const navigate = useNavigate()
-  const { soilData, setSoilData } = useApp()
+  const { soilData, setSoilData, dataSource, setDataSource } = useApp()
   const [tooltip, setTooltip] = useState(null)
 
-  const update = (key, value) => setSoilData(prev => ({ ...prev, [key]: value }))
+  const update = (key, value) => {
+    setSoilData(prev => ({ ...prev, [key]: value }))
+    setDataSource('manual')
+  }
+
+  const handleLoadSampleSoil = () => {
+    setSoilData(SAMPLE_SOIL_PRESET)
+    setDataSource('sample')
+  }
+
+  const hasInvalidValues = SOIL_PARAMS.some(section =>
+    section.params.some(p => {
+      const raw = soilData[p.key]
+      if (raw === '' || raw === null || raw === undefined) return false
+      const num = parseFloat(raw)
+      return Number.isNaN(num) || num < p.min || num > p.max
+    })
+  )
 
   const filledCount = Object.values(soilData).filter(v => v !== '' && v !== null).length
   const totalCount = 12
@@ -68,6 +91,62 @@ export default function SoilTest() {
       title="Soil Test Values"
       subtitle="Enter values from your Soil Health Card, soil testing lab report, or soil-testing device"
     >
+
+      {/* Data Source Selector (Manual vs Sample vs Future IoT) */}
+      <div className="ff-card" style={{ padding: '16px 20px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#77786F' }}>
+              Data Entry Source
+            </div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#171814', marginTop: 2 }}>
+              Active Source:{' '}
+              <span style={{ color: dataSource === 'sample' ? '#92400E' : '#183B2A' }}>
+                {dataSource === 'sample' ? 'Sample Dataset (Illustrative)' : 'Manual Soil Data Entry'}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setDataSource('manual')}
+              style={{
+                padding: '7px 14px', borderRadius: 999, fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                background: dataSource === 'manual' ? '#183B2A' : '#FFFFFF',
+                color: dataSource === 'manual' ? '#E7D927' : '#171814',
+                border: '1px solid #E5E5DC',
+              }}
+            >
+              Manual Input
+            </button>
+            <button
+              type="button"
+              onClick={handleLoadSampleSoil}
+              style={{
+                padding: '7px 14px', borderRadius: 999, fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                background: dataSource === 'sample' ? '#E7D927' : '#FFFFFF',
+                color: '#171814',
+                border: '1px solid #E5E5DC',
+              }}
+            >
+              Load Sample Dataset
+            </button>
+            <button
+              type="button"
+              disabled
+              title="ESP32 hardware device is not currently connected"
+              style={{
+                padding: '7px 14px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 600,
+                background: '#F2F5EE', color: '#77786F', border: '1px dashed #D1D5DB', cursor: 'not-allowed',
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              <Cpu size={13} /> ESP32 Sensor (Coming Later — Not Connected)
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Progress indicator */}
       <div className="ff-card" style={{ padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -154,34 +233,49 @@ export default function SoilTest() {
                   )}
 
                   {/* Input */}
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      id={`soil-${param.key}`}
-                      className="farm-input"
-                      type="number"
-                      min={param.min}
-                      max={param.max}
-                      step={param.step || 0.1}
-                      placeholder={param.placeholder}
-                      value={soilData[param.key]}
-                      onChange={e => update(param.key, e.target.value)}
-                      style={{ paddingRight: param.unit ? 56 : 14 }}
-                    />
-                    {param.unit && (
-                      <span style={{
-                        position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                        fontSize: '0.75rem', color: 'var(--ff-text-muted)', pointerEvents: 'none',
-                      }}>
-                        {param.unit}
-                      </span>
-                    )}
-                  </div>
-
-                  {soilData[param.key] === '' && (
-                    <p style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginTop: 3 }}>
-                      Optional
-                    </p>
-                  )}
+                  {(() => {
+                    const raw = soilData[param.key]
+                    const num = parseFloat(raw)
+                    const isOutOfRange = raw !== '' && raw !== null && (Number.isNaN(num) || num < param.min || num > param.max)
+                    return (
+                      <>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            id={`soil-${param.key}`}
+                            className="farm-input"
+                            type="number"
+                            min={param.min}
+                            max={param.max}
+                            step={param.step || 0.1}
+                            placeholder={param.placeholder}
+                            value={soilData[param.key]}
+                            onChange={e => update(param.key, e.target.value)}
+                            style={{
+                              paddingRight: param.unit ? 56 : 14,
+                              borderColor: isOutOfRange ? 'var(--ff-error)' : undefined,
+                            }}
+                          />
+                          {param.unit && (
+                            <span style={{
+                              position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                              fontSize: '0.75rem', color: 'var(--ff-text-muted)', pointerEvents: 'none',
+                            }}>
+                              {param.unit}
+                            </span>
+                          )}
+                        </div>
+                        {isOutOfRange ? (
+                          <p style={{ fontSize: '0.72rem', color: 'var(--ff-error)', marginTop: 3, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <AlertCircle size={12} /> Valid range: {param.min} – {param.max} {param.unit}
+                          </p>
+                        ) : soilData[param.key] === '' ? (
+                          <p style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginTop: 3 }}>
+                            Optional (Range: {param.min}–{param.max}{param.unit ? ` ${param.unit}` : ''})
+                          </p>
+                        ) : null}
+                      </>
+                    )
+                  })()}
                 </div>
               ))}
             </div>
@@ -192,7 +286,12 @@ export default function SoilTest() {
       {/* Navigation */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 28 }}>
         <button className="btn-secondary" onClick={() => navigate('/farm-details')}>← Back</button>
-        <button className="btn-primary" onClick={() => navigate('/environment')}>
+        <button
+          className="btn-primary"
+          disabled={hasInvalidValues}
+          onClick={() => navigate('/environment')}
+          title={hasInvalidValues ? 'Please fix out-of-range soil values before continuing' : ''}
+        >
           Next: Environment →
         </button>
       </div>
