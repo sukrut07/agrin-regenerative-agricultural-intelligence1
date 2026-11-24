@@ -431,11 +431,11 @@ export default function SoilHealth() {
 
             <div className="flex items-center gap-3">
               <Link
-                to="/marketplace?category=SOIL_AMENDMENTS"
-                className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all whitespace-nowrap"
+                to="/farm-details"
+                className="px-4 py-2.5 rounded-xl bg-[#183B2A] hover:bg-[#398653] text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all whitespace-nowrap"
               >
-                <ShoppingBag size={15} />
-                <span>{currentLanguage === 'mr' ? 'सुधारक खते खरेदी करा' : 'Buy Amendments on AgriMarket'}</span>
+                <FlaskConical size={15} />
+                <span>{currentLanguage === 'mr' ? 'पीक योग्यता तपासा' : 'Run Crop Suitability Analysis'}</span>
               </Link>
             </div>
           </div>
@@ -713,15 +713,15 @@ export default function SoilHealth() {
                         </div>
                       </div>
 
-                      {/* Soil-to-Market Bridge Button */}
+                      {/* Soil Analysis Action */}
                       {rec.marketQuery && (
                         <div className="shrink-0">
                           <Link
-                            to={`/marketplace?category=SOIL_AMENDMENTS&search=${rec.marketQuery}`}
-                            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                            to="/farm-details"
+                            className="px-3.5 py-2 rounded-xl bg-[#183B2A] hover:bg-[#398653] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
                           >
-                            <ShoppingBag size={13} />
-                            <span>{rec.amendmentLabel}</span>
+                            <FlaskConical size={13} />
+                            <span>Check Crop Impact</span>
                             <ArrowRight size={13} />
                           </Link>
                         </div>

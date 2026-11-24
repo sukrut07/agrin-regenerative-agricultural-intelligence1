@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import HeaderNav from '../components/HeaderNav'
 import {
   ChevronRight, ChevronDown, Sprout, AlertTriangle, Leaf, BarChart3,
   Printer, FileText, CheckCircle, XCircle, Shield, Info, Send,
@@ -14,7 +15,7 @@ export default function Recommendations() {
   const {
     analysisResult, setAnalysisResult, setSelectedCrop,
     farmData, setFarmData, soilData, setSoilData, envData, setEnvData,
-    sessionId, setSessionId
+    sessionId, setSessionId, dataSource, setDataSource
   } = useApp()
 
   const [expandedCrop, setExpandedCrop] = useState(null)
@@ -61,12 +62,14 @@ export default function Recommendations() {
     data_quality = {},
     country_neutral_advisory = {},
     weather_reasoning = [],
+    pipeline_execution = null,
+    warnings = [],
     session_id
   } = analysisResult
 
 
   const activeSessionId = session_id || sessionId || 'LOCAL-SESSION'
-  const isDemoMode = Boolean(farmData?.farm_id?.startsWith('DEMO-') || farm_context?.farm_id?.startsWith('DEMO-') || selectedDemoId)
+  const isDemoMode = dataSource === 'sample' || Boolean(farmData?.farm_id?.startsWith('DEMO-') || farm_context?.farm_id?.startsWith('DEMO-') || selectedDemoId)
 
   const district = location_context.district || farmData.district || 'Your District'
   const state = location_context.state || farmData.state || 'India'
@@ -102,6 +105,7 @@ export default function Recommendations() {
     setFarmData(scenario.farmData)
     setSoilData(scenario.soilData)
     setEnvData(scenario.envData)
+    setDataSource('sample')
 
     const payload = {
       farm_id: scenario.farmData.farm_id,
@@ -198,42 +202,61 @@ export default function Recommendations() {
 
   return (
     <div className="page-bg" style={{ minHeight: '100vh' }}>
+      <div className="no-print"><HeaderNav /></div>
 
-      {/* ── Top Navigation Bar ───────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-4 flex items-center justify-between no-print" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="ff-logo-icon">
-            <Leaf size={16} className="text-white" />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ff-text)' }}>AgriN Agricultural Intelligence Report</h1>
-            <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>{district}, {state} · {season.toUpperCase()} season</p>
-          </div>
+      {/* ── Top Action Toolbar ───────────────────────────────────────────── */}
+      <div className="ff-nav px-6 py-3 flex items-center justify-between no-print" style={{ borderTop: '1px solid var(--ff-border)' }}>
+        <div>
+          <h1 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ff-text)' }}>
+            Crop Suitability &amp; Soil Analysis Report
+          </h1>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>
+            {district}, {state} · {season.toUpperCase()} season · Source: <strong>{isDemoMode ? 'Sample Dataset' : 'Manual Input'}</strong> · ID: <code>{activeSessionId.slice(0, 12)}</code>
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             className="btn-secondary"
             onClick={handlePrint}
-            style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6, borderColor: 'var(--ff-primary)', color: 'var(--ff-primary)' }}
+            style={{ padding: '8px 16px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            <Printer size={15} /> Print / Export PDF
+            <Printer size={15} /> Print / Save PDF
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={() => navigate('/dashboard')}
+            style={{ padding: '8px 16px', fontSize: '0.82rem' }}
+          >
+            My Reports
           </button>
           <button
             className="btn-secondary"
             onClick={() => navigate('/farm-details')}
-            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+            style={{ padding: '8px 16px', fontSize: '0.82rem' }}
           >
-            ← Edit Inputs
+            New Assessment
           </button>
           <button
             className="btn-want"
             onClick={() => navigate('/i-want-to-grow')}
-            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+            style={{ padding: '8px 16px', fontSize: '0.82rem' }}
           >
-            <Sprout size={15} /> I Want to Grow This
+            <Sprout size={15} /> Check Specific Crop
           </button>
         </div>
       </div>
+
+      {/* Pipeline Status & Degraded Warnings Strip */}
+      {warnings && warnings.length > 0 && (
+        <div className="ff-container-narrow no-print" style={{ paddingTop: 14 }}>
+          <div style={{
+            background: '#FDF6E2', border: '1px solid #F3DFAA', borderRadius: 12,
+            padding: '10px 16px', fontSize: '0.78rem', color: '#92400E'
+          }}>
+            <strong>Pipeline Notice ({pipeline_execution?.status || 'PARTIAL_DEGRADED'}):</strong> {warnings.join(' · ')}
+          </div>
+        </div>
+      )}
 
       <div className="ff-container-narrow" style={{ paddingTop: 20, paddingBottom: 48 }}>
 

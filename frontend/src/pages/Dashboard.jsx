@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import HeaderNav from '../components/HeaderNav'
 import { getAnalytics, getModelInfo } from '../services/api'
-import { ArrowLeft, BarChart2, BookOpen, Layers, TrendingUp, Sprout, Zap } from 'lucide-react'
+import { BarChart2, BookOpen, Layers, TrendingUp, Sprout, Zap, FileText, ArrowRight } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 export default function Dashboard() {
@@ -76,6 +77,76 @@ export default function Dashboard() {
               <div style={{ fontSize: '0.82rem', color: 'var(--ff-text-secondary)', marginTop: 6 }}>{m.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* ── Saved Assessment Reports History ────────────────── */}
+        <div className="ff-card" style={{ padding: 24, marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FileText size={18} style={{ color: '#183B2A' }} />
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#171814' }}>Recent Soil &amp; Crop Suitability Assessments</h2>
+            </div>
+            <span style={{ fontSize: '0.75rem', color: '#77786F' }}>
+              Persisted SQLite records (zero synthetic history)
+            </span>
+          </div>
+
+          {recentAssessments.length === 0 ? (
+            <div style={{ padding: '28px 16px', textAlign: 'center', background: '#F7F7F2', borderRadius: 12, border: '1px dashed #E5E5DC' }}>
+              <p style={{ fontSize: '0.9rem', fontWeight: 600, color: '#171814', marginBottom: 6 }}>
+                No assessments yet. Start your first soil analysis.
+              </p>
+              <p style={{ fontSize: '0.78rem', color: '#77786F', marginBottom: 14 }}>
+                Enter manual Soil Health Card readings to save your first field suitability report.
+              </p>
+              <button
+                onClick={() => navigate('/farm-details')}
+                className="btn-primary"
+                style={{ fontSize: '0.82rem', padding: '8px 18px' }}
+              >
+                Analyse My Soil
+              </button>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #E5E5DC', color: '#77786F', fontSize: '0.72rem', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '10px 8px' }}>Date</th>
+                    <th style={{ padding: '10px 8px' }}>Location / Season</th>
+                    <th style={{ padding: '10px 8px' }}>Top Suitable Crop</th>
+                    <th style={{ padding: '10px 8px' }}>Score</th>
+                    <th style={{ padding: '10px 8px' }}>Confidence</th>
+                    <th style={{ padding: '10px 8px' }}>Model</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentAssessments.map((item) => (
+                    <tr key={item.id} style={{ borderBottom: '1px solid #F2F2EA' }}>
+                      <td style={{ padding: '10px 8px', color: '#77786F' }}>
+                        {item.created_at ? new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                      </td>
+                      <td style={{ padding: '10px 8px', fontWeight: 600, color: '#171814' }}>
+                        {item.district || 'Field'}{item.state ? `, ${item.state}` : ''}{item.season ? ` · ${item.season}` : ''}
+                      </td>
+                      <td style={{ padding: '10px 8px', fontWeight: 700, color: '#183B2A', textTransform: 'capitalize' }}>
+                        {item.top_crop || '—'}
+                      </td>
+                      <td style={{ padding: '10px 8px', fontWeight: 700, color: '#398653' }}>
+                        {item.top_score != null ? `${Math.round(item.top_score)}/100` : '—'}
+                      </td>
+                      <td style={{ padding: '10px 8px', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: 700 }}>
+                        {item.data_confidence || '—'}
+                      </td>
+                      <td style={{ padding: '10px 8px', fontFamily: 'monospace', fontSize: '0.72rem', color: '#77786F' }}>
+                        {item.model_version || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* ── ML Model performance ──────────────────────────────── */}
