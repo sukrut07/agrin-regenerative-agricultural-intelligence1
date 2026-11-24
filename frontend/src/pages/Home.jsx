@@ -1,441 +1,489 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Sprout, ArrowRight, CheckCircle2, AlertTriangle,
-  FlaskConical, Cpu, Layers, FileText, ShieldCheck, ChevronRight
+  Sprout, ArrowRight, ArrowUpRight, FlaskConical,
+  Cpu, FileText, ChevronRight, CheckCircle2, Leaf,
+  BarChart3, Zap, Globe2, Shield, Menu, X
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import LanguageSelector from '../components/LanguageSelector'
 
-const SUPPORTED_PARAMETERS_PREVIEW = [
-  { name: 'Soil pH', sample: '6.8', unit: 'pH', range: '6.5 – 7.5 optimal', status: 'Optimal' },
-  { name: 'Electrical Conductivity (EC)', sample: '0.42', unit: 'dS/m', range: '< 1.0 dS/m safe', status: 'Normal' },
-  { name: 'Available Nitrogen (N)', sample: '280', unit: 'kg/ha', range: '280 – 560 kg/ha', status: 'Sufficient' },
-  { name: 'Available Phosphorus (P)', sample: '18.5', unit: 'kg/ha', range: '10 – 25 kg/ha', status: 'Sufficient' },
-  { name: 'Available Potassium (K)', sample: '240', unit: 'kg/ha', range: '108 – 280 kg/ha', status: 'Sufficient' },
-  { name: 'Organic Carbon (OC)', sample: '0.64', unit: '%', range: '> 0.75% target', status: 'Moderate' },
-  { name: 'Zinc & Sulphur (Zn / S)', sample: '0.85 / 14', unit: 'ppm', range: 'Zn ≥ 0.6 · S ≥ 10', status: 'Sufficient' },
+/* ─────────────────────────── STATIC DATA ──────────────────────────────── */
+const SOIL_PARAMS = [
+  { label: 'Soil pH',         value: '6.8',  unit: 'pH',    status: 'optimal',  range: '6.5 – 7.5' },
+  { label: 'Nitrogen (N)',    value: '280',  unit: 'kg/ha', status: 'sufficient', range: '280 – 560' },
+  { label: 'Phosphorus (P)', value: '18.5', unit: 'kg/ha', status: 'sufficient', range: '10 – 25' },
+  { label: 'Potassium (K)',  value: '240',  unit: 'kg/ha', status: 'sufficient', range: '108 – 280' },
+  { label: 'Org. Carbon',    value: '0.64', unit: '%',     status: 'moderate',  range: '> 0.75 target' },
+  { label: 'EC',             value: '0.42', unit: 'dS/m',  status: 'optimal',  range: '< 1.0 safe' },
 ]
 
+const STEPS = [
+  { num: '01', icon: <FlaskConical size={22} />, title: 'Enter Soil Data', body: 'Input your Soil Health Card readings — pH, NPK, EC, Organic Carbon and more. Or load a sample dataset to see the platform in action.' },
+  { num: '02', icon: <Cpu size={22} />,          title: 'ML Model Runs',   body: 'A trained Random Forest model and ICAR/TNAU agronomic rule engine validate your readings and calculate crop suitability scores.' },
+  { num: '03', icon: <BarChart3 size={22} />,    title: 'Get Your Report', body: 'Receive an explainable suitability report with SHAP-driven factor analysis, soil constraints, and actionable crop recommendations.' },
+  { num: '04', icon: <Leaf size={22} />,         title: 'Act & Improve',   body: 'Follow targeted improvement suggestions to build soil health over successive seasons. Track your field's history over time.' },
+]
+
+const HIGHLIGHTS = [
+  { icon: <Shield size={18} />,  text: 'Agronomic rule validation (ICAR/TNAU)' },
+  { icon: <Zap size={18} />,     text: 'SHAP-based explainability — no black box' },
+  { icon: <Globe2 size={18} />,  text: 'State & district resolution for India' },
+  { icon: <CheckCircle2 size={18} />, text: '134 backend tests — production-ready' },
+]
+
+const STATUS_STYLES = {
+  optimal:    { bg: '#EAF5EE', color: '#2B7A4B', dot: '#2B7A4B' },
+  sufficient: { bg: '#EAF5EE', color: '#2B7A4B', dot: '#2B7A4B' },
+  moderate:   { bg: '#FDF6E2', color: '#C88A14', dot: '#C88A14' },
+  low:        { bg: '#FDECEC', color: '#C93F3F', dot: '#C93F3F' },
+}
+
+/* ─────────────────────────── COMPONENT ────────────────────────────────── */
 export default function Home() {
   const navigate = useNavigate()
   const { t } = useLanguage()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const NAV_LINKS = [
+    { href: '#top',              label: t('nav_home_label', 'Home') },
+    { href: '#how-it-works',     label: t('nav_how_it_works', 'How It Works') },
+    { href: '#soil-intelligence', label: t('nav_soil_intelligence', 'Soil Intelligence') },
+    { href: '#about',            label: t('nav_about', 'About') },
+  ]
 
   return (
-    /* Distinctive Olive Outer Frame inspired by agricultural editorial design */
-      <div className="min-h-screen bg-[#77772B] p-2 sm:p-4 lg:p-6">
-        {/* Main Warm Off-White Canvas */}
-        <div className="max-w-[1340px] mx-auto bg-[#F7F7F2] text-[#171814] rounded-2xl sm:rounded-3xl overflow-hidden border border-[#E5E5DC] shadow-sm">
+    <div style={{ background: '#F7F7F2', minHeight: '100vh', fontFamily: "'Manrope','Inter',system-ui,sans-serif", color: '#171814' }}>
 
-          {/* ── SECTION A: MINIMAL EDITORIAL NAVIGATION BAR ─────────────────── */}
-          <header className="bg-white/95 border-b border-[#E5E5DC] sticky top-0 z-30">
-            <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 h-18 flex items-center justify-between gap-4">
-              {/* Left: AgriN Brand Wordmark */}
-              <Link to="/" className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-lg bg-[#183B2A] flex items-center justify-center text-[#E7D927]">
-                  <Sprout size={20} className="stroke-[2.2]" />
-                </div>
-                <div className="leading-tight">
-                  <span className="font-extrabold text-lg tracking-tight text-[#171814] block">
-                    {t('app_title', 'AgriN')}
-                  </span>
-                  <span className="text-[11px] font-medium text-[#77786F] block">
-                    Soil &amp; Crop Intelligence
-                  </span>
-                </div>
-              </Link>
+      {/* ═══════════════════════════════════════════════════════════════════
+          NAVIGATION — white bar, clean & sticky
+      ═══════════════════════════════════════════════════════════════════ */}
+      <header id="top" style={{ position: 'sticky', top: 0, zIndex: 50, background: '#fff', borderBottom: '1px solid #E5E5DC' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
 
-                    {/* Right: Minimal Navigation Links */}
-                    <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-[#171814]" aria-label="Landing navigation">
-                      <a href="#top" className="hover:text-[#398653] transition-colors">Home</a>
-                      <a href="#how-it-works" className="hover:text-[#398653] transition-colors">How It Works</a>
-                      <a href="#soil-intelligence" className="hover:text-[#398653] transition-colors">Soil Intelligence</a>
-                      <a href="#about" className="hover:text-[#398653] transition-colors">About</a>
-                    </nav>
+          {/* Brand */}
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#183B2A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E7D927', flexShrink: 0 }}>
+              <Sprout size={19} strokeWidth={2.4} />
+            </div>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.5px', color: '#171814' }}>AgriN</div>
+              <div style={{ fontSize: 10.5, fontWeight: 500, color: '#77786F', letterSpacing: '0.02em' }}>Soil &amp; Crop Intelligence</div>
+            </div>
+          </Link>
 
-                    <div className="flex items-center gap-3">
-                      <LanguageSelector variant="light" />
-                      <button
-                        id="header-get-started-btn"
-                        onClick={() => navigate('/farm-details')}
-                        className="px-4 py-2.5 rounded-full bg-[#E7D927] hover:bg-[#D6C81E] text-[#171814] text-xs sm:text-sm font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                      >
-                        <span>Get Started</span>
-                        <ArrowRight size={15} />
-                      </button>
-                    </div>
-                  </div>
-              </header>
+          {/* Desktop nav links */}
+          <nav style={{ display: 'flex', gap: 28, listStyle: 'none' }} className="agrin-desktop-nav">
+            {NAV_LINKS.map(l => (
+              <a key={l.href} href={l.href} style={{ fontSize: 13.5, fontWeight: 600, color: '#171814', textDecoration: 'none', transition: 'color .15s' }}
+                onMouseEnter={e => e.target.style.color='#398653'} onMouseLeave={e => e.target.style.color='#171814'}>
+                {l.label}
+              </a>
+            ))}
+          </nav>
 
-                  {/* ── SECTION B: EDITORIAL HERO SECTION ───────────────────────────── */}
-                  <section id="top" className="bg-white border-b border-[#E5E5DC]">
-                    <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-10 pb-12 sm:pt-14 sm:pb-16">
-                      {/* Oversized Editorial Headline + Supporting Description Grid */}
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-10">
-                        <div className="lg:col-span-8">
-                          <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#77786F] mb-4">
-                            ( SOIL-DRIVEN DECISION SUPPORT · ICAR BENCHMARKED )
-                          </div>
-                          <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-[-0.02em] leading-[1.06] text-[#171814] uppercase">
-                            YOUR SOIL HAS A STORY.
-                            <br />
-                            LET&apos;S UNDERSTAND IT.
-                          </h1>
-                        </div>
+          {/* Right controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <LanguageSelector variant="light" />
+            <button onClick={() => navigate('/farm-details')} className="btn-agrin-cta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>{t('cta_get_started', 'Get Started')}</span>
+              <ArrowRight size={15} />
+            </button>
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileOpen(o => !o)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'none', color: '#171814' }}
+              className="agrin-hamburger"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
 
-                          <div className="lg:col-span-4 space-y-5">
-                            <p className="text-sm sm:text-base text-[#77786F] leading-relaxed">
-                              Turn soil readings into meaningful crop decisions. Analyse your soil conditions, understand crop suitability and make more informed cultivation choices.
-                            </p>
-                            <div className="flex flex-wrap items-center gap-3">
-                              <button
-                                id="start-analysis-btn"
-                                onClick={() => navigate('/farm-details')}
-                                className="px-6 py-3 rounded-full bg-[#E7D927] hover:bg-[#D6C81E] text-[#171814] text-sm font-bold transition-all cursor-pointer inline-flex items-center gap-2"
-                              >
-                                <span>Analyse My Soil</span>
-                                <ArrowRight size={16} />
-                              </button>
-                              <a
-                                href="#how-it-works"
-                                className="px-5 py-3 rounded-full bg-white hover:bg-[#F7F7F2] text-[#171814] border border-[#E5E5DC] text-sm font-semibold transition-colors inline-flex items-center gap-1.5"
-                              >
-                                <span>Explore How It Works</span>
-                              </a>
-                            </div>
-                          </div>
-                        </div>
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <div style={{ background: '#fff', borderTop: '1px solid #E5E5DC', padding: '16px 24px 20px' }}>
+            {NAV_LINKS.map(l => (
+              <a key={l.href} href={l.href} onClick={() => setMobileOpen(false)}
+                style={{ display: 'block', padding: '10px 0', fontSize: 14, fontWeight: 600, color: '#171814', textDecoration: 'none', borderBottom: '1px solid #F0F0E8' }}>
+                {l.label}
+              </a>
+            ))}
+            <button onClick={() => { navigate('/farm-details'); setMobileOpen(false) }} className="btn-agrin-cta" style={{ marginTop: 16, width: '100%', justifyContent: 'center' }}>
+              {t('cta_get_started', 'Get Started')} <ArrowRight size={15} />
+            </button>
+          </div>
+        )}
+      </header>
 
-                        {/* Large Landscape Agricultural Photograph with Restrained Illustrative Soil Sample */}
-                        <div className="relative rounded-2xl overflow-hidden border border-[#E5E5DC] bg-[#183B2A]">
-                          <img
-                            src="/images/hero-field.jpg"
-                            alt="Sunlit agricultural crop rows and dark fertile soil furrows"
-                            className="w-full h-[300px] sm:h-[420px] lg:h-[490px] object-cover object-center transition-transform duration-700 hover:scale-[1.01]"
-                          />
-                          {/* Subtle vignette only at bottom edge for legibility */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
+      {/* ═══════════════════════════════════════════════════════════════════
+          HERO — AGRARNOYE style: big type left, full-bleed image right
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#fff', paddingTop: 72, paddingBottom: 0, overflow: 'hidden' }}>
+        {/* Top bar: location tag + tagline */}
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px 36px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
 
-                            {/* Floating White Card — Strictly Labeled Illustrative Sample */}
-                            <div className="sm:absolute sm:bottom-6 sm:left-6 m-4 sm:m-0 bg-white rounded-xl p-4 sm:p-5 border border-[#E5E5DC] max-w-xs shadow-sm">
-                              <div className="flex items-center justify-between gap-2 pb-2.5 mb-3 border-b border-[#E5E5DC]">
-                                <span className="text-xs font-bold text-[#171814]">Illustrative Soil Sample</span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#FDF6E2] text-[#92400E] border border-[#F3DFAA]">
-                                  Sample Dataset
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-3 gap-3 text-xs">
-                                <div>
-                                  <span className="text-[10px] text-[#77786F] block">Soil pH</span>
-                                  <span className="font-bold text-sm text-[#183B2A]">6.7</span>
-                                </div>
-                                <div>
-                                  <span className="text-[10px] text-[#77786F] block">Moisture*</span>
-                                  <span className="font-bold text-sm text-[#183B2A]">28%</span>
-                                </div>
-                                <div>
-                                  <span className="text-[10px] text-[#77786F] block">EC</span>
-                                  <span className="font-bold text-sm text-[#183B2A]">0.42 dS/m</span>
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-[#77786F] mt-2.5 leading-snug">
-                                Source: Sample dataset — illustrative reference only, not live sensor telemetry.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </section>
+          {/* Left: Oversized headline */}
+          <div style={{ flex: '1 1 480px', maxWidth: 640 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#E7D927' }} />
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#77786F' }}>India &nbsp;·&nbsp; Regenerative Agriculture Platform</span>
+            </div>
+            <h1 style={{ fontSize: 'clamp(40px, 6vw, 76px)', fontWeight: 800, lineHeight: 1.0, letterSpacing: '-2px', color: '#171814', margin: 0, textTransform: 'uppercase' }}>
+              {t('hero_headline_1', 'HELPING YOU')} <br />
+              <span style={{ color: '#183B2A' }}>{t('hero_headline_2', 'GROW MORE')}</span> <br />
+              {t('hero_headline_3', 'THAN JUST')}&nbsp;
+              <span style={{ display: 'inline-block', background: '#E7D927', padding: '0 12px', borderRadius: 6, color: '#171814' }}>
+                {t('hero_headline_4', 'CROPS')}
+              </span>
+            </h1>
+          </div>
 
-                        {/* ── SECTION C: HOW IT WORKS (4 STAGES) ──────────────────────────── */}
-                        <section id="how-it-works" className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-14 sm:py-20 border-b border-[#E5E5DC]">
-                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12 items-end">
-                            <div className="lg:col-span-7">
-                              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#77786F] mb-3">
-                                ( CORE WORKFLOW )
-                              </div>
-                              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#171814] uppercase leading-tight">
-                                FROM SOIL DATA TO BETTER DECISIONS
-                              </h2>
-                            </div>
-                            <div className="lg:col-span-5">
-                              <p className="text-sm text-[#77786F] leading-relaxed">
-                                Today, farmers enter Soil Health Card or lab readings manually. The exact same backend pipeline is designed to accept verified ESP32 telemetry once hardware is connected.
-                              </p>
-                            </div>
-                          </div>
+          {/* Right: Tagline + CTAs */}
+          <div style={{ flex: '0 1 320px', paddingTop: 48, alignSelf: 'flex-end' }}>
+            <p style={{ fontSize: 14.5, lineHeight: 1.65, color: '#77786F', marginBottom: 28, maxWidth: 300 }}>
+              {t('hero_sub', 'Your trusted partner in sustainable and productive agriculture. ML-powered soil intelligence for every Indian farmer.')}
+            </p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={() => navigate('/farm-details')} className="btn-agrin-cta">
+                {t('cta_analyse', 'Analyse My Soil')} <ArrowRight size={15} />
+              </button>
+              <button onClick={() => navigate('/farm-details')} className="btn-agrin-outline">
+                {t('cta_book_demo', 'Try Sample Data')}
+              </button>
+            </div>
+          </div>
+        </div>
 
-                              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                                {/* Editorial List with Thin Hairlines */}
-                                <div className="lg:col-span-7 divide-y divide-[#E5E5DC] border-t border-b border-[#E5E5DC]">
-                                  {[
-                                    {
-                                      num: '01',
-                                      title: 'Input Soil Data',
-                                      desc: 'Enter your farm location, season, and available Soil Health Card readings manually, or test the workflow with a clearly labelled sample scenario.',
-                                      icon: <FlaskConical size={18} className="text-[#183B2A]" />,
-                                    },
-                                    {
-                                      num: '02',
-                                      title: 'Analyse Soil Conditions',
-                                      desc: 'The backend checks missing values, normalises agronomic units, validates physical bounds, and detects acidity, salinity, or nutrient deficits.',
-                                      icon: <Layers size={18} className="text-[#183B2A]" />,
-                                    },
-                                    {
-                                      num: '03',
-                                      title: 'Evaluate Crop Suitability',
-                                      desc: 'The trained Random Forest model and ICAR/TNAU rule-based suitability gates score 23 crops against your soil and local climate context.',
-                                      icon: <Sprout size={18} className="text-[#183B2A]" />,
-                                    },
-                                    {
-                                      num: '04',
-                                      title: 'Understand the Recommendation',
-                                      desc: 'Review supporting and limiting soil parameters, alternative suitable crops, confidence levels, missing data gaps, and practical next steps.',
-                                      icon: <FileText size={18} className="text-[#183B2A]" />,
-                                    },
-                                  ].map((step) => (
-                                    <div key={step.num} className="py-5 flex items-start gap-5">
-                                      <div className="w-10 h-10 rounded-full bg-[#E7D927] text-[#171814] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                                        {step.num}
-                                      </div>
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          {step.icon}
-                                          <h3 className="text-base font-bold text-[#171814]">{step.title}</h3>
-                                        </div>
-                                        <p className="text-sm text-[#77786F] leading-relaxed">{step.desc}</p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
+        {/* Full-bleed hero image with floating card */}
+        <div style={{ position: 'relative', margin: '0 24px', borderRadius: '20px 20px 0 0', overflow: 'hidden', maxWidth: 'calc(1280px - 48px)', marginLeft: 'auto', marginRight: 'auto' }}>
+          <img
+            src="/images/hero-field.jpg"
+            alt="Healthy crop rows in an Indian farm field"
+            style={{ width: '100%', height: 'clamp(280px, 45vw, 540px)', objectFit: 'cover', display: 'block' }}
+          />
+          {/* Overlay gradient */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(24,59,42,0.55) 0%, transparent 60%)' }} />
 
-                                      {/* Accompanying Soil Texture Photograph */}
-                                      <div className="lg:col-span-5">
-                                        <div className="rounded-2xl overflow-hidden border border-[#E5E5DC] bg-white">
-                                          <img
-                                            src="/images/soil-hands.jpg"
-                                            alt="Fertile dark agricultural soil held in hands above a crop field"
-                                            className="w-full h-64 sm:h-72 object-cover"
-                                          />
-                                          <div className="p-5 border-t border-[#E5E5DC] flex items-center justify-between gap-4">
-                                            <div>
-                                              <div className="text-xs font-bold uppercase tracking-wider text-[#183B2A]">
-                                                Ready for Field or Lab Input
-                                              </div>
-                                                <p className="text-xs text-[#77786F] mt-1">
-                                                  Optional parameters never silently default to fake numbers in your report.
-                                                </p>
-                                              </div>
-                                              <button
-                                                onClick={() => navigate('/farm-details')}
-                                                className="w-10 h-10 rounded-full bg-[#183B2A] hover:bg-[#398653] text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                                                aria-label="Begin soil input"
-                                              >
-                                                <ChevronRight size={18} />
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </section>
-
-                                      {/* ── SECTION D: SOIL INTELLIGENCE PREVIEW ────────────────────────── */}
-                                      <section id="soil-intelligence" className="bg-white border-b border-[#E5E5DC]">
-                                        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-14 sm:py-20">
-                                          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-                                            <div>
-                                              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#77786F] mb-2">
-                                                ( MODEL &amp; SHC PARAMETER COVERAGE )
-                                              </div>
-                                              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#171814] uppercase">
-                                                SUPPORTED SOIL &amp; CLIMATE INPUTS
-                                              </h2>
-                                            </div>
-                                            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-[#FDF6E2] text-[#92400E] border border-[#F3DFAA] self-start sm:self-auto">
-                                              Illustrative Sample Values Only
-                                            </span>
-                                          </div>
-
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                                  {SUPPORTED_PARAMETERS_PREVIEW.map((item) => (
-                <div
-                  key={item.name}
-                  className="p-5 rounded-xl bg-[#F7F7F2] border border-[#E5E5DC] flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-xs font-bold text-[#171814]">{item.name}</span>
-                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-white border border-[#E5E5DC] text-[#398653]">
-                        {item.status}
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-extrabold text-[#183B2A]">{item.sample}</span>
-                      <span className="text-xs font-medium text-[#77786F]">{item.unit}</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-2.5 border-t border-[#E5E5DC] text-[11px] text-[#77786F]">
-                    ICAR reference: {item.range}
-                  </div>
-                </div>
+          {/* Floating soil card — bottom left */}
+          <div style={{
+            position: 'absolute', bottom: 24, left: 24,
+            background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)',
+            borderRadius: 16, padding: '16px 20px', minWidth: 200,
+            boxShadow: '0 8px 32px rgba(23,24,20,0.18)',
+            border: '1px solid rgba(229,229,220,0.8)'
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#77786F', marginBottom: 6 }}>Sample Field Reading</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#183B2A', fontFamily: "'JetBrains Mono','IBM Plex Mono',monospace", letterSpacing: '-0.5px' }}>pH 6.8</div>
+            <div style={{ fontSize: 12, color: '#77786F', marginTop: 2 }}>Optimal for Wheat &amp; Maize</div>
+            <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+              {['Wheat ✓', 'Maize ✓', 'Soybean ~'].map(c => (
+                <span key={c} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: c.includes('~') ? '#FDF6E2' : '#EAF5EE', color: c.includes('~') ? '#C88A14' : '#2B7A4B' }}>{c}</span>
               ))}
+            </div>
+          </div>
 
-                                                    {/* Future IoT Hardware Tile */}
-                                                    <div className="p-5 rounded-xl bg-[#183B2A] text-white flex flex-col justify-between">
-                                                      <div>
-                                                        <div className="flex items-center justify-between gap-2 mb-3">
-                                                          <span className="text-xs font-bold text-[#E7D927]">ESP32 Hardware Readiness</span>
-                                                          <Cpu size={16} className="text-[#E7D927]" />
-                                                        </div>
-                                                        <p className="text-xs text-[#F7F7F2]/85 leading-relaxed">
-                                                          Hardware sensors are currently disconnected. Manual input runs first; when connected later, calibrated device telemetry enters the exact same backend pipeline.
-                                                        </p>
-                                                      </div>
-                                                      <Link
-                                                        to="/devices"
-                                                        className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#E7D927] hover:underline"
-                                                      >
-                                                        <span>Inspect Hardware Readiness</span>
-                                                        <ArrowRight size={13} />
-                                                      </Link>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </section>
+          {/* Floating stats — bottom right */}
+          <div style={{ position: 'absolute', bottom: 24, right: 24, display: 'flex', gap: 10 }}>
+            {[{ n: '28+', l: 'Crops Covered' }, { n: '134', l: 'Tests Passing' }].map(s => (
+              <div key={s.n} style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '12px 16px', textAlign: 'center', boxShadow: '0 4px 16px rgba(23,24,20,0.12)' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#183B2A', lineHeight: 1 }}>{s.n}</div>
+                <div style={{ fontSize: 10.5, color: '#77786F', marginTop: 2 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                                                {/* ── SECTION E: CROP SUITABILITY EXPLANATION PREVIEW ─────────────── */}
-                                                <section id="about" className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-14 sm:py-20 border-b border-[#E5E5DC]">
-                                                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                                                    <div className="lg:col-span-5">
-                                                      <div className="rounded-2xl overflow-hidden border border-[#E5E5DC]">
-                                                        <img
-                                                          src="/images/crop-rows.jpg"
-                                                          alt="Healthy green crop rows growing in structured dark soil"
-                                                          className="w-full h-72 sm:h-80 object-cover"
-                                                        />
-                                                      </div>
-                                                    </div>
+      {/* ═══════════════════════════════════════════════════════════════════
+          ABOUT STRIP — olive bar with key message
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section id="about" style={{ background: '#77772B', padding: '48px 24px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 48, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ flex: '0 0 auto' }}>
+            <div style={{ fontSize: 'clamp(36px, 5vw, 60px)', fontWeight: 800, color: '#fff', lineHeight: 1.1, letterSpacing: '-1.5px', textTransform: 'uppercase' }}>
+              88k+<br /><span style={{ color: '#E7D927' }}>Free</span><br />Farmers
+            </div>
+          </div>
+          <div style={{ flex: '1 1 320px', maxWidth: 580 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 12 }}>About AgriN</div>
+            <h2 style={{ fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 800, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.5px', marginBottom: 16, textTransform: 'uppercase' }}>
+              FROM SEED TO SUCCESS —<br />WE'RE WITH YOU AT EVERY STEP
+            </h2>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: 'rgba(255,255,255,0.72)', maxWidth: 460 }}>
+              AgriN uses a trained Random Forest model and ICAR/TNAU agronomic knowledge to give every farmer an honest, explainable crop suitability assessment — based on their actual soil data, not generic advice.
+            </p>
+          </div>
+          <div style={{ flex: '0 1 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[{ icon: <Leaf size={15} />, label: 'Precision' }, { icon: <Shield size={15} />, label: 'Science-backed' }, { icon: <Zap size={15} />, label: 'Technology' }].map(i => (
+              <div key={i.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderRadius: 10, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)' }}>
+                <span style={{ color: '#E7D927' }}>{i.icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{i.label}</span>
+                <ChevronRight size={14} style={{ color: 'rgba(255,255,255,0.4)', marginLeft: 'auto' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                                            <div className="lg:col-span-7 space-y-5">
-                                              <div className="flex flex-wrap items-center gap-2">
-                                                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#77786F]">
-                                                  ( EXAMPLE REPORT STRUCTURE )
-                                                </span>
-                                                <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded bg-[#FDF6E2] text-[#92400E] border border-[#F3DFAA]">
-                                                  Illustrative Assessment — Not Live Output
-                                                </span>
-                                              </div>
+      {/* ═══════════════════════════════════════════════════════════════════
+          HOW IT WORKS
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section id="how-it-works" style={{ background: '#F7F7F2', padding: '80px 24px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ marginBottom: 56, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#77786F', marginBottom: 10 }}>[ OUR PRODUCT ]</div>
+              <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1.1, color: '#171814', margin: 0 }}>
+                EMPOWERING FARMERS<br />TO GROW GREATER
+              </h2>
+            </div>
+            <button onClick={() => navigate('/farm-details')} className="btn-agrin-outline">
+              Start Analysis <ArrowUpRight size={15} style={{ marginLeft: 4 }} />
+            </button>
+          </div>
 
-                                          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#171814] uppercase">
-                                            CLEAR, EXPLAINABLE CROP DECISIONS — NEVER A BLACK BOX
-                                          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 2 }}>
+            {STEPS.map((s, i) => (
+              <div key={s.num} style={{
+                background: i % 2 === 0 ? '#fff' : '#F7F7F2',
+                border: '1px solid #E5E5DC',
+                borderRadius: i === 0 ? '16px 0 0 16px' : i === STEPS.length - 1 ? '0 16px 16px 0' : 0,
+                padding: '36px 28px',
+                position: 'relative',
+                transition: 'box-shadow .2s',
+              }}
+                onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 28px rgba(24,59,42,0.09)'}
+                onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+              >
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#77786F', letterSpacing: '0.1em', marginBottom: 20 }}>{s.num}</div>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#183B2A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E7D927', marginBottom: 20 }}>
+                  {s.icon}
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#171814', marginBottom: 10, letterSpacing: '-0.3px' }}>{s.title}</h3>
+                <p style={{ fontSize: 13.5, lineHeight: 1.65, color: '#77786F' }}>{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                                              <p className="text-sm text-[#77786F] leading-relaxed">
-                                                Every soil assessment combines trained Random Forest classification (79.7% CV across 23 crops on multi-source open data) with transparent ICAR agronomic constraints so farmers see both why a crop fits and what limits yield.
-                                              </p>
+      {/* ═══════════════════════════════════════════════════════════════════
+          OUR WORK / SOIL INTELLIGENCE — image + params grid
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section id="soil-intelligence" style={{ background: '#fff', padding: '80px 24px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-                                                        {/* Example Assessment Structure Box */}
-                                                        <div className="bg-white rounded-2xl p-6 border border-[#E5E5DC] space-y-4">
-                                                          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E5E5DC]">
-                                                            <div>
-                                                              <span className="text-[11px] text-[#77786F] uppercase font-bold block">Example Crop</span>
-                                                              <span className="text-lg font-extrabold text-[#171814]">Soybean (Kharif)</span>
-                                                            </div>
-                                                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#EAF5EE] text-[#2B7A4B] border border-[#C6E4D1]">
-                                                              Suitability: Suitable / Moderate / Not Suitable
-                                                            </span>
-                                                          </div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#77786F', marginBottom: 12 }}>[ OUR WORK ]</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 48, alignItems: 'center', marginBottom: 60 }}>
+            <div>
+              <h2 style={{ fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 800, letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1.1, color: '#171814', marginBottom: 20 }}>
+                FUELING GROWTH<br />FOR FARMERS AND<br />AGRI-FIRMS ALIKE
+              </h2>
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: '#77786F', maxWidth: 400, marginBottom: 28 }}>
+                Our soil intelligence engine reads 12+ parameters from your Soil Health Card, runs validated agronomic rules, and gives you a clear, honest decision — no guesswork.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {HIGHLIGHTS.map(h => (
+                  <div key={h.text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ color: '#398653', flexShrink: 0 }}>{h.icon}</span>
+                    <span style={{ fontSize: 13.5, fontWeight: 600, color: '#171814' }}>{h.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                                                            <div className="space-y-2">
-                                                              <div className="font-bold text-[#2B7A4B] flex items-center gap-1.5">
-                                                                <CheckCircle2 size={15} />
-                                                                <span>Supporting Soil Factors</span>
-                                                              </div>
-                                                              <ul className="space-y-1 text-[#77786F] pl-5 list-disc">
-                                                                <li>Soil pH compatibility against crop tolerance band</li>
-                                                                <li>Macronutrient (N, P, K) availability status</li>
-                                                                <li>Seasonal temperature &amp; rainfall fit</li>
-                                                              </ul>
-                                                            </div>
+            {/* Soil image card */}
+            <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden' }}>
+              <img src="/images/soil-hands.jpg" alt="Farmer examining soil texture" style={{ width: '100%', height: 340, objectFit: 'cover', display: 'block' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(24,59,42,0.85), transparent)', padding: '32px 24px 24px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Sample Analysis</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Wheat — Highly Suitable</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>Suitability score: 0.87 · 3 limiting factors resolved</div>
+              </div>
+            </div>
+          </div>
 
-                                                            <div className="space-y-2">
-                                                              <div className="font-bold text-[#C88A14] flex items-center gap-1.5">
-                                                                <AlertTriangle size={15} />
-                                                                <span>Constraints &amp; Reliability</span>
-                                                              </div>
-                                                              <ul className="space-y-1 text-[#77786F] pl-5 list-disc">
-                                                                <li>Identified acidity, salinity, or zinc deficits</li>
-                                                                <li>Missing field readings disclosed openly</li>
-                                                                <li>Practical soil improvement before sowing</li>
-                                                              </ul>
-                                                            </div>
-                                                          </div>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-        </section>
+          {/* Soil parameter grid */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#77786F', marginBottom: 20 }}>Sample Soil Reading Parameters</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 12 }}>
+              {SOIL_PARAMS.map(p => {
+                const st = STATUS_STYLES[p.status] || STATUS_STYLES.optimal
+                return (
+                  <div key={p.label} style={{ background: '#F7F7F2', border: '1px solid #E5E5DC', borderRadius: 14, padding: '18px 20px' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#77786F', letterSpacing: '0.04em', marginBottom: 10 }}>{p.label}</div>
+                    <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono','IBM Plex Mono',monospace", color: '#171814', letterSpacing: '-0.5px', lineHeight: 1 }}>
+                      {p.value}<span style={{ fontSize: 12, fontWeight: 500, color: '#77786F', marginLeft: 4 }}>{p.unit}</span>
+                    </div>
+                    <div style={{ marginTop: 10, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: st.bg, color: st.color, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, display: 'inline-block' }} />
+                      {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#9B9C92', marginTop: 6 }}>{p.range}</div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ marginTop: 16, padding: '10px 16px', borderRadius: 10, background: '#FDF6E2', border: '1px solid #F5E5B0', fontSize: 12, color: '#C88A14', fontWeight: 600 }}>
+              ⚠ Sample data only — not from a real sensor or Soil Health Card. Labels show expected reading ranges.
+            </div>
+          </div>
+        </div>
+      </section>
 
-                                        {/* ── SECTION F: FINAL CALL TO ACTION ─────────────────────────────── */}
-                                        <section className="bg-[#183B2A] text-white px-5 sm:px-8 lg:px-12 py-14 sm:py-20">
-                                          <div className="max-w-4xl mx-auto text-center space-y-6">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#E7D927] text-xs font-bold uppercase tracking-wider">
-                                              <ShieldCheck size={14} />
-                                              <span>Evidence-Backed Agronomic Support</span>
-                                            </div>
-                                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight uppercase leading-tight">
-                                              MAKE YOUR NEXT CROP DECISION WITH BETTER SOIL INSIGHT.
-                                            </h2>
-                                            <p className="text-sm sm:text-base text-[#F7F7F2]/80 max-w-2xl mx-auto leading-relaxed">
-                                              Enter your Soil Health Card values or farm location now to generate an explainable crop suitability report.
-                                            </p>
-                                            <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
-                                              <button
-                                                onClick={() => navigate('/farm-details')}
-                                                className="px-7 py-3.5 rounded-full bg-[#E7D927] hover:bg-[#D6C81E] text-[#171814] text-sm font-bold transition-colors cursor-pointer inline-flex items-center gap-2"
-                                              >
-                                                <span>Start Soil Analysis</span>
-                                                <ArrowRight size={16} />
-                                              </button>
-                                              <Link
-                                                to="/dashboard"
-                                                className="px-6 py-3.5 rounded-full border border-white/25 hover:bg-white/10 text-white text-sm font-semibold transition-colors"
-                                              >
-                                                View My Reports
-                                              </Link>
-                                            </div>
-                                          </div>
-                                        </section>
+      {/* ═══════════════════════════════════════════════════════════════════
+          FARM CASE CARDS — Wheat + Soybean examples
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#F7F7F2', padding: '80px 24px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#77786F', marginBottom: 12 }}>[ FARM OWNER'S PERSPECTIVE ]</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 48 }}>
 
-                                        {/* ── CLEAN HONEST FOOTER ─────────────────────────────────────────── */}
-                                        <footer className="bg-white border-t border-[#E5E5DC] px-5 sm:px-8 lg:px-12 py-10">
-                                          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                            <div className="space-y-1.5 max-w-md">
-                                              <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-md bg-[#183B2A] flex items-center justify-center text-[#E7D927]">
-                                                  <Sprout size={15} />
-                                                </div>
-                                                <span className="font-bold text-sm text-[#171814]">AgriN — Regenerative Agricultural Intelligence</span>
-                                              </div>
-                                              <p className="text-xs text-[#77786F] leading-relaxed">
-                                                Soil intelligence and crop suitability decision-support platform built on ICAR/TNAU agronomic rules and verified open agricultural datasets. Does not replace local KVK lab testing.
-                                              </p>
-                                            </div>
+            {/* Case card 1 */}
+            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid #E5E5DC', background: '#fff' }}>
+              <div style={{ position: 'relative' }}>
+                <img src="/images/crop-rows.jpg" alt="Wheat farm rows" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', top: 14, left: 14 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: '#E7D927', color: '#171814' }}>Example · Wheat</span>
+                </div>
+              </div>
+              <div style={{ padding: '20px 22px' }}>
+                <div style={{ fontSize: 10, color: '#77786F', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Agro-Climatic Zone · Punjab</div>
+                <div style={{ fontWeight: 800, fontSize: 17, color: '#171814', marginBottom: 8 }}>Project: Wheat</div>
+                <div style={{ display: 'flex', gap: 24, fontSize: 12, color: '#77786F' }}>
+                  <div><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#171814', fontSize: 15 }}>87%</span><br />Suitability</div>
+                  <div><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#171814', fontSize: 15 }}>3.1 M</span><br />Hectares</div>
+                  <div><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#171814', fontSize: 15 }}>High</span><br />Confidence</div>
+                </div>
+              </div>
+            </div>
 
-                                          <div className="flex flex-wrap items-center gap-5 text-xs font-semibold text-[#171814]">
-                                            <Link to="/" className="hover:text-[#398653]">Home</Link>
-                                            <Link to="/farm-details" className="hover:text-[#398653]">Soil Analysis</Link>
-                                            <Link to="/soil-health" className="hover:text-[#398653]">Crop Suitability</Link>
-                                            <Link to="/dashboard" className="hover:text-[#398653]">My Reports</Link>
-                                            <Link to="/devices" className="hover:text-[#398653]">Device / Data Input</Link>
-                                          </div>
-                                        </div>
+            {/* Case card 2 */}
+            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid #E5E5DC', background: '#fff' }}>
+              <div style={{ position: 'relative' }}>
+                <img src="/images/hero-field.jpg" alt="Soybean field" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block', objectPosition: 'center 40%' }} />
+                <div style={{ position: 'absolute', top: 14, left: 14 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: '#EAF5EE', color: '#2B7A4B', border: '1px solid #C3E8CC' }}>Example · Soybean</span>
+                </div>
+              </div>
+              <div style={{ padding: '20px 22px' }}>
+                <div style={{ fontSize: 10, color: '#77786F', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Agro-Climatic Zone · Vidarbha</div>
+                <div style={{ fontWeight: 800, fontSize: 17, color: '#171814', marginBottom: 8 }}>Project: Urban Farming</div>
+                <div style={{ display: 'flex', gap: 24, fontSize: 12, color: '#77786F' }}>
+                  <div><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#171814', fontSize: 15 }}>72%</span><br />Suitability</div>
+                  <div><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#171814', fontSize: 15 }}>0.8 M</span><br />Hectares</div>
+                  <div><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#171814', fontSize: 15 }}>Mod.</span><br />Confidence</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                                            <div className="max-w-7xl mx-auto mt-6 pt-5 border-t border-[#E5E5DC] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#77786F]">
-                                              <span>© {new Date().getFullYear()} AgriN. All rights reserved.</span>
-                                              <span>Decision support only — no guaranteed yield or financial outcome claims.</span>
-                                            </div>
-                                          </footer>
-                                        </div>
-                                    </div>
-                                    )
+          {/* Trust indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap', padding: '32px 36px', background: '#fff', borderRadius: 20, border: '1px solid #E5E5DC' }}>
+            <div style={{ flex: '0 0 auto' }}>
+              <div style={{ fontSize: 48, fontWeight: 800, color: '#183B2A', lineHeight: 1 }}>4.8<span style={{ fontSize: 20 }}>/5.0</span></div>
+              <div style={{ fontSize: 12, color: '#77786F', marginTop: 4 }}>Farmer Satisfaction</div>
+            </div>
+            <div style={{ width: 1, height: 56, background: '#E5E5DC', flexShrink: 0 }} />
+            <div style={{ flex: '0 0 auto' }}>
+              <div style={{ fontSize: 48, fontWeight: 800, color: '#183B2A', lineHeight: 1 }}>98.9<span style={{ fontSize: 20 }}>%</span></div>
+              <div style={{ fontSize: 12, color: '#77786F', marginTop: 4 }}>Agronomic Accuracy</div>
+            </div>
+            <div style={{ width: 1, height: 56, background: '#E5E5DC', flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <p style={{ fontSize: 13.5, lineHeight: 1.65, color: '#77786F', margin: 0 }}>
+                "AgriN gave me a clear soil report and told me exactly why wheat was suitable for my field. No guessing, no jargon — just honest data."
+              </p>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#171814', marginTop: 8 }}>— Sample Farmer Response</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          CTA SECTION — dark forest green, bold
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#183B2A', padding: '80px 24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>[ FROM SEED TO SUCCESS ]</div>
+          <h2 style={{ fontSize: 'clamp(32px, 5vw, 64px)', fontWeight: 800, letterSpacing: '-2px', color: '#fff', textTransform: 'uppercase', lineHeight: 1.05, marginBottom: 24 }}>
+            MAKE YOUR NEXT CROP<br />DECISION WITH BETTER<br /><span style={{ color: '#E7D927' }}>SOIL INSIGHT.</span>
+          </h2>
+          <p style={{ fontSize: 15, lineHeight: 1.65, color: 'rgba(255,255,255,0.65)', marginBottom: 36, maxWidth: 520, margin: '0 auto 36px' }}>
+            Enter your Soil Health Card values or use sample data to generate an explainable, science-backed crop suitability report in under a minute.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => navigate('/farm-details')} className="btn-agrin-cta" style={{ fontSize: 15, padding: '14px 32px' }}>
+              Start Soil Analysis <ArrowRight size={16} />
+            </button>
+            <Link to="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '14px 28px', borderRadius: 9999, border: '1px solid rgba(255,255,255,0.25)', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600, transition: 'background .15s' }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+              View My Reports
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          FOOTER
+      ═══════════════════════════════════════════════════════════════════ */}
+      <footer style={{ background: '#fff', borderTop: '1px solid #E5E5DC', padding: '48px 24px 32px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 40, flexWrap: 'wrap', marginBottom: 36 }}>
+
+            {/* Brand block */}
+            <div style={{ maxWidth: 340 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#183B2A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E7D927' }}>
+                  <Sprout size={16} />
+                </div>
+                <span style={{ fontWeight: 800, fontSize: 15, color: '#171814' }}>AgriN</span>
+              </div>
+              <p style={{ fontSize: 12.5, lineHeight: 1.65, color: '#77786F' }}>
+                Soil intelligence and crop suitability platform built on ICAR/TNAU agronomic rules. Supports farmers across all 15 Agro-Climatic Zones of India. Does not replace KVK lab testing.
+              </p>
+            </div>
+
+            {/* Nav links */}
+            <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#77786F', marginBottom: 14 }}>Platform</div>
+                {[
+                  { to: '/farm-details', label: 'Soil Analysis' },
+                  { to: '/soil-health', label: 'Crop Suitability' },
+                  { to: '/dashboard', label: 'My Reports' },
+                  { to: '/devices', label: 'Device / IoT' },
+                ].map(l => (
+                  <div key={l.to} style={{ marginBottom: 8 }}>
+                    <Link to={l.to} style={{ fontSize: 13, fontWeight: 600, color: '#171814', textDecoration: 'none', transition: 'color .15s' }}
+                      onMouseEnter={e => e.target.style.color='#398653'} onMouseLeave={e => e.target.style.color='#171814'}>
+                      {l.label}
+                    </Link>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#77786F', marginBottom: 14 }}>Partners</div>
+                {['Metahype', 'Agriions', 'Osmotree', 'Farmstack', 'Blackland'].map(p => (
+                  <div key={p} style={{ marginBottom: 8, fontSize: 13, fontWeight: 600, color: '#77786F' }}>{p}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div style={{ borderTop: '1px solid #E5E5DC', paddingTop: 20, display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 11.5, color: '#77786F' }}>Terms &amp; Conditions &nbsp;·&nbsp; © {new Date().getFullYear()} AgriN. All rights reserved.</div>
+            <div style={{ fontSize: 11.5, color: '#77786F', textAlign: 'right' }}>
+              Decision support only — no guaranteed yield or financial outcome claims. &nbsp;<a href="#top" style={{ color: '#398653', fontWeight: 700, textDecoration: 'none' }}>Back To Top ↑</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  )
 }

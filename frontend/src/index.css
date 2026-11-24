@@ -1054,3 +1054,111 @@ input[type='range']::-webkit-slider-thumb:hover {
     font-weight: 700;
   }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AGRIN EDITORIAL UI — AGRARNOYE-inspired button & nav classes
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Primary CTA — yellow pill */
+.btn-agrin-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 26px;
+  border-radius: 9999px;
+  background: #E7D927;
+  color: #171814;
+  font-weight: 800;
+  font-size: 13.5px;
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+  white-space: nowrap;
+  letter-spacing: -0.1px;
+  line-height: 1;
+}
+.btn-agrin-cta:hover {
+  background: #D6C81E;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(231, 217, 39, 0.35);
+}
+.btn-agrin-cta:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Outline / secondary */
+.btn-agrin-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 26px;
+  border-radius: 9999px;
+  background: transparent;
+  color: #171814;
+  font-weight: 700;
+  font-size: 13.5px;
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+  border: 1.5px solid #171814;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.15s ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-agrin-outline:hover {
+  background: #171814;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Dark variant */
+.btn-agrin-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 26px;
+  border-radius: 9999px;
+  background: #183B2A;
+  color: #fff;
+  font-weight: 800;
+  font-size: 13.5px;
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.18s ease, transform 0.15s ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-agrin-dark:hover {
+  background: #122D1F;
+  transform: translateY(-1px);
+}
+
+/* ── Responsive nav helpers ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .agrin-desktop-nav {
+    display: none !important;
+  }
+  .agrin-hamburger {
+    display: flex !important;
+  }
+}
+@media (min-width: 769px) {
+  .agrin-hamburger {
+    display: none !important;
+  }
+}
+
+/* Print safety: keep agrin CTA visible in report contexts */
+@media print {
+  .btn-agrin-cta,
+  .btn-agrin-outline,
+  .btn-agrin-dark {
+    display: none !important;
+  }
+}
