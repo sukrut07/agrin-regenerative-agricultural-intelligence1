@@ -16,7 +16,7 @@ export default function IWantToGrow() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    getCrops().then(data => setCrops(data.crops || [])).catch(() => {})
+    getCrops().then(data => setCrops(data.crops || [])).catch(() => { })
   }, [])
 
   const filtered = crops.filter(c =>
@@ -197,10 +197,10 @@ function FeasibilityResult({ result, onWhatIf }) {
   const color = result.feasibility_color
 
   const colorMap = {
-    green:  { bg: 'var(--ff-success-bg)', border: 'rgba(19,138,75,0.25)',   text: 'var(--ff-primary)', top: 'var(--ff-primary)' },
-    yellow: { bg: 'var(--ff-warning-bg)', border: 'rgba(216,155,24,0.3)',   text: 'var(--ff-warning)', top: 'var(--ff-warning)' },
-    orange: { bg: '#FFF4EE',              border: 'rgba(224,123,58,0.3)',    text: '#E07B3A',           top: '#E07B3A' },
-    red:    { bg: 'var(--ff-error-bg)',   border: 'rgba(217,75,75,0.25)',   text: 'var(--ff-error)',   top: 'var(--ff-error)' },
+    green: { bg: 'var(--ff-success-bg)', border: 'rgba(19,138,75,0.25)', text: 'var(--ff-primary)', top: 'var(--ff-primary)' },
+    yellow: { bg: 'var(--ff-warning-bg)', border: 'rgba(216,155,24,0.3)', text: 'var(--ff-warning)', top: 'var(--ff-warning)' },
+    orange: { bg: '#FFF4EE', border: 'rgba(224,123,58,0.3)', text: '#E07B3A', top: '#E07B3A' },
+    red: { bg: 'var(--ff-error-bg)', border: 'rgba(217,75,75,0.25)', text: 'var(--ff-error)', top: 'var(--ff-error)' },
   }
 
   const c = colorMap[color] || colorMap.yellow

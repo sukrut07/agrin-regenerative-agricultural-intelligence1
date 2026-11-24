@@ -100,9 +100,9 @@ export default function CropDetails() {
   }
 
   const supporting = crop.supporting_factors?.filter(f => f.status === 'suitable') || []
-  const limiting   = crop.limiting_factors || []
-  const moderate   = crop.moderate_factors || []
-  const missing    = crop.missing_factors || []
+  const limiting = crop.limiting_factors || []
+  const moderate = crop.moderate_factors || []
+  const missing = crop.missing_factors || []
 
   const score = crop.final_score || 50
   const scoreColor = score >= 90 ? '#138A4B' : score >= 70 ? '#20A65A' : score >= 50 ? '#D89B18' : score >= 30 ? '#E07B3A' : '#D94B4B'
@@ -341,7 +341,7 @@ export default function CropDetails() {
 function renderParameterRow(label, userValue, factorObj) {
   const status = factorObj?.status || 'suitable'
   const note = factorObj?.note || 'Within reference range for crop growth'
-  
+
   const statusColor = status === 'suitable' ? '#138A4B' : status === 'limiting' ? '#D94B4B' : status === 'moderate' ? '#D89B18' : '#9CA3AF'
   const statusBadge = status === 'suitable' ? '✓ Adequate' : status === 'limiting' ? '✗ Deficient / Limiting' : status === 'moderate' ? '⚠ Moderate' : '? Unknown'
 

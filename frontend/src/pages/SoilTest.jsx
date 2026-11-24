@@ -17,9 +17,9 @@ const SOIL_PARAMS = [
     accentBg: 'var(--ff-soft)',
     icon: '🌱',
     params: [
-      { key: 'N',  label: 'Nitrogen (N)',    unit: 'kg/ha', min: 0, max: 800,  placeholder: 'e.g. 280', tip: 'Available nitrogen. Alkaline KMnO₄ method. Low <240, Medium 240–480, High >480 kg/ha (ICAR)' },
-      { key: 'P',  label: 'Phosphorus (P)',  unit: 'kg/ha', min: 0, max: 300,  placeholder: 'e.g. 15',  tip: 'Available phosphorus. Olsen method. Low <11, Medium 11–22, High >22 kg/ha (ICAR)' },
-      { key: 'K',  label: 'Potassium (K)',   unit: 'kg/ha', min: 0, max: 1200, placeholder: 'e.g. 180', tip: 'Available potassium. NH₄OAc method. Low <110, Medium 110–280, High >280 kg/ha (ICAR)' },
+      { key: 'N', label: 'Nitrogen (N)', unit: 'kg/ha', min: 0, max: 800, placeholder: 'e.g. 280', tip: 'Available nitrogen. Alkaline KMnO₄ method. Low <240, Medium 240–480, High >480 kg/ha (ICAR)' },
+      { key: 'P', label: 'Phosphorus (P)', unit: 'kg/ha', min: 0, max: 300, placeholder: 'e.g. 15', tip: 'Available phosphorus. Olsen method. Low <11, Medium 11–22, High >22 kg/ha (ICAR)' },
+      { key: 'K', label: 'Potassium (K)', unit: 'kg/ha', min: 0, max: 1200, placeholder: 'e.g. 180', tip: 'Available potassium. NH₄OAc method. Low <110, Medium 110–280, High >280 kg/ha (ICAR)' },
     ],
   },
   {
@@ -37,11 +37,11 @@ const SOIL_PARAMS = [
     accentBg: '#F5F0FF',
     icon: '🔬',
     params: [
-      { key: 'Zn', label: 'Zinc (Zn)',       unit: 'ppm', min: 0, max: 20,  placeholder: 'e.g. 0.8', tip: 'DTPA-extractable zinc. Critical level: 0.6 ppm (ICAR)' },
-      { key: 'Fe', label: 'Iron (Fe)',        unit: 'ppm', min: 0, max: 100, placeholder: 'e.g. 6.5', tip: 'DTPA-extractable iron. Critical level: 4.5 ppm (ICAR SHC)' },
-      { key: 'Cu', label: 'Copper (Cu)',      unit: 'ppm', min: 0, max: 20,  placeholder: 'e.g. 0.5', tip: 'DTPA-extractable copper. Critical level: 0.2 ppm (ICAR SHC)' },
-      { key: 'Mn', label: 'Manganese (Mn)',   unit: 'ppm', min: 0, max: 50,  placeholder: 'e.g. 3.2', tip: 'DTPA-extractable manganese. Critical level: 2.0 ppm (ICAR SHC)' },
-      { key: 'B',  label: 'Boron (B)',        unit: 'ppm', min: 0, max: 10,  placeholder: 'e.g. 0.7', tip: 'Hot water extractable boron. Critical level: 0.5 ppm (ICAR SHC)' },
+      { key: 'Zn', label: 'Zinc (Zn)', unit: 'ppm', min: 0, max: 20, placeholder: 'e.g. 0.8', tip: 'DTPA-extractable zinc. Critical level: 0.6 ppm (ICAR)' },
+      { key: 'Fe', label: 'Iron (Fe)', unit: 'ppm', min: 0, max: 100, placeholder: 'e.g. 6.5', tip: 'DTPA-extractable iron. Critical level: 4.5 ppm (ICAR SHC)' },
+      { key: 'Cu', label: 'Copper (Cu)', unit: 'ppm', min: 0, max: 20, placeholder: 'e.g. 0.5', tip: 'DTPA-extractable copper. Critical level: 0.2 ppm (ICAR SHC)' },
+      { key: 'Mn', label: 'Manganese (Mn)', unit: 'ppm', min: 0, max: 50, placeholder: 'e.g. 3.2', tip: 'DTPA-extractable manganese. Critical level: 2.0 ppm (ICAR SHC)' },
+      { key: 'B', label: 'Boron (B)', unit: 'ppm', min: 0, max: 10, placeholder: 'e.g. 0.7', tip: 'Hot water extractable boron. Critical level: 0.5 ppm (ICAR SHC)' },
     ],
   },
   {
@@ -50,9 +50,9 @@ const SOIL_PARAMS = [
     accentBg: '#FFF7E1',
     icon: '⚗️',
     params: [
-      { key: 'ph', label: 'Soil pH',                      unit: '',     min: 3.0, max: 11.0, placeholder: 'e.g. 7.2', step: 0.1,  tip: 'pH in 1:2 soil:water. Optimal 6.5–7.5. <6 acidic, >8.5 alkaline (ICAR)' },
-      { key: 'EC', label: 'Electrical Conductivity (EC)', unit: 'dS/m', min: 0,   max: 20,   placeholder: 'e.g. 0.4', step: 0.01, tip: 'Soil salinity. Normal <1.0 dS/m. >4 dS/m injurious to most crops (ICAR)' },
-      { key: 'OC', label: 'Organic Carbon (OC)',           unit: '%',    min: 0,   max: 5,    placeholder: 'e.g. 0.45', step: 0.01, tip: 'Walkley-Black method. Low <0.5%, Medium 0.5–0.75%, High >0.75% (ICAR)' },
+      { key: 'ph', label: 'Soil pH', unit: '', min: 3.0, max: 11.0, placeholder: 'e.g. 7.2', step: 0.1, tip: 'pH in 1:2 soil:water. Optimal 6.5–7.5. <6 acidic, >8.5 alkaline (ICAR)' },
+      { key: 'EC', label: 'Electrical Conductivity (EC)', unit: 'dS/m', min: 0, max: 20, placeholder: 'e.g. 0.4', step: 0.01, tip: 'Soil salinity. Normal <1.0 dS/m. >4 dS/m injurious to most crops (ICAR)' },
+      { key: 'OC', label: 'Organic Carbon (OC)', unit: '%', min: 0, max: 5, placeholder: 'e.g. 0.45', step: 0.01, tip: 'Walkley-Black method. Low <0.5%, Medium 0.5–0.75%, High >0.75% (ICAR)' },
     ],
   },
 ]
@@ -286,14 +286,14 @@ export default function SoilTest() {
       {/* Navigation */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 28 }}>
         <button className="btn-secondary" onClick={() => navigate('/farm-details')}>← Back</button>
-        <button
-          className="btn-primary"
-          disabled={hasInvalidValues}
-          onClick={() => navigate('/environment')}
-          title={hasInvalidValues ? 'Please fix out-of-range soil values before continuing' : ''}
-        >
-          Next: Environment →
-        </button>
+          <button
+            className="btn-primary"
+            disabled={hasInvalidValues}
+            onClick={() => navigate('/environment')}
+            title={hasInvalidValues ? 'Please fix out-of-range soil values before continuing' : ''}
+          >
+            Next: Environment →
+          </button>
       </div>
 
       <style>{`

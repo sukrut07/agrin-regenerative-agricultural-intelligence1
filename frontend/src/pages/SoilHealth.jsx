@@ -306,17 +306,14 @@ export default function SoilHealth() {
   const handleVoiceDiagnosis = () => {
     let text = ''
     if (currentLanguage === 'mr') {
-      text = `माती तपासणीनुसार, मातीचा सामू (pH) ${soilValues.ph} आणि सेंद्रिय कर्ब ${soilValues.oc} टक्के आहे. ${
-        soilValues.oc < 0.6 ? 'जमिनीत सेंद्रिय कर्ब कमी आहे, शेणखत किंवा ढैंचा खत टाका.' : 'मातीचे आरोग्य चांगले आहे.'
-      }`
+      text = `माती तपासणीनुसार, मातीचा सामू (pH) ${soilValues.ph} आणि सेंद्रिय कर्ब ${soilValues.oc} टक्के आहे. ${soilValues.oc < 0.6 ? 'जमिनीत सेंद्रिय कर्ब कमी आहे, शेणखत किंवा ढैंचा खत टाका.' : 'मातीचे आरोग्य चांगले आहे.'
+        }`
     } else if (currentLanguage === 'hi') {
-      text = `मृदा परीक्षण के अनुसार, मिट्टी का पीएच ${soilValues.ph} और जैविक कार्बन ${soilValues.oc} प्रतिशत है। ${
-        soilValues.oc < 0.6 ? 'मिट्टी में जैविक कार्बन कम है, कम्पोस्ट या हरी खाद का उपयोग करें।' : 'मृदा स्वास्थ्य संतोषजनक है।'
-      }`
+      text = `मृदा परीक्षण के अनुसार, मिट्टी का पीएच ${soilValues.ph} और जैविक कार्बन ${soilValues.oc} प्रतिशत है। ${soilValues.oc < 0.6 ? 'मिट्टी में जैविक कार्बन कम है, कम्पोस्ट या हरी खाद का उपयोग करें।' : 'मृदा स्वास्थ्य संतोषजनक है।'
+        }`
     } else {
-      text = `According to your soil biometric profile, pH is ${soilValues.ph} and Organic Carbon is ${soilValues.oc} percent. ${
-        soilValues.oc < 0.6 ? 'Organic carbon is low. We recommend applying compost or green manuring.' : 'Your overall soil condition is balanced.'
-      }`
+      text = `According to your soil biometric profile, pH is ${soilValues.ph} and Organic Carbon is ${soilValues.oc} percent. ${soilValues.oc < 0.6 ? 'Organic carbon is low. We recommend applying compost or green manuring.' : 'Your overall soil condition is balanced.'
+        }`
     }
     const langCode = currentLanguage === 'mr' ? 'mr-IN' : currentLanguage === 'hi' ? 'hi-IN' : 'en-US'
     speakText(text, langCode)
@@ -359,11 +356,10 @@ export default function SoilHealth() {
         <div className="max-w-7xl mx-auto mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('SHC')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'SHC'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'SHC'
                 ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
+              }`}
           >
             <FlaskConical size={14} />
             <span>SHC 12-Nutrient Diagnostics</span>
@@ -371,11 +367,10 @@ export default function SoilHealth() {
 
           <button
             onClick={() => setActiveTab('DEPTH')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'DEPTH'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'DEPTH'
                 ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
+              }`}
           >
             <Layers size={14} />
             <span>{t('soil_depth_title', 'Depth & Compaction Intelligence')}</span>
@@ -383,11 +378,10 @@ export default function SoilHealth() {
 
           <button
             onClick={() => setActiveTab('SAMPLING')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'SAMPLING'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'SAMPLING'
                 ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
+              }`}
           >
             <Compass size={14} />
             <span>{t('sampling_planner_title', 'Sampling Route Planner')}</span>
@@ -395,11 +389,10 @@ export default function SoilHealth() {
 
           <button
             onClick={() => setActiveTab('TREATMENT')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'TREATMENT'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'TREATMENT'
                 ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
+              }`}
           >
             <TrendingUp size={14} />
             <span>{t('treatment_tracker_title', 'Treatment Outcome Tracker')}</span>
@@ -468,11 +461,10 @@ export default function SoilHealth() {
                   <button
                     key={key}
                     onClick={() => handlePresetChange(key)}
-                    className={`p-3 rounded-xl text-left border transition-all ${
-                      selectedPreset === key
+                    className={`p-3 rounded-xl text-left border transition-all ${selectedPreset === key
                         ? 'border-emerald-500 bg-emerald-50/70 shadow-sm ring-1 ring-emerald-400'
                         : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     <div className="font-bold text-xs text-slate-900 mb-0.5">{item.name}</div>
                     <div className="text-[10px] text-slate-500 line-clamp-2 leading-tight">{item.description}</div>
@@ -699,9 +691,8 @@ export default function SoilHealth() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="text-xs font-black text-slate-800">{rec.title}</span>
-                          <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded ${
-                            rec.priority === 'HIGH' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
-                          }`}>
+                          <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded ${rec.priority === 'HIGH' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
                             {rec.priority} Priority
                           </span>
                         </div>
@@ -780,11 +771,10 @@ export default function SoilHealth() {
                     {depthData.layers && depthData.layers.map((layer, idx) => (
                       <div
                         key={idx}
-                        className={`p-5 rounded-2xl border transition-all ${
-                          layer.compaction_psi > 240
+                        className={`p-5 rounded-2xl border transition-all ${layer.compaction_psi > 240
                             ? 'bg-rose-50/50 border-rose-300 ring-1 ring-rose-200'
                             : 'bg-slate-50/80 border-slate-200'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <span className="font-black text-xs uppercase px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-800">
@@ -892,11 +882,10 @@ export default function SoilHealth() {
                         <div
                           key={wp.point_id}
                           onClick={() => handleToggleCollected(wp.point_id)}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between select-none ${
-                            wp.is_collected
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between select-none ${wp.is_collected
                               ? 'bg-emerald-50 border-emerald-300 text-emerald-950 shadow-sm'
                               : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className="text-emerald-600">
@@ -909,9 +898,8 @@ export default function SoilHealth() {
                               </div>
                             </div>
                           </div>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                            wp.is_collected ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'
-                          }`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${wp.is_collected ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'
+                            }`}>
                             {wp.is_collected ? 'Collected' : 'Pending'}
                           </span>
                         </div>

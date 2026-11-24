@@ -25,78 +25,78 @@ export default function Analysis() {
 
     const interval = setInterval(() => {
       setStep(s => s < ANALYSIS_STEPS.length - 1 ? s + 1 : s)
-    }, 550)
+  }, 550)
 
-    const payload = getApiPayload()
-    runAnalysis(payload)
-      .then(result => {
-        clearInterval(interval)
-        setAnalysisResult(result)
-        setSessionId(result.session_id)
-        navigate('/recommendations')
-      })
-      .catch(err => {
-        clearInterval(interval)
-        setError(err.message)
-      })
+  const payload = getApiPayload()
+  runAnalysis(payload)
+    .then(result => {
+      clearInterval(interval)
+      setAnalysisResult(result)
+      setSessionId(result.session_id)
+      navigate('/recommendations')
+    })
+    .catch(err => {
+      clearInterval(interval)
+      setError(err.message)
+    })
 
-    return () => clearInterval(interval)
-  }, [])
+  return () => clearInterval(interval)
+}, [])
 
-  if (error) return (
-    <div className="page-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div className="ff-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: 36, textAlign: 'center' }}>
-        <div style={{
-          width: 64, height: 64, borderRadius: 16,
-          background: 'var(--ff-error-bg)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 20px', fontSize: 28,
-        }}>⚠️</div>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 10 }}>
-          We couldn't complete the analysis
-        </h2>
-        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem', marginBottom: 24, lineHeight: 1.6 }}>
-          {error}
-        </p>
-        <p style={{ color: 'var(--ff-text-muted)', fontSize: '0.8rem', marginBottom: 20 }}>
-          Please check your inputs and try again.
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <button className="btn-secondary" onClick={() => navigate('/soil-test')}>← Edit Inputs</button>
-          <button className="btn-primary" onClick={() => window.location.reload()}>Try Again</button>
-        </div>
+if (error) return (
+  <div className="page-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div className="ff-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: 36, textAlign: 'center' }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 16,
+        background: 'var(--ff-error-bg)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto 20px', fontSize: 28,
+      }}>⚠️</div>
+      <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 10 }}>
+        We couldn't complete the analysis
+      </h2>
+      <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem', marginBottom: 24, lineHeight: 1.6 }}>
+        {error}
+      </p>
+      <p style={{ color: 'var(--ff-text-muted)', fontSize: '0.8rem', marginBottom: 20 }}>
+        Please check your inputs and try again.
+      </p>
+      <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+        <button className="btn-secondary" onClick={() => navigate('/soil-test')}>← Edit Inputs</button>
+        <button className="btn-primary" onClick={() => window.location.reload()}>Try Again</button>
       </div>
     </div>
-  )
+  </div>
+)
 
-  const progress = ((step + 1) / ANALYSIS_STEPS.length) * 100
+const progress = ((step + 1) / ANALYSIS_STEPS.length) * 100
 
-  return (
-    <div className="hero-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div className="ff-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '44px 36px', textAlign: 'center' }}>
+return (
+  <div className="hero-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div className="ff-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '44px 36px', textAlign: 'center' }}>
 
-        {/* Animated leaf icon */}
-        <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 28px' }}>
-          {/* Outer pulse ring */}
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            background: 'rgba(19, 138, 75, 0.1)',
-            animation: 'pulse 2s ease-in-out infinite',
-          }} />
-          {/* Inner circle */}
-          <div style={{
-            position: 'absolute', inset: 8, borderRadius: '50%',
-            background: 'var(--ff-soft)',
-            border: '2px solid rgba(19,138,75,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Leaf size={38} style={{ color: 'var(--ff-primary)', animation: 'leafPulse 1.8s ease-in-out infinite' }} />
-          </div>
+      {/* Animated leaf icon */}
+      <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 28px' }}>
+        {/* Outer pulse ring */}
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: 'rgba(19, 138, 75, 0.1)',
+          animation: 'pulse 2s ease-in-out infinite',
+        }} />
+        {/* Inner circle */}
+        <div style={{
+          position: 'absolute', inset: 8, borderRadius: '50%',
+          background: 'var(--ff-soft)',
+          border: '2px solid rgba(19,138,75,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Leaf size={38} style={{ color: 'var(--ff-primary)', animation: 'leafPulse 1.8s ease-in-out infinite' }} />
         </div>
+      </div>
 
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 8 }}>
-          Analysing Your Soil
-        </h2>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 8 }}>
+        Analysing Your Soil
+      </h2>
         <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem', marginBottom: 12 }}>
           Evaluating 23 crops using trained Random Forest ML + ICAR agronomic rules
         </p>
@@ -135,7 +135,7 @@ export default function Analysis() {
         <p style={{ color: 'var(--ff-text-muted)', fontSize: '0.75rem', marginTop: 20 }}>
           No external AI API called — analysis runs entirely on your data
         </p>
-      </div>
     </div>
-  )
+  </div>
+)
 }

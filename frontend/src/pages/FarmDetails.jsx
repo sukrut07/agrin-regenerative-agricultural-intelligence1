@@ -26,7 +26,7 @@ export default function FarmDetails() {
       .then(data => {
         setRefData(data)
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false))
   }, [])
 
@@ -130,9 +130,9 @@ export default function FarmDetails() {
 
   const validate = () => {
     const errs = {}
-    if (!farmData.state)    errs.state    = 'Please select your state'
+    if (!farmData.state) errs.state = 'Please select your state'
     if (!farmData.district && !farmData.latitude) errs.district = 'Please select your district or use GPS'
-    if (!farmData.season)   errs.season   = 'Please select the farming season'
+    if (!farmData.season) errs.season = 'Please select the farming season'
     return errs
   }
 
@@ -355,7 +355,7 @@ export default function FarmDetails() {
           <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
             {[
               { val: 'yes', label: '✓ Yes, irrigated' },
-              { val: 'no',  label: '✗ Rainfed farm only' },
+              { val: 'no', label: '✗ Rainfed farm only' },
             ].map(({ val, label }) => (
               <button
                 key={val}
