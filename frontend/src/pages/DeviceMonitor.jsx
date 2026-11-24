@@ -155,9 +155,9 @@ export default function DeviceMonitor() {
   const [selectedDevice, setSelectedDevice] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('agrin_registered_devices') || '[]')
-      return saved[0]?.device_id || 'agrisense-001'
+      return saved[0]?.device_id || ''
     } catch {
-      return 'agrisense-001'
+      return ''
     }
   })
   const [device, setDevice] = useState(null)
@@ -167,10 +167,12 @@ export default function DeviceMonitor() {
   const [liveDeviceConnected, setLiveDeviceConnected] = useState(false)
   const [telemetryStale, setTelemetryStale] = useState(false)
   const [lastTelemetryAt, setLastTelemetryAt] = useState(null)
+  const [deviceLookupError, setDeviceLookupError] = useState(null)
   const [lastRefresh, setLastRefresh] = useState(new Date())
 
   const fetchData = useCallback(async () => {
     setLoading(true)
+    setDeviceLookupError(null)
     if (hardwareMode === 'wokwi') {
       // Wokwi Virtual Simulator mode (strictly labeled synthetic)
       setDevice(WOKWI_LAB_DEVICE)
@@ -184,51 +186,67 @@ export default function DeviceMonitor() {
       return
     }
 
-    // Physical Hardware mode: Query real backend device status, latest packet, and persisted history
-    try {
-      const [devRes, telRes, histRes] = await Promise.all([
-        getDeviceStatus(selectedDevice),
-        getLatestTelemetry(selectedDevice),
-        getTelemetryHistory(selectedDevice, 1, 24).catch(() => null),
-      ])
-      if (devRes) {
-        setDevice(devRes)
-        const latestMeas = telRes?.measurements || []
-        setMeasurements(latestMeas)
-        setLastTelemetryAt(telRes?.timestamp || devRes.last_seen_at || null)
-        const stale = !telRes?.timestamp || isTelemetryStale(telRes.timestamp, 15)
-        setTelemetryStale(stale)
-        setLiveDeviceConnected(latestMeas.length > 0)
-
-        // Build real persisted moisture trend (oldest -> newest)
-        const records = histRes?.records || []
-        const moisturePoints = records
-          .slice()
-          .reverse()
-          .map(rec => {
-            const m = (rec.measurements || []).find(item => item.sensor_type === 'SOIL_MOISTURE')
-            if (!m) return null
-            return {
-              time: new Date(rec.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              moisture: m.calibrated_value,
-            }
-          })
-          .filter(Boolean)
-        setTrendData(moisturePoints)
-      } else {
-        setDevice(null)
-        setMeasurements([])
-        setTrendData([])
-        setLiveDeviceConnected(false)
-        setTelemetryStale(false)
-      }
-    } catch (err) {
-      // Honest state: No physical device connected
+    const trimmedId = (selectedDevice || '').trim()
+    if (!trimmedId) {
+      // No physical device registered or selected yet — avoid spurious 404 console spam
       setDevice(null)
       setMeasurements([])
       setTrendData([])
       setLiveDeviceConnected(false)
       setTelemetryStale(false)
+      setLastTelemetryAt(null)
+      setLoading(false)
+      setLastRefresh(new Date())
+      return
+    }
+
+    // Physical Hardware mode: verify device exists first, then fetch telemetry
+    try {
+      const devRes = await getDeviceStatus(trimmedId)
+      if (!devRes) {
+        setDevice(null)
+        setMeasurements([])
+        setTrendData([])
+        setLiveDeviceConnected(false)
+        setTelemetryStale(false)
+        setLoading(false)
+        return
+      }
+      setDevice(devRes)
+      const [telRes, histRes] = await Promise.all([
+        getLatestTelemetry(trimmedId).catch(() => null),
+        getTelemetryHistory(trimmedId, 1, 24).catch(() => null),
+      ])
+      const latestMeas = telRes?.measurements || []
+      setMeasurements(latestMeas)
+      setLastTelemetryAt(telRes?.timestamp || devRes.last_seen_at || null)
+      const stale = !telRes?.timestamp || isTelemetryStale(telRes.timestamp, 15)
+      setTelemetryStale(stale)
+      setLiveDeviceConnected(latestMeas.length > 0)
+
+      // Build real persisted moisture trend (oldest -> newest)
+      const records = histRes?.records || []
+      const moisturePoints = records
+        .slice()
+        .reverse()
+        .map(rec => {
+          const m = (rec.measurements || []).find(item => item.sensor_type === 'SOIL_MOISTURE')
+          if (!m) return null
+          return {
+            time: new Date(rec.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            moisture: m.calibrated_value,
+          }
+        })
+        .filter(Boolean)
+      setTrendData(moisturePoints)
+    } catch (err) {
+      // Honest state: Device not registered or unreachable
+      setDevice(null)
+      setMeasurements([])
+      setTrendData([])
+      setLiveDeviceConnected(false)
+      setTelemetryStale(false)
+      setDeviceLookupError(`Device "${trimmedId}" is not registered on the backend. Register an ESP32 node first.`)
     } finally {
       setLoading(false)
       setLastRefresh(new Date())
@@ -366,7 +384,10 @@ export default function DeviceMonitor() {
                       {t('no_live_data', 'NO LIVE SENSOR DATA — Connect AgriSense ESP32 or launch Wokwi Simulator')}
                     </h2>
                     <p className="text-xs text-amber-800 leading-relaxed">
-                      No telemetry packet received from <code>{selectedDevice}</code>. To connect real hardware, register a device, flash your ESP32 with <code>firmware/AGRISENSE_FIRMWARE_SPEC.md</code>, and authenticate using header <code>X-Device-Token</code>.
+                      {deviceLookupError || (selectedDevice
+                        ? <>No telemetry packet received from <code>{selectedDevice}</code>.</>
+                        : 'No ESP32 device registered in this browser yet.')}{' '}
+                      To connect real hardware, register a device, flash your ESP32 with <code>firmware/AGRISENSE_FIRMWARE_SPEC.md</code>, and authenticate using header <code>X-Device-Token</code>.
                     </p>
                       <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
                         <button

@@ -821,9 +821,17 @@ export default function Recommendations() {
             </div>
             <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>WHY</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--ff-text)', marginTop: 4, lineHeight: 1.5 }}>
-                {explanation.why || recommendation_explanation || 'Soil attributes and seasonal precipitation align with physiological thresholds.'}
-              </div>
+              {Array.isArray(explanation.why) ? (
+                <ul style={{ paddingLeft: 16, margin: '4px 0 0 0', fontSize: '0.82rem', color: 'var(--ff-text)', lineHeight: 1.55 }}>
+                  {explanation.why.map((line, idx) => (
+                    <li key={idx}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ fontSize: '0.85rem', color: 'var(--ff-text)', marginTop: 4, lineHeight: 1.5 }}>
+                  {explanation.why || recommendation_explanation || 'Soil attributes and seasonal precipitation align with physiological thresholds.'}
+                </div>
+              )}
             </div>
           </div>
 
@@ -863,30 +871,30 @@ export default function Recommendations() {
               </h2>
             </div>
             <span style={{ fontSize: '0.72rem', background: '#D1FAE5', color: '#065F46', padding: '4px 10px', borderRadius: 20, fontWeight: 700 }}>
-              {soil_health.overall_status || 'Evaluated Condition'}
+              {soilOverallStatus}{soil_health.score != null ? ` (${Math.round(soil_health.score)}/100)` : ''}
             </span>
           </div>
 
           {/* Indicators Matrix */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
-            <SoilIndicatorCard label="pH Reaction" val={soil_health.ph?.value != null ? soil_health.ph.value : soilData.ph} status={soil_health.ph?.status || 'OPTIMAL'} />
-            <SoilIndicatorCard label="Organic Carbon" val={soil_health.organic_carbon?.value != null ? `${soil_health.organic_carbon.value}%` : (soilData.OC ? `${soilData.OC}%` : 'N/A')} status={soil_health.organic_carbon?.status || 'LOW'} />
-            <SoilIndicatorCard label="EC (Salinity)" val={soil_health.electrical_conductivity?.value != null ? `${soil_health.electrical_conductivity.value} dS/m` : (soilData.EC ? `${soilData.EC} dS/m` : 'NORMAL')} status={soil_health.electrical_conductivity?.status || 'NORMAL'} />
-            <SoilIndicatorCard label="Nitrogen (N)" val={soil_health.nitrogen?.value != null ? `${soil_health.nitrogen.value} kg/ha` : (soilData.N ? `${soilData.N} kg/ha` : 'MEDIUM')} status={soil_health.nitrogen?.status || 'MEDIUM'} />
-            <SoilIndicatorCard label="Phosphorus (P)" val={soil_health.phosphorus?.value != null ? `${soil_health.phosphorus.value} kg/ha` : (soilData.P ? `${soilData.P} kg/ha` : 'MEDIUM')} status={soil_health.phosphorus?.status || 'MEDIUM'} />
-            <SoilIndicatorCard label="Potassium (K)" val={soil_health.potassium?.value != null ? `${soil_health.potassium.value} kg/ha` : (soilData.K ? `${soilData.K} kg/ha` : 'SUFFICIENT')} status={soil_health.potassium?.status || 'HIGH'} />
+            <SoilIndicatorCard label="pH Reaction" val={soilPhVal != null && soilPhVal !== '' ? soilPhVal : 'N/A'} status={soilPhStatus} />
+            <SoilIndicatorCard label="Organic Carbon" val={soilOcVal != null && soilOcVal !== '' ? `${soilOcVal}%` : 'N/A'} status={soilOcStatus} />
+            <SoilIndicatorCard label="EC (Salinity)" val={soilEcVal != null && soilEcVal !== '' ? `${soilEcVal} dS/m` : 'N/A'} status={soilEcStatus} />
+            <SoilIndicatorCard label="Nitrogen (N)" val={soilNVal != null && soilNVal !== '' ? `${soilNVal} kg/ha` : 'N/A'} status={soilNStatus} />
+            <SoilIndicatorCard label="Phosphorus (P)" val={soilPVal != null && soilPVal !== '' ? `${soilPVal} kg/ha` : 'N/A'} status={soilPStatus} />
+            <SoilIndicatorCard label="Potassium (K)" val={soilKVal != null && soilKVal !== '' ? `${soilKVal} kg/ha` : 'N/A'} status={soilKStatus} />
           </div>
 
           {/* Actionable Constraints & Targeted Amendments */}
-          {soil_health.constraints && soil_health.constraints.length > 0 ? (
+          {soilConstraintsList.length > 0 ? (
             <div style={{ background: '#FFFBEB', borderRadius: 8, padding: 12, border: '1px solid #FDE68A', marginBottom: 10 }}>
               <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#92400E', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <AlertTriangle size={15} /> Identified Soil Constraints & Targeted Amendments:
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {soil_health.constraints.map((c, idx) => (
+                {soilConstraintsList.map((c, idx) => (
                   <div key={idx} style={{ fontSize: '0.78rem', color: '#78350F' }}>
-                    <strong>• {c.factor}:</strong> {c.condition} → <em>Action: {c.actionable_remediation}</em>
+                    <strong>• {c.name || c.factor}</strong>{c.severity ? ` (${c.severity})` : ''}: {c.condition || (c.value != null ? `Measured ${c.value}` : 'Threshold breached')} → <em>Action: {c.remediation || c.actionable_remediation}</em>
                   </div>
                 ))}
               </div>
@@ -1013,10 +1021,11 @@ export default function Recommendations() {
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
-            <ConfidenceDimCard label="Input Completeness" score={confidence.dimensions?.input_completeness} />
-            <ConfidenceDimCard label="Geographic Resolution" score={confidence.dimensions?.geographic_resolution} />
-            <ConfidenceDimCard label="Sensor Freshness" score={confidence.dimensions?.sensor_freshness} />
-            <ConfidenceDimCard label="Model Calibration" score={confidence.dimensions?.model_calibration} />
+            <ConfidenceDimCard label="Input Completeness" score={confidence.factors?.completeness ?? confidence.dimensions?.input_completeness} />
+            <ConfidenceDimCard label="Geographic Resolution" score={confidence.factors?.geographic_precision ?? confidence.dimensions?.geographic_resolution} />
+            <ConfidenceDimCard label="Data Freshness" score={confidence.factors?.freshness ?? confidence.dimensions?.sensor_freshness} />
+            <ConfidenceDimCard label="Model Evidence" score={confidence.factors?.model_confidence ?? confidence.dimensions?.model_calibration} />
+            <ConfidenceDimCard label="Rule Coverage" score={confidence.factors?.rule_coverage} />
           </div>
         </div>
 
@@ -1029,15 +1038,15 @@ export default function Recommendations() {
             </h2>
           </div>
 
-          {confidence.missing_fields && confidence.missing_fields.length > 0 ? (
+          {missingFieldsList.length > 0 ? (
             <div>
               <p style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginBottom: 8 }}>
                 The following parameters were missing and filled via regional agro-climatic averages:
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-                {confidence.missing_fields.map((f, i) => (
+                {missingFieldsList.map((f, i) => (
                   <span key={i} style={{ fontSize: '0.72rem', background: '#EFF6FF', color: '#1D4ED8', padding: '3px 8px', borderRadius: 6, border: '1px solid #BFDBFE' }}>
-                    {f}
+                    {typeof f === 'object' ? (f.name || JSON.stringify(f)) : f}
                   </span>
                 ))}
               </div>
@@ -1074,7 +1083,7 @@ export default function Recommendations() {
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#166534', marginBottom: 4 }}>INPUTS USED:</div>
               <div style={{ fontSize: '0.78rem', color: '#14532D', lineHeight: 1.6 }}>
                 <div>✓ Soil Profile ({soil_health.score != null ? 'Lab/SHC Card' : 'Parameters'})</div>
-                <div>✓ Meteorological NWP ({weather_context.temperature?.value ?? (envData.temperature || 28)}°C)</div>
+                <div>✓ Weather ({weatherSource}: {tempValue ?? 'N/A'}°C)</div>
                 <div>✓ Location ({district}, {state})</div>
                 <div>✓ Season ({season})</div>
               </div>
@@ -1085,15 +1094,15 @@ export default function Recommendations() {
               <div style={{ fontSize: '0.78rem', color: '#7F1D1D', lineHeight: 1.6 }}>
                 <div>○ Satellite Earth Observation (Disconnected)</div>
                 <div>○ Vision Pathology (Model not deployed)</div>
-                <div>○ Subsoil Moisture Sensor (NWP estimate applied)</div>
+                <div>○ Subsoil Moisture Sensor (Unlinked)</div>
               </div>
             </div>
 
             <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0369A1', marginBottom: 4 }}>DECISION METHOD:</div>
               <div style={{ fontSize: '0.78rem', color: '#0C4A6E', lineHeight: 1.6 }}>
-                <div>• 60% Decoupled Random Forest ML</div>
-                <div>• 40% ICAR Agronomic Rule Gates</div>
+                <div>• 50% Decoupled Random Forest ML</div>
+                <div>• 50% ICAR Agronomic Rule Gates</div>
                 <div>• Evidence-Grounded Risk Detection</div>
               </div>
             </div>
@@ -1411,10 +1420,10 @@ function SubScoreBadge({ label, val }) {
 }
 
 function FreshnessBadge({ freshness }) {
-  const isFresh = freshness === 'FRESH'
+  const isFresh = freshness === 'FRESH' || freshness === 'LIVE' || String(freshness).toUpperCase().includes('FRESH')
   return (
     <span style={{
-      fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+      fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: 4,
       background: isFresh ? '#D1FAE5' : '#FEF3C7',
       color: isFresh ? '#065F46' : '#92400E'
     }}>
@@ -1424,7 +1433,8 @@ function FreshnessBadge({ freshness }) {
 }
 
 function SoilIndicatorCard({ label, val, status }) {
-  const isOptimal = status === 'OPTIMAL' || status === 'SUFFICIENT' || status === 'NORMAL'
+  const normStatus = String(status || '').toUpperCase()
+  const isOptimal = ['OPTIMAL', 'SUFFICIENT', 'NORMAL', 'NEUTRAL', 'NON_SALINE', 'HEALTHY', 'ADEQUATE'].includes(normStatus)
   return (
     <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', textAlign: 'center' }}>
       <div style={{ fontSize: '0.68rem', color: '#6B7280' }}>{label}</div>
@@ -1435,7 +1445,7 @@ function SoilIndicatorCard({ label, val, status }) {
         color: isOptimal ? '#065F46' : '#92400E',
         display: 'inline-block', marginTop: 3
       }}>
-        {status}
+        {String(status || 'N/A').replace(/_/g, ' ')}
       </span>
     </div>
   )
