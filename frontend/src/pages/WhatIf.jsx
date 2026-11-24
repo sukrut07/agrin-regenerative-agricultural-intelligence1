@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { runWhatIf, getCrops } from '../services/api'
+import HeaderNav from '../components/HeaderNav'
 import { ArrowLeft, Zap, AlertTriangle, RotateCcw } from 'lucide-react'
 
 const SIMULATABLE = [
@@ -67,32 +68,33 @@ export default function WhatIf() {
   const cropInfo = crops.find(c => c.id === selectedCrop)
 
   return (
-    <div className="page-bg" style={{ minHeight: '100vh' }}>
+    <div className="page-bg min-h-screen">
+      <HeaderNav />
 
-      {/* ── Top bar ───────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-4 flex items-center gap-3" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            background: 'var(--ff-soft)', border: '1px solid var(--ff-border)',
-            borderRadius: 10, padding: '6px 10px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', color: 'var(--ff-text-secondary)',
-          }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--ff-text)', display: 'flex', alignItems: 'center', gap: 7 }}>
-            <Zap size={18} style={{ color: 'var(--ff-warning)' }} />
-            What-If Simulator
-          </h1>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>
-            Explore how changing conditions affects crop suitability
-          </p>
+      {/* ── Secondary Toolbar ─────────────────────────────────── */}
+      <div className="bg-white border-b border-[#E5E5DC]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-xl bg-[#F7F7F2] border border-[#E5E5DC] flex items-center justify-center text-[#171814] hover:border-[#183B2A] cursor-pointer transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="text-base font-extrabold text-[#171814] flex items-center gap-2">
+              <Zap size={16} className="text-[#C88A14]" />
+              <span>What-If Simulator</span>
+            </h1>
+            <p className="text-xs text-[#77786F]">
+              Explore how changing soil or climate parameters affects crop suitability
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="ff-container-narrow" style={{ paddingTop: 24, paddingBottom: 48 }}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-7">
 
         {/* Disclaimer */}
         <div className="ff-alert-warning animate-fade-in" style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -238,12 +240,13 @@ export default function WhatIf() {
 
         {/* Run button */}
         <button
-          className="btn-primary"
-          style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '0.95rem' }}
+          type="button"
+          className="btn-agrin-cta w-full justify-center"
+          style={{ padding: '14px 28px', fontSize: '14px' }}
           onClick={handleSimulate}
           disabled={!selectedCrop || changeCount === 0 || loading}
         >
-          <Zap size={20} />
+          <Zap size={17} />
           {loading
             ? 'Simulating...'
             : `Run What-If Simulation${changeCount > 0 ? ` (${changeCount} parameter${changeCount !== 1 ? 's' : ''})` : ''}`
