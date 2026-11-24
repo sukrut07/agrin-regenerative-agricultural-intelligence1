@@ -99,17 +99,21 @@ const WOKWI_LAB_MEASUREMENTS = [
   },
 ]
 
-function generateWokwiTrend() {
-  const data = []
-  const now = Date.now()
-  for (let i = 23; i >= 0; i--) {
-    const t = new Date(now - i * 60 * 60 * 1000)
-    data.push({
-      time: t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      moisture: +(40 + Math.sin(i * 0.35) * 6 + (Math.random() * 1.5 - 0.75)).toFixed(1),
-    })
-  }
-  return data
+// Deterministic baseline curve for Wokwi virtual lab (never randomized or labeled live)
+const WOKWI_BASELINE_TREND = [
+  { time: '00:00', moisture: 43.2 },
+  { time: '04:00', moisture: 44.1 },
+  { time: '08:00', moisture: 43.0 },
+  { time: '12:00', moisture: 41.2 },
+  { time: '16:00', moisture: 39.8 },
+  { time: '20:00', moisture: 41.0 },
+  { time: 'Now',   moisture: 41.8 },
+]
+
+function isTelemetryStale(isoStr, thresholdMinutes = 15) {
+  if (!isoStr) return true
+  const diffMins = (Date.now() - new Date(isoStr).getTime()) / 60000
+  return Number.isNaN(diffMins) || diffMins > thresholdMinutes
 }
 
 function minutesAgo(isoStr) {
@@ -141,47 +145,90 @@ export default function DeviceMonitor() {
 
   // Hardware mode: 'wokwi' (virtual lab) | 'physical' (live ESP32 hardware)
   const [hardwareMode, setHardwareMode] = useState('wokwi')
-  const [selectedDevice, setSelectedDevice] = useState('agrisense-001')
+  const [registeredDevices] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('agrin_registered_devices') || '[]')
+    } catch {
+      return []
+    }
+  })
+  const [selectedDevice, setSelectedDevice] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('agrin_registered_devices') || '[]')
+      return saved[0]?.device_id || 'agrisense-001'
+    } catch {
+      return 'agrisense-001'
+    }
+  })
   const [device, setDevice] = useState(null)
   const [measurements, setMeasurements] = useState([])
   const [trendData, setTrendData] = useState([])
   const [loading, setLoading] = useState(false)
   const [liveDeviceConnected, setLiveDeviceConnected] = useState(false)
+  const [telemetryStale, setTelemetryStale] = useState(false)
+  const [lastTelemetryAt, setLastTelemetryAt] = useState(null)
   const [lastRefresh, setLastRefresh] = useState(new Date())
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     if (hardwareMode === 'wokwi') {
-      // Wokwi Virtual Simulator mode
+      // Wokwi Virtual Simulator mode (strictly labeled synthetic)
       setDevice(WOKWI_LAB_DEVICE)
       setMeasurements(WOKWI_LAB_MEASUREMENTS)
-      setTrendData(generateWokwiTrend())
+      setTrendData(WOKWI_BASELINE_TREND)
       setLiveDeviceConnected(true)
+      setTelemetryStale(false)
+      setLastTelemetryAt(null)
       setLoading(false)
       setLastRefresh(new Date())
       return
     }
 
-    // Physical Hardware mode: Attempt to query real backend for physical telemetry
+    // Physical Hardware mode: Query real backend device status, latest packet, and persisted history
     try {
-      const [devRes, telRes] = await Promise.all([
+      const [devRes, telRes, histRes] = await Promise.all([
         getDeviceStatus(selectedDevice),
-        getLatestTelemetry(selectedDevice)
+        getLatestTelemetry(selectedDevice),
+        getTelemetryHistory(selectedDevice, 1, 24).catch(() => null),
       ])
-      if (devRes && telRes) {
+      if (devRes) {
         setDevice(devRes)
-        setMeasurements(telRes.measurements || [])
-        setLiveDeviceConnected(true)
+        const latestMeas = telRes?.measurements || []
+        setMeasurements(latestMeas)
+        setLastTelemetryAt(telRes?.timestamp || devRes.last_seen_at || null)
+        const stale = !telRes?.timestamp || isTelemetryStale(telRes.timestamp, 15)
+        setTelemetryStale(stale)
+        setLiveDeviceConnected(latestMeas.length > 0)
+
+        // Build real persisted moisture trend (oldest -> newest)
+        const records = histRes?.records || []
+        const moisturePoints = records
+          .slice()
+          .reverse()
+          .map(rec => {
+            const m = (rec.measurements || []).find(item => item.sensor_type === 'SOIL_MOISTURE')
+            if (!m) return null
+            return {
+              time: new Date(rec.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              moisture: m.calibrated_value,
+            }
+          })
+          .filter(Boolean)
+        setTrendData(moisturePoints)
       } else {
         setDevice(null)
         setMeasurements([])
+        setTrendData([])
         setLiveDeviceConnected(false)
+        setTelemetryStale(false)
       }
     } catch (err) {
       // Honest state: No physical device connected
       setDevice(null)
       setMeasurements([])
+      setTrendData([])
       setLiveDeviceConnected(false)
+      setTelemetryStale(false)
     } finally {
       setLoading(false)
       setLastRefresh(new Date())
@@ -242,6 +289,44 @@ export default function DeviceMonitor() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Device ID Selector in Physical Mode */}
+        {hardwareMode === 'physical' && (
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+              <Radio size={15} className="text-emerald-600" />
+              <span>Monitored Physical Device ID:</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {registeredDevices.length > 0 && (
+                <select
+                  value={selectedDevice}
+                  onChange={(e) => setSelectedDevice(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-slate-50"
+                >
+                  {registeredDevices.map(d => (
+                    <option key={d.device_id} value={d.device_id}>
+                      {d.name} ({d.device_id.slice(0, 8)}…)
+                    </option>
+                  ))}
+                </select>
+              )}
+              <input
+                type="text"
+                value={selectedDevice}
+                onChange={(e) => setSelectedDevice(e.target.value)}
+                placeholder="Enter registered Device UUID"
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-mono w-64"
+              />
+              <button
+                onClick={fetchData}
+                className="px-3 py-1.5 rounded-xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800"
+              >
+                Query Device
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Banner based on Active Mode */}
         {hardwareMode === 'wokwi' ? (
           <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 mb-6 flex items-start justify-between gap-4">
@@ -257,7 +342,7 @@ export default function DeviceMonitor() {
                   </span>
                 </div>
                 <div className="text-xs text-purple-800 mt-0.5 leading-relaxed">
-                  Displaying simulated calibrated ADC telemetry from the virtual ESP32 testbench (<code>firmware/wokwi/</code>). Telemetry is authenticated with token <code>agrin_dev_test_wokwi_token_993</code>.
+                  Displaying deterministic simulated calibration profile from the virtual ESP32 testbench (<code>firmware/wokwi/</code>). Strictly labeled <code>SYNTHETIC</code> — zero simulated data is written to live farm history.
                 </div>
               </div>
             </div>
@@ -279,7 +364,7 @@ export default function DeviceMonitor() {
               {t('no_live_data', 'NO LIVE SENSOR DATA — Connect AgriSense ESP32 or launch Wokwi Simulator')}
             </h2>
             <p className="text-xs text-amber-800 leading-relaxed">
-              No physical telemetry packet received from <code>{selectedDevice}</code> within the last 15 minutes. To connect real hardware, register a device below, flash your ESP32 with <code>firmware/AGRISENSE_FIRMWARE_SPEC.md</code>, and configure header <code>X-Device-Token</code>.
+              No telemetry packet received from <code>{selectedDevice}</code>. To connect real hardware, register a device, flash your ESP32 with <code>firmware/AGRISENSE_FIRMWARE_SPEC.md</code>, and authenticate using header <code>X-Device-Token</code>.
             </p>
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
@@ -294,6 +379,18 @@ export default function DeviceMonitor() {
               >
                 Register Device
               </button>
+            </div>
+          </div>
+        ) : telemetryStale ? (
+          <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 mb-6 flex items-start gap-3">
+            <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900">
+              <div className="font-black uppercase tracking-wider text-[11px] text-amber-950">
+                STALE TELEMETRY — DEVICE OFFLINE / DISCONNECTED (&gt; 15 mins old)
+              </div>
+              <p className="mt-0.5">
+                Last successful telemetry packet received <strong>{minutesAgo(lastTelemetryAt)}</strong>. Historical measurements are shown below with preserved provenance and are NOT labeled as live readings.
+              </p>
             </div>
           </div>
         ) : null}

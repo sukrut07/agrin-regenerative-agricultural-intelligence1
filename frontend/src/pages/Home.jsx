@@ -14,7 +14,7 @@ export default function Home() {
             <Leaf size={18} className="text-white" />
           </div>
           <div>
-            <span className="font-bold" style={{ fontSize: '1rem', color: 'var(--ff-text)' }}>FarmFriend AI</span>
+            <span className="font-bold" style={{ fontSize: '1rem', color: 'var(--ff-text)' }}>AgriN</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -78,7 +78,7 @@ export default function Home() {
                 marginBottom: 32,
                 maxWidth: 480,
               }}>
-                Enter your soil-test results and farm conditions. FarmFriend AI analyses 22 crops using ML + agricultural rules and shows you which ones fit your land best.
+                Enter your soil-test results and farm conditions. AgriN analyses 23 crops using Random Forest ML + ICAR agricultural rules and shows you which ones fit your land best.
               </p>
 
               {/* CTAs */}
@@ -135,16 +135,16 @@ export default function Home() {
                       <Leaf size={20} style={{ color: 'var(--ff-primary)' }} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--ff-text)' }}>Your Soil Analysis</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>Nashik · Kharif 2025</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--ff-text)' }}>Illustrative Example</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>Nashik · Sample Profile</div>
                     </div>
                     <div style={{ marginLeft: 'auto' }}>
                       <span style={{
                         fontSize: '0.7rem', fontWeight: 600,
-                        background: 'var(--ff-light)', color: 'var(--ff-primary)',
+                        background: '#FEF3C7', color: '#92400E',
                         padding: '4px 10px', borderRadius: 999,
-                        border: '1px solid rgba(19,138,75,0.2)',
-                      }}>Ready</span>
+                        border: '1px solid #FDE68A',
+                      }}>Illustrative</span>
                     </div>
                   </div>
 
@@ -187,7 +187,7 @@ export default function Home() {
                   border: '1px solid rgba(19,138,75,0.12)',
                 }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--ff-primary)', fontWeight: 600, marginBottom: 3 }}>
-                    ✦ FarmFriend AI Explains
+                    ✦ AgriN Illustrative Explanation
                   </div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--ff-text-secondary)', lineHeight: 1.5 }}>
                     Soybean is highly suitable for your soil. Nitrogen and pH are in the optimal range.
@@ -244,7 +244,7 @@ export default function Home() {
                 emoji="🤖"
                 icon={<BarChart3 size={22} style={{ color: 'var(--ff-info)' }} />}
                 title="ML + Rule Engine"
-                desc="92.6% accuracy Logistic Regression model combined with ICAR/TNAU agricultural rules."
+                desc="79.7% cross-validated Random Forest ensemble combined with ICAR/TNAU agronomic gates."
                 accent="var(--ff-info)"
                 bg="#EDF4FF"
               />
@@ -336,11 +336,11 @@ export default function Home() {
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
           <Shield size={13} style={{ color: 'var(--ff-text-muted)' }} />
           <span style={{ fontSize: '0.78rem', color: 'var(--ff-text-muted)', textAlign: 'center' }}>
-            FarmFriend AI provides data-driven decision support. It does not replace professional agricultural advice or local Krishi Vigyan Kendra (KVK) recommendations.
+            AgriN provides data-driven decision support. It does not replace professional agricultural advice or local Krishi Vigyan Kendra (KVK) recommendations.
           </span>
         </div>
         <p style={{ textAlign: 'center', fontSize: '0.72rem', color: '#C0CCC4', marginTop: 6 }}>
-          AgriN Pan-India Architecture · Model Accuracy: 92.4% · Trained on ICAR/TNAU/FAO benchmarks · Supporting 28 States & 8 Union Territories
+          AgriN Pan-India Architecture · Random Forest v2 (79.7% multi-source CV) · ICAR/TNAU/CRIDA benchmarks · 28 States &amp; 8 Union Territories
         </p>
       </footer>
 
