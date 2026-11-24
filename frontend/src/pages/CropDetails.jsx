@@ -169,7 +169,7 @@ export default function CropDetails() {
         <div className="print-header print-only">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <h1 style={{ fontSize: '18pt', fontWeight: 800, color: '#075C35', margin: 0 }}>FarmFriend AI</h1>
+              <h1 style={{ fontSize: '18pt', fontWeight: 800, color: '#183B2A', margin: 0 }}>AgriN</h1>
               <p style={{ fontSize: '10pt', fontWeight: 700, color: '#138A4B', margin: '2px 0 0 0' }}>
                 Detailed Crop Suitability & Agronomic Advisory Report: {crop.common_name}
               </p>

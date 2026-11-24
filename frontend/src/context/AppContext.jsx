@@ -55,6 +55,12 @@ export function AppProvider({ children }) {
   const [selectedCrop, setSelectedCropState] = useState(() => loadSaved('selectedCrop', null))
   const [feasibilityResult, setFeasibilityResultState] = useState(() => loadSaved('feasibilityResult', null))
   const [whatIfResult, setWhatIfResultState] = useState(() => loadSaved('whatIfResult', null))
+  const [dataSource, setDataSourceState] = useState(() => loadSaved('dataSource', 'manual'))
+
+  const setDataSource = val => {
+    saveState('dataSource', val)
+    setDataSourceState(val)
+  }
 
   const setFarmData = val => setFarmDataState(prev => {
     const next = typeof val === 'function' ? val(prev) : val
@@ -125,6 +131,7 @@ export function AppProvider({ children }) {
       selectedCrop, setSelectedCrop,
       feasibilityResult, setFeasibilityResult,
       whatIfResult, setWhatIfResult,
+      dataSource, setDataSource,
       getApiPayload,
       prepareForApi
     }}>

@@ -21,14 +21,14 @@ export default function StepLayout({ step, title, subtitle, children }) {
       <div className="ff-nav sticky top-0 z-10 px-6 py-3 flex items-center gap-4">
         {/* Logo */}
         <div
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2.5 cursor-pointer"
           onClick={() => navigate('/')}
         >
-          <div className="ff-logo-icon">
-            <Leaf size={17} className="text-white" />
+          <div className="w-8 h-8 rounded-lg bg-[#183B2A] flex items-center justify-center text-[#E7D927]">
+            <Leaf size={17} />
           </div>
-          <span className="font-bold text-ff-text hidden sm:block" style={{ fontSize: '0.95rem', color: 'var(--ff-text)' }}>
-            FarmFriend AI
+          <span className="font-bold hidden sm:block tracking-tight" style={{ fontSize: '0.95rem', color: '#171814' }}>
+            AgriN
           </span>
         </div>
 

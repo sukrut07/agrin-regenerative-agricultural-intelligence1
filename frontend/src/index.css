@@ -1,50 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 
 /* ══════════════════════════════════════════════════════════════════════════
-   FARMFRIEND AI — DESIGN TOKENS
+   AGRIN — REGENERATIVE AGRICULTURAL INTELLIGENCE DESIGN SYSTEM
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Brand Colors */
-  --ff-primary:       #138A4B;
-  --ff-primary-dark:  #075C35;
-  --ff-deep:          #06452B;
-  --ff-light:         #E9F7EF;
-  --ff-soft:          #F3FAF5;
-  --ff-accent:        #20A65A;
+  /* Core Editorial Palette */
+  --agrin-olive:      #77772B;
+  --agrin-forest:     #183B2A;
+  --agrin-yellow:     #E7D927;
+  --agrin-yellow-hover:#D6C81E;
+  --agrin-green:      #398653;
+  --agrin-bg:         #F7F7F2;
+  --agrin-surface:    #FFFFFF;
+  --agrin-text:       #171814;
+  --agrin-muted:      #77786F;
+  --agrin-border:     #E5E5DC;
+
+  /* Compatibility Aliases for Existing Components */
+  --ff-primary:       #398653;
+  --ff-primary-dark:  #183B2A;
+  --ff-deep:          #183B2A;
+  --ff-light:         #EAF3EC;
+  --ff-soft:          #F2F5EE;
+  --ff-accent:        #E7D927;
 
   /* Backgrounds */
-  --ff-bg:            #F8FAF8;
+  --ff-bg:            #F7F7F2;
   --ff-card:          #FFFFFF;
-  --ff-border:        #E2E9E4;
+  --ff-border:        #E5E5DC;
 
   /* Text */
-  --ff-text:          #17231D;
-  --ff-text-secondary:#65736B;
-  --ff-text-muted:    #9BAA9E;
+  --ff-text:          #171814;
+  --ff-text-secondary:#77786F;
+  --ff-text-muted:    #9B9C92;
 
   /* Status */
-  --ff-warning:       #D89B18;
-  --ff-warning-bg:    #FFF7E1;
-  --ff-error:         #D94B4B;
-  --ff-error-bg:      #FFF0F0;
-  --ff-success:       #168A4A;
-  --ff-success-bg:    #EAF8EF;
-  --ff-info:          #3978B8;
-  --ff-info-bg:       #EDF4FF;
+  --ff-warning:       #C88A14;
+  --ff-warning-bg:    #FDF6E2;
+  --ff-error:         #C93F3F;
+  --ff-error-bg:      #FDECEC;
+  --ff-success:       #2B7A4B;
+  --ff-success-bg:    #EAF5EE;
+  --ff-info:          #2E6CA4;
+  --ff-info-bg:       #EDF4FA;
 
   /* Spacing & Shape */
-  --ff-radius-card:   20px;
-  --ff-radius-btn:    14px;
-  --ff-radius-input:  12px;
+  --ff-radius-card:   18px;
+  --ff-radius-btn:    12px;
+  --ff-radius-input:  10px;
   --ff-radius-pill:   9999px;
 
-  /* Shadows */
-  --ff-shadow-sm:     0 2px 10px rgba(20, 50, 30, 0.06);
-  --ff-shadow-md:     0 4px 20px rgba(20, 50, 30, 0.08);
-  --ff-shadow-lg:     0 8px 30px rgba(20, 50, 30, 0.10);
-  --ff-shadow-hover:  0 12px 40px rgba(20, 50, 30, 0.12);
+  /* Restrained Shadows */
+  --ff-shadow-sm:     0 1px 4px rgba(23, 24, 20, 0.04);
+  --ff-shadow-md:     0 4px 16px rgba(24, 59, 42, 0.06);
+  --ff-shadow-lg:     0 10px 28px rgba(24, 59, 42, 0.08);
+  --ff-shadow-hover:  0 12px 32px rgba(24, 59, 42, 0.10);
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
@@ -53,12 +65,21 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: var(--ff-bg);
-  color: var(--ff-text);
+  font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--agrin-bg);
+  color: var(--agrin-text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Custom Scrollbar ─────────────────────────────────────────────────────── */

@@ -1,11 +1,11 @@
-"""FarmFriend AI — Analytics Dashboard Routes"""
+"""AgriN — Analytics & Assessment History Routes"""
 
 import json, os
 from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
-from backend.app.database.db import get_db, PredictionRecord, FeasibilityRecord, WhatIfRecord
+from backend.app.database.db import get_db, FarmerSession, PredictionRecord, FeasibilityRecord, WhatIfRecord
 
 router = APIRouter()
 
@@ -69,6 +69,31 @@ def get_analytics(db: Session = Depends(get_db)):
     except Exception as exc:
         model_info["reason"] = f"Model metadata unavailable: {exc}"
 
+    # Recent persisted assessments (ordered newest first)
+    recent_raw = (
+        db.query(PredictionRecord, FarmerSession)
+        .outerjoin(FarmerSession, PredictionRecord.session_id == FarmerSession.session_id)
+        .order_by(PredictionRecord.id.desc())
+        .limit(12)
+        .all()
+    )
+    recent_assessments = []
+    for pred, sess in recent_raw:
+        top_crops = [c.get("crop") for c in (pred.ranked_crops_json or [])[:3] if c.get("crop")]
+        recent_assessments.append({
+            "id": pred.id,
+            "session_id": pred.session_id,
+            "created_at": pred.created_at.isoformat() if pred.created_at else None,
+            "top_crop": pred.top_crop,
+            "top_score": pred.top_score,
+            "top_crops": top_crops,
+            "data_confidence": pred.data_confidence,
+            "model_version": pred.model_version,
+            "state": sess.state if sess else None,
+            "district": sess.district if sess else None,
+            "season": sess.season if sess else None,
+        })
+
     return {
         "total_analyses": total_analyses,
         "total_feasibility_checks": total_feasibility,
@@ -76,6 +101,7 @@ def get_analytics(db: Session = Depends(get_db)):
         "top_recommended_crops": top_recommended,
         "top_chosen_crops": top_chosen,
         "score_distribution": score_buckets,
+        "recent_assessments": recent_assessments,
         "district_distribution": [],
         "season_distribution": [],
         "model_info": model_info,

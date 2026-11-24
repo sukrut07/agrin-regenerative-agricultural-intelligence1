@@ -71,7 +71,7 @@ export default function IWantToGrow() {
         <div className="ff-alert-info animate-fade-in" style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <span style={{ fontSize: '1rem', flexShrink: 0 }}>💡</span>
           <span style={{ lineHeight: 1.6 }}>
-            Have a specific crop in mind? Select it below and FarmFriend AI will check how well your current soil
+            Have a specific crop in mind? Select it below and AgriN will check how well your current soil
             and environmental conditions match that crop's requirements.
           </span>
         </div>
