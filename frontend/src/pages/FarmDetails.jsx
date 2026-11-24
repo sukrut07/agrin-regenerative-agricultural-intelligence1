@@ -8,7 +8,7 @@ import { DEMO_SCENARIOS } from '../services/demoScenarios'
 
 export default function FarmDetails() {
   const navigate = useNavigate()
-  const { farmData, setFarmData, setSoilData, setEnvData } = useApp()
+  const { farmData, setFarmData, setSoilData, setEnvData, dataSource, setDataSource } = useApp()
   const [refData, setRefData] = useState({
     states: [], districts: [], seasons: [], soil_types: [],
     water_sources: [], drainage_conditions: [], previous_crops: [],
@@ -52,6 +52,7 @@ export default function FarmDetails() {
 
   const update = (field, value) => {
     setFarmData(prev => ({ ...prev, [field]: value }))
+    setDataSource('manual')
     setErrors(prev => ({ ...prev, [field]: null }))
   }
 
@@ -124,6 +125,7 @@ export default function FarmDetails() {
     setFarmData(sc.farmData)
     setSoilData(sc.soilData)
     setEnvData(sc.envData)
+    setDataSource('sample')
   }
 
   const validate = () => {
@@ -152,7 +154,7 @@ export default function FarmDetails() {
     ? refData.states
     : [{ name: 'Maharashtra', type: 'State' }]
 
-  const isDemo = Boolean(farmData?.farm_id?.startsWith('DEMO-'))
+  const isDemo = dataSource === 'sample' || Boolean(farmData?.farm_id?.startsWith('DEMO-'))
 
   return (
     <StepLayout step={1} title="Farm Details" subtitle="Tell us about your farm location and conditions across India">
