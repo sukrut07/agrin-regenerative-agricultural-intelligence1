@@ -1,25 +1,76 @@
 /**
- * FarmFriend AI — API Service
- * All API calls to the FastAPI backend.
+ * AgriN — API Service
+ * Centralized HTTP client for the FastAPI backend with timeouts and structured errors.
  */
 
 const BASE_URL = '/api';
+const DEFAULT_TIMEOUT_MS = 15000;
+
+export class ApiError extends Error {
+  constructor(message, { status = 0, code = 'API_ERROR', detail = null } = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+    this.detail = detail;
+  }
+}
 
 async function apiCall(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;
-  const response = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, ...fetchOptions } = options;
 
-  const data = await response.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!response.ok) {
-    const error = data.detail || data.error || 'An error occurred';
-    throw new Error(typeof error === 'string' ? error : JSON.stringify(error));
+  try {
+    const response = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...headers },
+      signal: controller.signal,
+      ...fetchOptions,
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    let data = null;
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = text ? { message: text } : {};
+    }
+
+    if (!response.ok) {
+      const rawDetail = data?.detail ?? data?.error ?? data?.message ?? `Request failed (${response.status})`;
+      const msg = typeof rawDetail === 'string'
+        ? rawDetail
+        : rawDetail?.message || JSON.stringify(rawDetail);
+      throw new ApiError(msg, {
+        status: response.status,
+        code: response.status === 401 ? 'UNAUTHORIZED'
+          : response.status === 403 ? 'FORBIDDEN'
+          : response.status === 422 ? 'VALIDATION_ERROR'
+          : response.status >= 500 ? 'SERVER_ERROR'
+          : 'HTTP_ERROR',
+        detail: rawDetail,
+      });
+    }
+
+    return data;
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    if (err?.name === 'AbortError') {
+      throw new ApiError(`Request timed out after ${Math.round(timeoutMs / 1000)}s. Please check your connection and retry.`, {
+        status: 408,
+        code: 'TIMEOUT',
+      });
+    }
+    throw new ApiError(err?.message || 'Network error reaching AgriN backend API.', {
+      status: 0,
+      code: 'NETWORK_ERROR',
+    });
+  } finally {
+    clearTimeout(timer);
   }
-
-  return data;
 }
 
 // ── Reference Data ─────────────────────────────────────────────────────────
@@ -122,6 +173,9 @@ export const getFarmResilienceScore = (payload) =>
 
 export const getSatelliteStatus = () =>
   apiCall('/satellite/status');
+
+export const diagnoseCropDisease = (payload) =>
+  apiCall('/disease/diagnose', { method: 'POST', body: JSON.stringify(payload) });
 
 export const getNationalOverview = () =>
   apiCall('/national/overview');

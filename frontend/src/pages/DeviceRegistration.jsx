@@ -35,7 +35,20 @@ export default function DeviceRegistration() {
 
     try {
       const resp = await registerDevice(formData)
-      setResult(resp.data || resp)
+      const registered = resp.data || resp
+      setResult(registered)
+      // Store only non-secret device metadata locally so DeviceMonitor can select it
+      try {
+        const existing = JSON.parse(localStorage.getItem('agrin_registered_devices') || '[]')
+        const entry = {
+          device_id: registered.device_id,
+          name: registered.name,
+          farm_id: registered.farm_id,
+          field_id: registered.field_id,
+        }
+        const filtered = existing.filter(d => d.device_id !== entry.device_id)
+        localStorage.setItem('agrin_registered_devices', JSON.stringify([entry, ...filtered].slice(0, 10)))
+      } catch {}
     } catch (err) {
       console.error('Registration error:', err)
       setError(
@@ -236,7 +249,8 @@ export default function DeviceRegistration() {
 {`"backend": {
   "device_id": "${result.device_id}",
   "api_base_url": "http://YOUR_SERVER_IP:8000",
-  "telemetry_endpoint": "/api/telemetry/ingest"
+  "telemetry_endpoint": "/api/telemetry/ingest",
+  "auth_header": "X-Device-Token: <YOUR_COPIED_API_KEY>"
 }`}
               </pre>
             </div>

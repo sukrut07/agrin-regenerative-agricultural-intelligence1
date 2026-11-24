@@ -91,22 +91,31 @@ export default function Dashboard() {
             </p>
 
             {/* Key metrics */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} className="model-metrics-grid">
-              {[
-                { label: 'Accuracy',  value: `${((modelInfo.metrics?.accuracy || 0) * 100).toFixed(1)}%`,       color: 'var(--ff-primary)', bg: 'var(--ff-soft)' },
-                { label: 'Precision', value: `${((modelInfo.metrics?.precision_weighted || 0) * 100).toFixed(1)}%`, color: '#3978B8',           bg: '#EDF4FF' },
-                { label: 'Recall',    value: `${((modelInfo.metrics?.recall_weighted || 0) * 100).toFixed(1)}%`,  color: '#7C3AED',           bg: '#F5F0FF' },
-                { label: 'F1-Score',  value: (modelInfo.metrics?.f1_weighted || 0).toFixed(3),                    color: '#D89B18',           bg: '#FFF7E1' },
-              ].map(m => (
-                <div key={m.label} style={{
-                  background: m.bg, borderRadius: 14, padding: '16px 12px', textAlign: 'center',
-                  border: `1px solid ${m.color}22`,
-                }}>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)', marginTop: 6 }}>{m.label}</div>
-                </div>
-              ))}
-            </div>
+            {modelInfo.metrics ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} className="model-metrics-grid">
+                {[
+                  { label: 'Accuracy',  value: `${((modelInfo.metrics?.accuracy || 0) * 100).toFixed(1)}%`,       color: 'var(--ff-primary)', bg: 'var(--ff-soft)' },
+                  { label: 'Precision', value: `${((modelInfo.metrics?.precision_weighted || 0) * 100).toFixed(1)}%`, color: '#3978B8',           bg: '#EDF4FF' },
+                  { label: 'Recall',    value: `${((modelInfo.metrics?.recall_weighted || 0) * 100).toFixed(1)}%`,  color: '#7C3AED',           bg: '#F5F0FF' },
+                  { label: 'F1-Score',  value: (modelInfo.metrics?.f1_weighted || 0).toFixed(3),                    color: '#D89B18',           bg: '#FFF7E1' },
+                ].map(m => (
+                  <div key={m.label} style={{
+                    background: m.bg, borderRadius: 14, padding: '16px 12px', textAlign: 'center',
+                    border: `1px solid ${m.color}22`,
+                  }}>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)', marginTop: 6 }}>{m.label}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{
+                padding: '14px 16px', borderRadius: 12, marginBottom: 20,
+                background: '#FEF3C7', border: '1px solid #FDE68A', color: '#92400E', fontSize: '0.82rem', fontWeight: 600,
+              }}>
+                Evaluation metrics unavailable ({modelInfo.reason || 'model_metadata.json not loaded'}).
+              </div>
+            )}
 
             {/* Model comparison bars */}
             {allModels.length > 0 && (
