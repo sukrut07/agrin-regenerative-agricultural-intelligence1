@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { checkFeasibility, getCrops } from '../services/api'
-import { ArrowLeft, Search, Shield, Zap, CheckCircle } from 'lucide-react'
+import HeaderNav from '../components/HeaderNav'
+import { ArrowLeft, Search, Shield, Zap, CheckCircle, Info, AlertTriangle } from 'lucide-react'
 import SuitabilityMeter from '../components/SuitabilityMeter'
 
 export default function IWantToGrow() {
@@ -45,34 +46,35 @@ export default function IWantToGrow() {
   const chosenCropInfo = crops.find(c => c.id === chosen)
 
   return (
-    <div className="page-bg" style={{ minHeight: '100vh' }}>
+    <div className="page-bg min-h-screen">
+      <HeaderNav />
 
-      {/* ── Top bar ───────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-4 flex items-center gap-3" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <button
-          onClick={() => navigate('/recommendations')}
-          style={{
-            background: 'var(--ff-soft)', border: '1px solid var(--ff-border)',
-            borderRadius: 10, padding: '6px 10px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', color: 'var(--ff-text-secondary)',
-          }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--ff-text)' }}>I Want to Grow This</h1>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>Check feasibility for your chosen crop</p>
+      {/* ── Secondary Toolbar ─────────────────────────────────── */}
+      <div className="bg-white border-b border-[#E5E5DC]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/recommendations')}
+            className="w-9 h-9 rounded-xl bg-[#F7F7F2] border border-[#E5E5DC] flex items-center justify-center text-[#171814] hover:border-[#183B2A] cursor-pointer transition-colors"
+            aria-label="Back to recommendations"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="text-base font-extrabold text-[#171814]">I Want to Grow This</h1>
+            <p className="text-xs text-[#77786F]">Check soil &amp; climate feasibility for a specific crop</p>
+          </div>
         </div>
       </div>
 
-      <div className="ff-container-narrow" style={{ paddingTop: 24, paddingBottom: 48 }}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-7">
 
         {/* Explanation */}
-        <div className="ff-alert-info animate-fade-in" style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <span style={{ fontSize: '1rem', flexShrink: 0 }}>💡</span>
-          <span style={{ lineHeight: 1.6 }}>
-            Have a specific crop in mind? Select it below and AgriN will check how well your current soil
-            and environmental conditions match that crop's requirements.
+        <div className="bg-[#EDF4FA] border border-[#C5DCED] rounded-[14px] px-4 py-3 mb-5 flex items-start gap-2.5 text-xs text-[#2E6CA4]">
+          <Info size={16} className="shrink-0 mt-0.5" />
+          <span className="leading-relaxed">
+            Have a specific crop in mind? Select it below and AgriN will evaluate how well your current soil
+            and climate readings match that crop&apos;s agronomic requirements.
           </span>
         </div>
 
@@ -149,11 +151,12 @@ export default function IWantToGrow() {
                 </span>
               </div>
               <button
-                className="btn-primary"
+                type="button"
+                className="btn-agrin-cta"
                 onClick={handleAnalyse}
                 disabled={loading}
               >
-                {loading ? '🌱 Analysing...' : 'Check Feasibility →'}
+                {loading ? 'Analysing...' : 'Check Feasibility →'}
               </button>
             </div>
           )}
