@@ -9,6 +9,14 @@ import {
 } from 'lucide-react'
 import { submitFeedback, runAnalysis, compareCrops } from '../services/api'
 import { DEMO_SCENARIOS } from '../services/demoScenarios'
+import {
+  ReportKpiVisualStrip,
+  CropSuitabilityChartCard,
+  CropComparisonCharts,
+  SoilHealthCharts,
+  ResilienceVisuals,
+  ConfidenceVisuals,
+} from '../components/ReportCharts'
 
 export default function Recommendations() {
   const navigate = useNavigate()
@@ -27,6 +35,7 @@ export default function Recommendations() {
   const [comparingCrops, setComparingCrops] = useState(false)
   const [comparisonResult, setComparisonResult] = useState(null)
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
+  const [priorityFilter, setPriorityFilter] = useState('ALL')
 
   // Farmer Feedback state (Phase 12)
   const [didFollow, setDidFollow] = useState('')
@@ -418,6 +427,17 @@ export default function Recommendations() {
             </div>
           </div>
 
+          <ReportKpiVisualStrip
+            topCropName={cropsToDisplay[0]?.common_name || cropsToDisplay[0]?.crop}
+            topCropScore={cropsToDisplay[0]?.overall_score ?? cropsToDisplay[0]?.final_score}
+            soilScore={soil_health?.score}
+            soilStatus={soilOverallStatus}
+            resilienceScore={resilienceScore}
+            resilienceTier={resilienceTier}
+            qualityPct={data_quality?.score != null ? (data_quality.score <= 1 ? data_quality.score * 100 : data_quality.score) : (confidence?.confidence_score != null ? (confidence.confidence_score <= 1 ? confidence.confidence_score * 100 : confidence.confidence_score) : undefined)}
+            confidenceLevel={confidence?.confidence_level}
+          />
+
           {/* 6 Canonical Sections Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 16 }}>
             {/* 1. 🌱 CROP OPPORTUNITY */}
@@ -586,7 +606,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 2. WHAT SHOULD I CONSIDER? (TOP CROPS) ──────────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-crops" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Sprout size={20} className="text-emerald-700" />
@@ -598,6 +618,8 @@ export default function Recommendations() {
               Top Viable Cultivars & Compatibility Breakdowns
             </span>
           </div>
+
+          <CropSuitabilityChartCard crops={cropsToDisplay} onSelectCrop={handleCropClick} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {cropsToDisplay.map((crop, i) => (
@@ -672,6 +694,7 @@ export default function Recommendations() {
               <h4 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#111827', marginBottom: 10 }}>
                 Side-by-Side Fit Matrix
               </h4>
+              <CropComparisonCharts evaluations={comparisonResult.crop_evaluations || []} />
               <div style={{ overflowX: 'auto', marginBottom: 14 }}>
                 <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
                   <thead>
