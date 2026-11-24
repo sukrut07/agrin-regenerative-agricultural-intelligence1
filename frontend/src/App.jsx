@@ -37,8 +37,8 @@ export default function App() {
         <AppProvider>
           <BrowserRouter>
             <Routes>
-              {/* Field Intelligence is the Primary Farm Workspace */}
-              <Route path="/" element={<Navigate to="/field-intelligence" replace />} />
+              {/* Public Landing Page */}
+              <Route path="/" element={<Home />} />
               <Route path="/field-intelligence" element={<FieldIntelligence />} />
 
               {/* Scientific Modules */}
