@@ -9,8 +9,9 @@ all persistence is committed here.
 """
 
 import logging
-from datetime import datetime
-from typing import List, Optional
+import secrets
+from datetime import datetime, timezone
+from typing import List, Optional, Dict, Any
 
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -73,6 +74,7 @@ def register_device(db: Session, request: DeviceRegistrationRequest) -> DeviceRe
         if not field:
             raise HTTPException(status_code=404, detail=f"Field {request.field_id} not found")
 
+    api_key_gen = f"agrin_dev_{secrets.token_hex(20)}"
     device = Device(
         farm_id          = request.farm_id,
         field_id         = request.field_id,
@@ -80,6 +82,7 @@ def register_device(db: Session, request: DeviceRegistrationRequest) -> DeviceRe
         description      = request.description,
         firmware_version = request.firmware_version,
         hardware_profile = request.hardware_profile,
+        api_key          = api_key_gen,
         wifi_ssid        = request.wifi_ssid,
         ip_address       = request.ip_address,
         is_active        = True,
@@ -96,6 +99,7 @@ def register_device(db: Session, request: DeviceRegistrationRequest) -> DeviceRe
         field_id   = device.field_id,
         name       = device.name,
         status     = device.status,
+        api_key    = device.api_key,
         created_at = device.created_at,
     )
 
@@ -211,6 +215,27 @@ def ingest_telemetry(
     Returns DUPLICATE status if the same payload_hash already exists.
     """
     device = _get_device_or_404(db, payload.device_id)
+
+    # Security: Verify farm_id ownership
+    if payload.farm_id and payload.farm_id != device.farm_id:
+        logger.warning(
+            "Security alert: Telemetry farm_id '%s' does not match device farm_id '%s'",
+            payload.farm_id, device.farm_id
+        )
+        raise HTTPException(
+            status_code=403,
+            detail=f"Security violation: Payload farm_id '{payload.farm_id}' does not match registered device farm_id."
+        )
+
+    # Security: Validate temporal bounds (protect against replay / extreme clock drift)
+    if payload.timestamp:
+        now_ts = datetime.now(timezone.utc) if payload.timestamp.tzinfo else datetime.utcnow()
+        diff_sec = (payload.timestamp - now_ts).total_seconds()
+        if diff_sec > 900:  # > 15 minutes in future
+            raise HTTPException(
+                status_code=422,
+                detail=f"Telemetry rejected: timestamp is {int(diff_sec)} seconds in the future (temporal replay violation)."
+            )
 
     payload_hash = payload.compute_hash()
 

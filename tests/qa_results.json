@@ -1,9 +1,9 @@
 {
-  "test_run_date": "2026-11-17T00:28:24.864271",
+  "test_run_date": "2026-11-24T23:44:41.340955",
   "total": 68,
-  "passed": 61,
+  "passed": 62,
   "failed": 2,
-  "warnings": 5,
+  "warnings": 4,
   "blocked": 0,
   "critical_failures": 1,
   "results": [
@@ -23,8 +23,8 @@
       "name": "Dataset has expected columns",
       "status": "PASS",
       "severity": "critical",
-      "expected": "{'EC', 'Mn', 'OC', 'S', 'Fe', 'K', 'rainfall', 'Cu', 'N', 'Zn', 'ph', 'P', 'B', 'label', 'temperature', 'humidity'}",
-      "actual": "{'EC', 'N', 'Mn', 'OC', 'S', 'Zn', 'Fe', 'ph', 'P', 'B', 'label', 'K', 'rainfall', 'temperature', 'Cu', 'humidity'}",
+      "expected": "{'N', 'Zn', 'humidity', 'ph', 'B', 'P', 'rainfall', 'Mn', 'S', 'K', 'label', 'Fe', 'OC', 'Cu', 'temperature', 'EC'}",
+      "actual": "{'label', 'S', 'N', 'K', 'Zn', 'Fe', 'Mn', 'humidity', 'ph', 'OC', 'Cu', 'B', 'P', 'rainfall', 'temperature', 'EC'}",
       "evidence": "",
       "root_cause": "",
       "fix": ""
@@ -155,8 +155,8 @@
       "name": "Reproducible metrics (no data leakage)",
       "status": "PASS",
       "severity": "critical",
-      "expected": "acc=0.7971, f1=0.7944",
-      "actual": "acc=0.7971, f1=0.7944",
+      "expected": "acc=0.7971, f1=0.7943",
+      "actual": "acc=0.7971, f1=0.7943",
       "evidence": "",
       "root_cause": "",
       "fix": ""
@@ -179,7 +179,7 @@
       "severity": "medium",
       "expected": "",
       "actual": "",
-      "evidence": "Top feature: rainfall (importance=0.1658)",
+      "evidence": "Top feature: rainfall (importance=0.1660)",
       "root_cause": "",
       "fix": ""
     },
@@ -267,7 +267,7 @@
       "severity": "critical",
       "expected": "",
       "actual": "",
-      "evidence": "Top crop: cotton (51.4/100), 10 crops returned",
+      "evidence": "Top crop: cotton (51.6/100), 10 crops returned",
       "root_cause": "",
       "fix": ""
     },
@@ -311,7 +311,7 @@
       "severity": "critical",
       "expected": "",
       "actual": "",
-      "evidence": "All 5 runs identical. Top: ('cotton', 51.4)",
+      "evidence": "All 5 runs identical. Top: ('cotton', 51.6)",
       "root_cause": "",
       "fix": ""
     },
@@ -322,7 +322,7 @@
       "severity": "critical",
       "expected": "",
       "actual": "",
-      "evidence": "Scores: [51.4, 48.3, 47.2, 46.9, 46.9]",
+      "evidence": "Scores: [51.6, 48.3, 47.2, 46.9, 46.9]",
       "root_cause": "",
       "fix": ""
     },
@@ -366,7 +366,7 @@
       "severity": "high",
       "expected": "",
       "actual": "",
-      "evidence": "Top crop ml_score=10.0, rule_score=92.8, final=51.4",
+      "evidence": "Top crop ml_score=10.3, rule_score=92.8, final=51.6",
       "root_cause": "",
       "fix": ""
     },
@@ -377,7 +377,7 @@
       "severity": "critical",
       "expected": "",
       "actual": "",
-      "evidence": "Cotton: score=51.4, outcome=low",
+      "evidence": "Cotton: score=51.6, outcome=low",
       "root_cause": "",
       "fix": ""
     },
@@ -388,7 +388,7 @@
       "severity": "medium",
       "expected": "",
       "actual": "",
-      "evidence": "The analysis indicates that Cotton has low suitability (score: 51.4/100) under the current supplied conditions. Growing ",
+      "evidence": "The analysis indicates that Cotton has low suitability (score: 51.6/100) under the current supplied conditions. Growing ",
       "root_cause": "",
       "fix": ""
     },
@@ -399,7 +399,7 @@
       "severity": "high",
       "expected": "",
       "actual": "",
-      "evidence": "score=51.4, outcome=low",
+      "evidence": "score=51.6, outcome=low",
       "root_cause": "",
       "fix": ""
     },
@@ -421,7 +421,7 @@
       "severity": "critical",
       "expected": "",
       "actual": "",
-      "evidence": "Before=51.4, After=51.0, Change=-0.4",
+      "evidence": "Before=51.6, After=51.2, Change=-0.4",
       "root_cause": "",
       "fix": ""
     },
@@ -465,7 +465,7 @@
       "severity": "high",
       "expected": "",
       "actual": "",
-      "evidence": "Before=51.4, After=51.4",
+      "evidence": "Before=51.6, After=51.6",
       "root_cause": "",
       "fix": ""
     },
@@ -571,11 +571,11 @@
     {
       "test_id": "TC-MISS-002",
       "name": "Missing K produces different score than full data",
-      "status": "WARNING",
+      "status": "PASS",
       "severity": "high",
       "expected": "",
       "actual": "",
-      "evidence": "Full: 51.4, Missing K: 51.4",
+      "evidence": "Full: 51.6, Missing K: 51.4",
       "root_cause": "",
       "fix": ""
     },
@@ -619,7 +619,7 @@
       "severity": "critical",
       "expected": "",
       "actual": "",
-      "evidence": "Score=51.4, Classification=Moderately Suitable",
+      "evidence": "Score=51.6, Classification=Moderately Suitable",
       "root_cause": "",
       "fix": ""
     },
@@ -641,7 +641,7 @@
       "severity": "high",
       "expected": "",
       "actual": "",
-      "evidence": "Cotton ranks first because it has the highest overall suitability score (51.4/100) based on the soil test values and far",
+      "evidence": "Cotton ranks first because it has the highest overall suitability score (51.6/100) based on the soil test values and far",
       "root_cause": "",
       "fix": ""
     },
@@ -760,7 +760,7 @@
     "top_5_crops": [
       [
         "cotton",
-        51.4,
+        51.6,
         "Moderately Suitable"
       ],
       [
@@ -774,12 +774,12 @@
         "Moderately Suitable"
       ],
       [
-        "blackgram",
+        "maize",
         46.9,
         "Moderately Suitable"
       ],
       [
-        "mungbean",
+        "blackgram",
         46.9,
         "Moderately Suitable"
       ]
@@ -787,17 +787,17 @@
     "model_info": {
       "model_version": "random_forest_v2",
       "model_type": "Random Forest",
-      "training_date": "2026-11-17T00:03:56.045337",
+      "training_date": "2026-11-24T23:16:25.423702",
       "metrics": {
         "accuracy": 0.7971014492753623,
-        "precision_weighted": 0.7975675241389052,
+        "precision_weighted": 0.7972425255202107,
         "recall_weighted": 0.7971014492753623,
-        "f1_weighted": 0.7943929372390127,
-        "precision_macro": 0.7975675241389052,
+        "f1_weighted": 0.794283810943247,
+        "precision_macro": 0.7972425255202108,
         "recall_macro": 0.7971014492753624,
-        "f1_macro": 0.7943929372390125,
-        "cv_accuracy_mean": 0.7920289855072463,
-        "cv_accuracy_std": 0.013672436423270453
+        "f1_macro": 0.794283810943247,
+        "cv_accuracy_mean": 0.7927536231884058,
+        "cv_accuracy_std": 0.013093703622893233
       },
       "n_classes": 23,
       "all_models": [
@@ -822,11 +822,11 @@
         {
           "name": "Random Forest",
           "accuracy": 0.7971014492753623,
-          "precision_weighted": 0.7975675241389052,
+          "precision_weighted": 0.7972425255202107,
           "recall_weighted": 0.7971014492753623,
-          "f1_weighted": 0.7943929372390127,
-          "f1_macro": 0.7943929372390125,
-          "cv_mean": 0.7920289855072463
+          "f1_weighted": 0.794283810943247,
+          "f1_macro": 0.794283810943247,
+          "cv_mean": 0.7927536231884058
         },
         {
           "name": "HistGradientBoosting",

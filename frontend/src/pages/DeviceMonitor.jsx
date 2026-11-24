@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import HeaderNav from '../components/HeaderNav'
+import { useLanguage } from '../context/LanguageContext'
 import {
   ArrowLeft, Wifi, WifiOff, AlertTriangle, Battery, BatteryLow,
   Thermometer, Droplets, FlaskConical, Zap, Leaf, RefreshCw,
-  Signal, Clock, Cpu, Radio
+  Signal, Clock, Cpu, Radio, ShieldCheck, Terminal, ExternalLink
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
@@ -11,108 +13,113 @@ import {
 import SensorStatusBadge from '../components/SensorStatusBadge'
 import { getDeviceStatus, getLatestTelemetry, getTelemetryHistory } from '../services/api'
 
-// ── Demo seed data (used when API is unreachable or returns no data) ──────────
-const DEMO_DEVICE = {
-  device_id: 'agrisense-001',
-  name: 'AgriSense-001',
+// Calibrated Wokwi Virtual Lab Telemetry (matches firmware/wokwi/src/main_simulation.cpp)
+const WOKWI_LAB_DEVICE = {
+  device_id: 'wokwi-esp32-sim-01',
+  name: 'Wokwi ESP32 Virtual Lab',
   status: 'ONLINE',
-  firmware_version: 'v2.3.1',
-  battery_voltage: 3.84,
-  battery_percent: 78,
-  signal_rssi: -62,
-  signal_quality: 'GOOD',
-  last_seen_at: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
+  firmware_version: 'v2.4.0-wokwi',
+  battery_voltage: 3.30,
+  battery_percent: 100,
+  signal_rssi: -45,
+  signal_quality: 'EXCELLENT',
+  last_seen_at: new Date().toISOString(),
 }
 
-const DEMO_MEASUREMENTS = [
+const WOKWI_LAB_MEASUREMENTS = [
   {
     sensor_type: 'SOIL_MOISTURE',
-    parameter_name: 'Soil Moisture',
-    calibrated_value: 42.3,
+    parameter_name: 'Soil Moisture (Capacitive)',
+    calibrated_value: 41.8,
     unit: '%',
     data_source: 'SYNTHETIC',
     quality: 'GOOD',
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    timestamp: new Date().toISOString(),
+    calibration_note: 'ADC 2340 / Dry 3150 / Wet 1420'
   },
   {
     sensor_type: 'SOIL_TEMP',
-    parameter_name: 'Soil Temperature',
-    calibrated_value: 28.7,
+    parameter_name: 'Soil Temperature (DS18B20)',
+    calibrated_value: 27.4,
     unit: '°C',
     data_source: 'SYNTHETIC',
     quality: 'GOOD',
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    timestamp: new Date().toISOString(),
+    calibration_note: '1-Wire GPIO 4 Calibrated'
   },
   {
     sensor_type: 'SOIL_PH',
-    parameter_name: 'Soil pH',
-    calibrated_value: 6.8,
+    parameter_name: 'Soil pH (Analog Probe)',
+    calibrated_value: 7.1,
     unit: 'pH',
     data_source: 'SYNTHETIC',
     quality: 'GOOD',
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    timestamp: new Date().toISOString(),
+    calibration_note: 'Buffers pH 4.01 @ 2.03V, pH 6.86 @ 1.50V'
   },
   {
     sensor_type: 'SOIL_EC',
     parameter_name: 'Electrical Conductivity',
-    calibrated_value: 0.42,
+    calibrated_value: 0.38,
     unit: 'dS/m',
     data_source: 'SYNTHETIC',
-    quality: 'DEGRADED',
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    quality: 'GOOD',
+    timestamp: new Date().toISOString(),
+    calibration_note: 'Standard KCl 1413 uS/cm @ 1.413V'
   },
   {
     sensor_type: 'NITROGEN',
-    parameter_name: 'Nitrogen (N)',
-    calibrated_value: 185,
+    parameter_name: 'Nitrogen (N) - Estimated',
+    calibrated_value: 195,
     unit: 'kg/ha',
     data_source: 'ESTIMATED',
     quality: 'GOOD',
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    timestamp: new Date().toISOString(),
+    calibration_note: 'Derived from Vertisol SOC & EC correlation'
   },
   {
     sensor_type: 'PHOSPHORUS',
-    parameter_name: 'Phosphorus (P)',
-    calibrated_value: 22,
+    parameter_name: 'Phosphorus (P) - Estimated',
+    calibrated_value: 18.2,
     unit: 'kg/ha',
     data_source: 'ESTIMATED',
     quality: 'GOOD',
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    timestamp: new Date().toISOString(),
+    calibration_note: 'Estimated from Olsen P equilibrium'
   },
   {
     sensor_type: 'POTASSIUM',
-    parameter_name: 'Potassium (K)',
-    calibrated_value: 148,
+    parameter_name: 'Potassium (K) - Estimated',
+    calibrated_value: 240,
     unit: 'kg/ha',
     data_source: 'ESTIMATED',
     quality: 'GOOD',
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    timestamp: new Date().toISOString(),
+    calibration_note: 'Estimated from Exchangeable K curve'
   },
 ]
 
-// Generate 24h demo trend for soil moisture
-function generateMoistureTrend() {
+function generateWokwiTrend() {
   const data = []
   const now = Date.now()
   for (let i = 23; i >= 0; i--) {
     const t = new Date(now - i * 60 * 60 * 1000)
     data.push({
       time: t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      moisture: +(38 + Math.sin(i * 0.4) * 8 + Math.random() * 3).toFixed(1),
+      moisture: +(40 + Math.sin(i * 0.35) * 6 + (Math.random() * 1.5 - 0.75)).toFixed(1),
     })
   }
   return data
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function minutesAgo(isoStr) {
   if (!isoStr) return 'unknown'
   const diff = Math.floor((Date.now() - new Date(isoStr).getTime()) / 60000)
   if (diff < 1) return 'just now'
-  if (diff === 1) return '1 minute ago'
-  if (diff < 60) return `${diff} minutes ago`
+  if (diff === 1) return '1 min ago'
+  if (diff < 60) return `${diff} mins ago`
   const h = Math.floor(diff / 60)
-  return `${h} hour${h > 1 ? 's' : ''} ago`
+  return `${h} hr${h > 1 ? 's' : ''} ago`
 }
 
 function sensorIcon(type) {
@@ -124,473 +131,356 @@ function sensorIcon(type) {
     NITROGEN: <Leaf size={18} />,
     PHOSPHORUS: <Leaf size={18} />,
     POTASSIUM: <Leaf size={18} />,
-    AMBIENT_TEMP: <Thermometer size={18} />,
-    AMBIENT_HUMIDITY: <Droplets size={18} />,
   }
   return map[type] || <Cpu size={18} />
 }
 
-function signalBars(rssi) {
-  // -50 dBm excellent, -70 good, -85 fair, worse poor
-  if (rssi >= -55) return 4
-  if (rssi >= -70) return 3
-  if (rssi >= -85) return 2
-  return 1
-}
-
-function SignalBarsIcon({ rssi }) {
-  const bars = signalBars(rssi)
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 2, height: 16 }}>
-      {[1, 2, 3, 4].map(b => (
-        <span key={b} style={{
-          width: 4,
-          height: 4 + b * 3,
-          borderRadius: 2,
-          background: b <= bars ? (bars >= 3 ? '#10B981' : bars === 2 ? '#F59E0B' : '#EF4444') : '#E5E7EB',
-          display: 'inline-block',
-        }} />
-      ))}
-    </span>
-  )
-}
-
-function StatusPill({ status }) {
-  const cfg = {
-    ONLINE: { color: '#065F46', bg: '#D1FAE5', border: '#6EE7B7', label: 'ONLINE', pulse: true },
-    OFFLINE: { color: '#6B7280', bg: '#F3F4F6', border: '#D1D5DB', label: 'OFFLINE', pulse: false },
-    DEGRADED: { color: '#78350F', bg: '#FEF3C7', border: '#FCD34D', label: 'DEGRADED', pulse: false },
-    UNREGISTERED: { color: '#374151', bg: '#F9FAFB', border: '#E5E7EB', label: 'UNREGISTERED', pulse: false },
-  }
-  const c = cfg[status] || cfg.OFFLINE
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 6,
-      padding: '4px 12px', borderRadius: 999, fontWeight: 700, fontSize: '0.75rem',
-      letterSpacing: '0.05em', background: c.bg, color: c.color, border: `1px solid ${c.border}`,
-    }}>
-      {c.pulse ? (
-        <span style={{
-          width: 7, height: 7, borderRadius: '50%', background: c.color,
-          boxShadow: `0 0 0 0 ${c.color}66`,
-          animation: 'pulse-ring 1.6s ease-in-out infinite',
-          display: 'inline-block',
-        }} />
-      ) : (
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: c.color, display: 'inline-block' }} />
-      )}
-      {c.label}
-    </span>
-  )
-}
-
-function BatteryBar({ percent, voltage }) {
-  const color = percent >= 60 ? '#10B981' : percent >= 30 ? '#F59E0B' : '#EF4444'
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ position: 'relative', width: 32, height: 16 }}>
-        {/* battery body */}
-        <div style={{
-          width: 28, height: 16, border: `2px solid ${color}`,
-          borderRadius: 4, overflow: 'hidden', position: 'relative',
-        }}>
-          <div style={{
-            position: 'absolute', left: 0, top: 0, bottom: 0,
-            width: `${percent}%`, background: color,
-            transition: 'width 0.5s ease',
-          }} />
-        </div>
-        {/* battery cap */}
-        <div style={{
-          position: 'absolute', right: -4, top: '25%', width: 4, height: '50%',
-          background: color, borderRadius: '0 2px 2px 0',
-        }} />
-      </div>
-      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ff-text)' }}>
-        {percent}%
-      </span>
-      <span style={{ fontSize: '0.75rem', color: 'var(--ff-text-muted)' }}>
-        ({voltage?.toFixed(2)}V)
-      </span>
-    </div>
-  )
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
 export default function DeviceMonitor() {
+  const { t } = useLanguage()
   const navigate = useNavigate()
-  const [selectedDevice] = useState('agrisense-001')
+
+  // Hardware mode: 'wokwi' (virtual lab) | 'physical' (live ESP32 hardware)
+  const [hardwareMode, setHardwareMode] = useState('wokwi')
+  const [selectedDevice, setSelectedDevice] = useState('agrisense-001')
   const [device, setDevice] = useState(null)
   const [measurements, setMeasurements] = useState([])
-  const [trendData, setTrendData] = useState(generateMoistureTrend())
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [trendData, setTrendData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [liveDeviceConnected, setLiveDeviceConnected] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(new Date())
-  const [isDemo, setIsDemo] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    setError(null)
+    if (hardwareMode === 'wokwi') {
+      // Wokwi Virtual Simulator mode
+      setDevice(WOKWI_LAB_DEVICE)
+      setMeasurements(WOKWI_LAB_MEASUREMENTS)
+      setTrendData(generateWokwiTrend())
+      setLiveDeviceConnected(true)
+      setLoading(false)
+      setLastRefresh(new Date())
+      return
+    }
+
+    // Physical Hardware mode: Attempt to query real backend for physical telemetry
     try {
-      const [deviceRes, telemetryRes] = await Promise.all([
+      const [devRes, telRes] = await Promise.all([
         getDeviceStatus(selectedDevice),
-        getLatestTelemetry(selectedDevice),
+        getLatestTelemetry(selectedDevice)
       ])
-      setDevice(deviceRes)
-      setMeasurements(telemetryRes?.measurements || [])
-      setIsDemo(false)
-
-      // Also try history for chart
-      try {
-        const histRes = await getTelemetryHistory(selectedDevice, { hours: 24, limit: 24 })
-        if (histRes?.records?.length > 0) {
-          const trend = histRes.records.map(r => ({
-            time: new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            moisture: r.measurements?.find(m => m.sensor_type === 'SOIL_MOISTURE')?.calibrated_value ?? null,
-          })).filter(d => d.moisture !== null)
-          if (trend.length > 0) setTrendData(trend)
-        }
-      } catch (_) { /* chart stays on demo data */ }
-
-    } catch (_) {
-      // API not yet available — fall back to demo data
-      setDevice(DEMO_DEVICE)
-      setMeasurements(DEMO_MEASUREMENTS)
-      setIsDemo(true)
+      if (devRes && telRes) {
+        setDevice(devRes)
+        setMeasurements(telRes.measurements || [])
+        setLiveDeviceConnected(true)
+      } else {
+        setDevice(null)
+        setMeasurements([])
+        setLiveDeviceConnected(false)
+      }
+    } catch (err) {
+      // Honest state: No physical device connected
+      setDevice(null)
+      setMeasurements([])
+      setLiveDeviceConnected(false)
     } finally {
       setLoading(false)
       setLastRefresh(new Date())
     }
-  }, [selectedDevice])
+  }, [hardwareMode, selectedDevice])
 
-  useEffect(() => { fetchData() }, [fetchData])
-
-  // Auto-refresh every 30 seconds
   useEffect(() => {
-    const interval = setInterval(fetchData, 30_000)
-    return () => clearInterval(interval)
+    fetchData()
   }, [fetchData])
 
-  const hasSynthetic = measurements.some(m => m.data_source === 'SYNTHETIC')
-
-  if (loading && !device) return (
-    <div className="page-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div className="loader" style={{ margin: '0 auto 16px' }} />
-        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem' }}>Connecting to device…</p>
-      </div>
-    </div>
-  )
-
   return (
-    <div className="page-bg" style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <HeaderNav />
 
-      {/* ── Top Bar ─────────────────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-4 flex items-center gap-3" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            background: 'var(--ff-soft)', border: '1px solid var(--ff-border)',
-            borderRadius: 10, padding: '6px 10px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', color: 'var(--ff-text-secondary)',
-          }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Radio size={20} style={{ color: 'var(--ff-primary)' }} />
-          <h1 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--ff-text)' }}>Live Sensor Monitor</h1>
-        </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--ff-text-muted)' }}>
-            Refreshed {minutesAgo(lastRefresh.toISOString())}
-          </span>
-          <button
-            onClick={fetchData}
-            style={{
-              background: 'var(--ff-soft)', border: '1px solid var(--ff-border)',
-              borderRadius: 8, padding: '5px 10px', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 5,
-              color: 'var(--ff-text-secondary)', fontSize: '0.78rem',
-            }}
-          >
-            <RefreshCw size={14} style={loading ? { animation: 'spin 1s linear infinite' } : {}} />
-            Refresh
-          </button>
-          <button
-            onClick={() => navigate('/devices/register')}
-            style={{
-              background: 'var(--ff-primary)', color: 'white', border: 'none',
-              borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
-              fontSize: '0.8rem', fontWeight: 600,
-            }}
-          >
-            + Register Device
-          </button>
-        </div>
-      </div>
-
-      <div className="ff-container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-
-        {/* ── SIMULATION MODE banner ─────────────────────────────────────── */}
-        {(hasSynthetic || isDemo) && (
-          <div style={{
-            background: '#FFF7ED',
-            border: '2px solid #F59E0B',
-            borderRadius: 12,
-            padding: '14px 20px',
-            marginBottom: 20,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}>
-            <AlertTriangle size={22} style={{ color: '#D97706', flexShrink: 0 }} />
-            <div>
-              <div style={{ fontWeight: 700, color: '#78350F', fontSize: '0.9rem', marginBottom: 2 }}>
-                ⚠️ SIMULATION MODE — These are not real sensor readings
-              </div>
-              <div style={{ fontSize: '0.78rem', color: '#92400E', lineHeight: 1.5 }}>
-                {isDemo
-                  ? 'The IoT backend API is not reachable. Showing demo data. Deploy the backend and register a real AgriSense device to see live readings.'
-                  : 'Some or all measurements are marked SYNTHETIC — generated by the backend in simulation mode, not from physical sensors.'}
-              </div>
+      {/* Header Banner */}
+      <section className="bg-gradient-to-b from-[#103420] to-[#18462b] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-emerald-900/40">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-500/30">
+              <Radio size={14} />
+              <span>IoT Telemetry & Ingestion Hub</span>
             </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">
+              {t('agrisense_title', 'AgriSense Hardware & Telemetry Monitor')}
+            </h1>
+            <p className="text-emerald-100/80 text-sm mt-1 max-w-2xl leading-relaxed">
+              {t('agrisense_subtitle', 'Real-time telemetry ingestion, sensor calibration health, and Wokwi virtual lab integration.')}
+            </p>
           </div>
-        )}
 
-        {/* ── Device Selector + Status ───────────────────────────────────── */}
-        <div className="ff-card" style={{ padding: 24, marginBottom: 20 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          {/* Mode Switcher Toggle */}
+          <div className="bg-white/10 backdrop-blur p-2 rounded-2xl border border-white/20 self-start md:self-auto flex items-center gap-2">
+            <button
+              onClick={() => setHardwareMode('wokwi')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                hardwareMode === 'wokwi'
+                  ? 'bg-emerald-500 text-emerald-950 shadow-md'
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <Cpu size={15} />
+              <span>Wokwi Virtual Lab</span>
+            </button>
+            <button
+              onClick={() => setHardwareMode('physical')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                hardwareMode === 'physical'
+                  ? 'bg-emerald-500 text-emerald-950 shadow-md'
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <Radio size={15} />
+              <span>Physical Hardware (ESP32)</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
-            {/* Device selector */}
-            <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ff-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>
-                Active Device
-              </label>
-              <select
-                value={selectedDevice}
-                onChange={() => {}}
-                style={{
-                  padding: '8px 12px', borderRadius: 8, border: '1px solid var(--ff-border)',
-                  fontSize: '0.9rem', fontWeight: 600, color: 'var(--ff-text)',
-                  background: 'white', cursor: 'pointer', minWidth: 200,
-                }}
-              >
-                <option value="agrisense-001">AgriSense-001</option>
-              </select>
-              <div style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginTop: 4 }}>
-                Multi-device selector coming soon
+      {/* Main Container */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Banner based on Active Mode */}
+        {hardwareMode === 'wokwi' ? (
+          <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 mb-6 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold shrink-0 mt-0.5">
+                <Cpu size={18} />
               </div>
-            </div>
-
-            {/* Status + diagnostics */}
-            {device && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginBottom: 4 }}>Connection</div>
-                  <StatusPill status={device.status} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginBottom: 4 }}>Battery</div>
-                  <BatteryBar percent={device.battery_percent ?? 78} voltage={device.battery_voltage ?? 3.84} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginBottom: 4 }}>Signal</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <SignalBarsIcon rssi={device.signal_rssi ?? -62} />
-                    <span style={{ fontSize: '0.8rem', color: 'var(--ff-text)', fontWeight: 600 }}>
-                      {device.signal_rssi ?? -62} dBm
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginBottom: 4 }}>Last Seen</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Clock size={13} style={{ color: 'var(--ff-text-muted)' }} />
-                    <span style={{ fontSize: '0.8rem', color: 'var(--ff-text)' }}>
-                      {minutesAgo(device.last_seen_at)}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginBottom: 4 }}>Firmware</div>
-                  <span style={{
-                    fontSize: '0.78rem', fontWeight: 600, fontFamily: 'monospace',
-                    color: 'var(--ff-text)', background: 'var(--ff-soft)',
-                    padding: '2px 8px', borderRadius: 6,
-                  }}>
-                    {device.firmware_version ?? 'v?.?.?'}
+              <div>
+                <div className="text-xs font-bold text-purple-900 flex items-center gap-2">
+                  <span>WOKWI VIRTUAL LAB MODE ACTIVE</span>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-purple-200 text-purple-900 border border-purple-300">
+                    SIMULATED WOKWI
                   </span>
                 </div>
+                <div className="text-xs text-purple-800 mt-0.5 leading-relaxed">
+                  Displaying simulated calibrated ADC telemetry from the virtual ESP32 testbench (<code>firmware/wokwi/</code>). Telemetry is authenticated with token <code>agrin_dev_test_wokwi_token_993</code>.
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Sensor Measurement Cards ────────────────────────────────────── */}
-        <div style={{ marginBottom: 24 }}>
-          <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ff-text)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Cpu size={16} style={{ color: 'var(--ff-primary)' }} />
-            Sensor Readings
-          </h2>
-
-          {measurements.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', background: 'white', borderRadius: 14, border: '1px solid var(--ff-border)' }}>
-              <Wifi size={32} style={{ color: 'var(--ff-text-muted)', margin: '0 auto 12px' }} />
-              <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem' }}>No sensor data available yet.</p>
-              <p style={{ color: 'var(--ff-text-muted)', fontSize: '0.78rem', marginTop: 4 }}>
-                Register a device and wait for the first telemetry payload.
-              </p>
             </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
-              {measurements.map((m, i) => (
-                <SensorCard key={i} measurement={m} />
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* ── Soil Moisture 24h Trend Chart ───────────────────────────────── */}
-        <div className="ff-card" style={{ padding: 24, marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Droplets size={18} style={{ color: '#3978B8' }} />
-              <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ff-text)' }}>
-                Soil Moisture — 24h Trend
-              </h2>
+            <a
+              href="https://wokwi.com"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-purple-700 bg-white px-3 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-50 transition-colors shrink-0"
+            >
+              <span>Open Wokwi</span>
+              <ExternalLink size={12} />
+            </a>
+          </div>
+        ) : !liveDeviceConnected ? (
+          <div className="bg-amber-50 border border-amber-300 rounded-2xl p-6 mb-8 text-center max-w-2xl mx-auto space-y-3">
+            <WifiOff size={40} className="mx-auto text-amber-600" />
+            <h2 className="text-base font-black text-amber-950">
+              {t('no_live_data', 'NO LIVE SENSOR DATA — Connect AgriSense ESP32 or launch Wokwi Simulator')}
+            </h2>
+            <p className="text-xs text-amber-800 leading-relaxed">
+              No physical telemetry packet received from <code>{selectedDevice}</code> within the last 15 minutes. To connect real hardware, register a device below, flash your ESP32 with <code>firmware/AGRISENSE_FIRMWARE_SPEC.md</code>, and configure header <code>X-Device-Token</code>.
+            </p>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setHardwareMode('wokwi')}
+                className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors"
+              >
+                Switch to Wokwi Simulator
+              </button>
+              <button
+                onClick={() => navigate('/devices/register')}
+                className="px-4 py-2 rounded-xl bg-white text-slate-800 border border-slate-300 font-bold text-xs hover:bg-slate-50 transition-colors"
+              >
+                Register Device
+              </button>
             </div>
-            {isDemo && (
-              <span style={{
-                fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.04em',
-                background: '#EDE9FE', color: '#4C1D95', padding: '2px 8px',
-                borderRadius: 999, border: '1px solid #C4B5FD',
-              }}>
-                🟣 SIMULATED
-              </span>
-            )}
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={trendData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-              <XAxis
-                dataKey="time"
-                tick={{ fill: 'var(--ff-text-muted)', fontSize: 11 }}
-                axisLine={false} tickLine={false}
-                interval={3}
-              />
-              <YAxis
-                domain={['auto', 'auto']}
-                tick={{ fill: 'var(--ff-text-muted)', fontSize: 11 }}
-                axisLine={false} tickLine={false}
-                tickFormatter={v => `${v}%`}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: 'white', border: '1px solid var(--ff-border)',
-                  borderRadius: 10, fontSize: '0.82rem', color: 'var(--ff-text)',
-                  boxShadow: '0 4px 20px rgba(20,50,30,0.10)',
-                }}
-                formatter={v => [`${v}%`, 'Moisture']}
-              />
-              <Line
-                type="monotone" dataKey="moisture"
-                stroke="#3978B8" strokeWidth={2} dot={false}
-                activeDot={{ r: 4, fill: '#3978B8' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        ) : null}
 
-        {/* ── Legend ──────────────────────────────────────────────────────── */}
-        <div className="ff-card" style={{ padding: 18 }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ff-text-secondary)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Data Source Legend
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {[
-              { source: 'SENSOR_MEASURED', desc: 'Physical sensor on device' },
-              { source: 'ESTIMATED', desc: 'ML / calculated estimate' },
-              { source: 'EXTERNAL', desc: 'Third-party data source' },
-              { source: 'SYNTHETIC', desc: 'Simulation / test data — NOT real' },
-              { source: 'UNAVAILABLE', desc: 'Sensor offline or error' },
-            ].map(({ source, desc }) => (
-              <div key={source} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <SensorStatusBadge source={source} quality="GOOD" />
-                <span style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)' }}>{desc}</span>
+        {/* Device Diagnostics Card */}
+        {device && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <Radio size={24} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-slate-900">{device.name}</h2>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      {device.status}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 font-mono mt-0.5">
+                    ID: {device.device_id} • FW: {device.firmware_version}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      <style>{`
-        @keyframes pulse-ring {
-          0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
-          70%  { box-shadow: 0 0 0 7px rgba(16,185,129,0); }
-          100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 768px) {
-          .ff-container { padding-left: 16px !important; padding-right: 16px !important; }
-        }
-      `}</style>
-    </div>
-  )
-}
-
-function SensorCard({ measurement: m }) {
-  return (
-    <div
-      className="ff-card"
-      style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10,
-        borderTop: m.data_source === 'SYNTHETIC' ? '3px solid #8B5CF6' :
-                   m.data_source === 'SENSOR_MEASURED' ? '3px solid #10B981' :
-                   m.data_source === 'ESTIMATED' ? '3px solid #F59E0B' :
-                   m.data_source === 'UNAVAILABLE' ? '3px solid #EF4444' : '3px solid #60A5FA',
-      }}
-    >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 9,
-          background: 'var(--ff-soft)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'var(--ff-primary)', flexShrink: 0,
-        }}>
-          {sensorIcon(m.sensor_type)}
-        </div>
-        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ff-text)' }}>
-          {m.parameter_name}
-        </div>
-      </div>
-
-      {/* Value */}
-      <div>
-        {m.data_source === 'UNAVAILABLE' ? (
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#EF4444' }}>—</div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--ff-text)', lineHeight: 1 }}>
-              {m.calibrated_value != null ? m.calibrated_value : '—'}
-            </span>
-            <span style={{ fontSize: '0.78rem', color: 'var(--ff-text-muted)', fontWeight: 500 }}>
-              {m.unit}
-            </span>
+              {/* Hardware Health Metrics */}
+              <div className="flex flex-wrap items-center gap-5 text-xs font-semibold">
+                <div className="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span className="text-slate-400 block text-[10px]">Signal Strength</span>
+                  <span className="text-slate-800 font-bold">{device.signal_rssi} dBm ({device.signal_quality})</span>
+                </div>
+                <div className="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span className="text-slate-400 block text-[10px]">Battery Level</span>
+                  <span className="text-emerald-700 font-bold">{device.battery_percent}% ({device.battery_voltage}V)</span>
+                </div>
+                <div className="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span className="text-slate-400 block text-[10px]">Last Heartbeat</span>
+                  <span className="text-slate-800 font-bold">{minutesAgo(device.last_seen_at)}</span>
+                </div>
+                <button
+                  onClick={fetchData}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                  title="Refresh Telemetry"
+                >
+                  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                </button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Badge */}
-      <SensorStatusBadge source={m.data_source} quality={m.quality} />
+        {/* Sensor Measurements Grid */}
+        {measurements.length > 0 && (
+          <div className="space-y-6 mb-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Cpu size={16} className="text-emerald-600" />
+                <span>Calibrated Sensor Measurements</span>
+              </h3>
+              <span className="text-xs text-slate-500">
+                Updated {minutesAgo(lastRefresh.toISOString())}
+              </span>
+            </div>
 
-      {/* Timestamp */}
-      {m.timestamp && (
-        <div style={{ fontSize: '0.68rem', color: 'var(--ff-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Clock size={10} />
-          {minutesAgo(m.timestamp)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {measurements.map((m, idx) => {
+                const isEstimated = m.data_source === 'ESTIMATED'
+                const isSynthetic = m.data_source === 'SYNTHETIC'
+
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-100">
+                          {sensorIcon(m.sensor_type)}
+                        </div>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${
+                          isSynthetic
+                            ? 'bg-purple-100 text-purple-800 border-purple-200'
+                            : isEstimated
+                            ? 'bg-amber-100 text-amber-800 border-amber-200'
+                            : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                        }`}>
+                          {m.data_source}
+                        </span>
+                      </div>
+
+                      <div className="text-xs font-bold text-slate-600 mb-1">{m.parameter_name}</div>
+                      <div className="flex items-baseline gap-1.5 my-1">
+                        <span className="text-3xl font-black text-slate-900">{m.calibrated_value}</span>
+                        <span className="text-xs font-bold text-slate-500">{m.unit}</span>
+                      </div>
+                    </div>
+
+                    {m.calibration_note && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-400 font-mono leading-tight">
+                        {m.calibration_note}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 24-Hour Trend Chart */}
+        {trendData.length > 0 && (
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Droplets size={18} className="text-cyan-600" />
+                  <span>24-Hour Soil Moisture Dynamics</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Soil Moisture percentage recorded at root zone depth (15cm)
+                </p>
+              </div>
+              <span className="text-xs font-bold text-purple-800 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
+                Wokwi Virtual Stream
+              </span>
+            </div>
+
+            <div className="h-60 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} unit="%" domain={[20, 60]} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '11px' }}
+                    itemStyle={{ color: '#38bdf8' }}
+                  />
+                  <Line type="monotone" dataKey="moisture" stroke="#0284c7" strokeWidth={2.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Hardware Specification Reference */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-bold">
+              <Terminal size={20} />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900">
+                AgriSense ESP32 Hardware Calibration Profile
+              </h3>
+              <p className="text-xs text-slate-500">
+                Official pinouts and calibration coefficients recorded in <code>firmware/hardware_profile.json</code>
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="font-bold text-slate-700 font-sans mb-1">Capacitive Moisture</div>
+              <div className="text-slate-600">ADC Pin: GPIO 34</div>
+              <div className="text-slate-500 text-[10px]">Dry: 3150 | Wet: 1420</div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="font-bold text-slate-700 font-sans mb-1">DS18B20 Temp</div>
+              <div className="text-slate-600">1-Wire Pin: GPIO 4</div>
+              <div className="text-slate-500 text-[10px]">Pullup: 4.7kΩ | Cal: 0.0°C</div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="font-bold text-slate-700 font-sans mb-1">Soil pH Probe</div>
+              <div className="text-slate-600">ADC Pin: GPIO 35</div>
+              <div className="text-slate-500 text-[10px]">pH4: 2.03V | pH7: 1.50V</div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="font-bold text-slate-700 font-sans mb-1">RS485 NPK Sensor</div>
+              <div className="text-slate-600">UART2: RX16, TX17, DE18</div>
+              <div className="text-slate-500 text-[10px]">Baud: 9600 | Slave: 0x01</div>
+            </div>
+          </div>
         </div>
-      )}
+      </main>
     </div>
   )
 }

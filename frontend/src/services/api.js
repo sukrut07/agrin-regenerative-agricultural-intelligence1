@@ -155,5 +155,37 @@ export const registerDevice = (data) =>
 export const getFieldsForFarm = (farmId) =>
   apiCall(`/fields/${encodeURIComponent(farmId)}`);
 
+export const createField = (data) =>
+  apiCall('/fields', { method: 'POST', body: JSON.stringify(data) });
+
+// ── Expanded Crop Catalogue & Synthetic Engine ──────────────────────────────
+export const getCropCatalogue = (params = {}) => {
+  const q = new URLSearchParams();
+  if (params.category) q.append('category', params.category);
+  if (params.season) q.append('season', params.season);
+  if (params.state) q.append('state', params.state);
+  if (params.soil_type) q.append('soil_type', params.soil_type);
+  if (params.search) q.append('search', params.search);
+  if (params.lifecycle) q.append('lifecycle', params.lifecycle);
+  const qs = q.toString();
+  return apiCall(`/crops/catalogue${qs ? `?${qs}` : ''}`);
+};
+
+export const getCropCategories = () =>
+  apiCall('/crops/categories');
+
+export const getCropById = (cropId) =>
+  apiCall(`/crops/${encodeURIComponent(cropId)}`);
+
+export const getSyntheticMetadata = () =>
+  apiCall('/synthetic/metadata');
+
+export const getSyntheticSample = (limit = 10) =>
+  apiCall(`/synthetic/sample?limit=${limit}`);
+
+export const getSyntheticScenarios = () =>
+  apiCall('/synthetic/scenarios');
+
+
 
 

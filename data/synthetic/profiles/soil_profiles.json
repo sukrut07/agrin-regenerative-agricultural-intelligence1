@@ -1,0 +1,159 @@
+{
+  "classification": "Indian Council of Agricultural Research (ICAR) Major Soil Orders of India",
+  "profiles": {
+    "black": {
+      "name": "Black Soil / Regur (Vertisols)",
+      "order": "Vertisols",
+      "texture": "Clayey / Heavy Clay",
+      "characteristics": "High swelling and shrinkage, high water-holding capacity, deep cracks in dry season.",
+      "typical_ranges": {
+        "N": [90, 180],
+        "P": [12, 35],
+        "K": [200, 480],
+        "S": [8.0, 22.0],
+        "Zn": [0.4, 1.2],
+        "Fe": [4.0, 10.0],
+        "Cu": [0.3, 1.0],
+        "Mn": [3.5, 8.5],
+        "B": [0.4, 0.9],
+        "ph": [7.3, 8.6],
+        "EC": [0.2, 0.8],
+        "OC": [0.45, 0.85]
+      },
+      "common_deficiencies": ["Nitrogen", "Phosphorus", "Zinc"],
+      "predominant_regions": ["Maharashtra", "Madhya Pradesh", "Gujarat", "Karnataka", "Telangana", "Andhra Pradesh"]
+    },
+    "alluvial": {
+      "name": "Alluvial Soil (Entisols / Inceptisols)",
+      "order": "Entisols / Inceptisols",
+      "texture": "Sandy Loam to Silt Loam / Clay Loam",
+      "characteristics": "Immature azonal soils deposited by Indo-Gangetic and coastal river systems, highly fertile.",
+      "typical_ranges": {
+        "N": [110, 240],
+        "P": [20, 50],
+        "K": [140, 320],
+        "S": [10.0, 25.0],
+        "Zn": [0.6, 1.8],
+        "Fe": [5.0, 15.0],
+        "Cu": [0.4, 1.2],
+        "Mn": [4.0, 12.0],
+        "B": [0.5, 1.2],
+        "ph": [6.5, 8.0],
+        "EC": [0.15, 0.65],
+        "OC": [0.5, 1.1]
+      },
+      "common_deficiencies": ["Nitrogen", "Zinc", "Boron"],
+      "predominant_regions": ["Punjab", "Haryana", "Uttar Pradesh", "Bihar", "West Bengal", "Assam", "Coastal Plains"]
+    },
+    "red_loam": {
+      "name": "Red and Yellow Soil (Alfisols / Ultisols)",
+      "order": "Alfisols",
+      "texture": "Sandy Loam to Clayey Loam",
+      "characteristics": "Developed on crystalline igneous rocks, reddish color due to iron diffusion, friable structure.",
+      "typical_ranges": {
+        "N": [70, 160],
+        "P": [8, 28],
+        "K": [120, 260],
+        "S": [6.0, 18.0],
+        "Zn": [0.3, 0.9],
+        "Fe": [8.0, 25.0],
+        "Cu": [0.3, 0.9],
+        "Mn": [5.0, 15.0],
+        "B": [0.3, 0.7],
+        "ph": [5.5, 7.2],
+        "EC": [0.1, 0.45],
+        "OC": [0.35, 0.70]
+      },
+      "common_deficiencies": ["Nitrogen", "Phosphorus", "Potassium", "Zinc", "Boron"],
+      "predominant_regions": ["Tamil Nadu", "Karnataka", "Odisha", "Jharkhand", "Andhra Pradesh", "Chhattisgarh"]
+    },
+    "laterite": {
+      "name": "Laterite Soil (Oxisols / Ultisols)",
+      "order": "Oxisols",
+      "texture": "Porous, Gravelly Loam",
+      "characteristics": "Intense leaching under high temperature and rainfall, rich in iron and aluminium oxides, acidic.",
+      "typical_ranges": {
+        "N": [60, 140],
+        "P": [5, 20],
+        "K": [80, 200],
+        "S": [5.0, 15.0],
+        "Zn": [0.2, 0.7],
+        "Fe": [15.0, 45.0],
+        "Cu": [0.2, 0.8],
+        "Mn": [4.0, 12.0],
+        "B": [0.2, 0.5],
+        "ph": [4.5, 6.0],
+        "EC": [0.05, 0.35],
+        "OC": [0.6, 1.4]
+      },
+      "common_deficiencies": ["Phosphorus (High P-fixation)", "Potassium", "Calcium", "Magnesium", "Zinc"],
+      "predominant_regions": ["Kerala", "Goa", "Karnataka Coastal/Ghats", "Maharashtra Konkan", "Odisha", "Meghalaya"]
+    },
+    "arid_desert": {
+      "name": "Arid / Desert Soil (Aridisols)",
+      "order": "Aridisols",
+      "texture": "Sandy to Gravelly Sand",
+      "characteristics": "Low organic matter, loose structure, high soluble salts in depression basins, low moisture retention.",
+      "typical_ranges": {
+        "N": [40, 110],
+        "P": [6, 22],
+        "K": [160, 380],
+        "S": [10.0, 30.0],
+        "Zn": [0.2, 0.6],
+        "Fe": [2.5, 7.0],
+        "Cu": [0.2, 0.5],
+        "Mn": [2.0, 6.0],
+        "B": [0.5, 1.8],
+        "ph": [7.8, 9.2],
+        "EC": [0.5, 2.8],
+        "OC": [0.1, 0.35]
+      },
+      "common_deficiencies": ["Nitrogen", "Organic Carbon", "Zinc", "Iron"],
+      "predominant_regions": ["Rajasthan (Thar)", "Gujarat (Kutch)", "Southern Haryana", "Southwest Punjab"]
+    },
+    "saline_alkali": {
+      "name": "Saline and Alkaline / Sodic Soil",
+      "order": "Halomorphic / Natric",
+      "texture": "Clay Loam to Sandy Loam",
+      "characteristics": "High concentration of soluble chlorides/sulfates of sodium (Saline) or exchangeable sodium percentage > 15% (Alkaline).",
+      "typical_ranges": {
+        "N": [50, 120],
+        "P": [8, 25],
+        "K": [180, 420],
+        "S": [15.0, 50.0],
+        "Zn": [0.2, 0.5],
+        "Fe": [2.0, 6.0],
+        "Cu": [0.2, 0.6],
+        "Mn": [1.5, 5.0],
+        "B": [1.0, 3.5],
+        "ph": [8.5, 10.2],
+        "EC": [1.5, 8.5],
+        "OC": [0.15, 0.40]
+      },
+      "common_deficiencies": ["Available Calcium", "Zinc", "Iron", "Nitrogen"],
+      "predominant_regions": ["Canal command areas of UP, Haryana, Punjab, Rajasthan, Gujarat coastal marshes"]
+    },
+    "mountain_forest": {
+      "name": "Mountain and Forest Soil",
+      "order": "Inceptisols / Spodosols",
+      "texture": "Silty Loam to Gravelly Loam",
+      "characteristics": "High organic matter on upper slopes, thin solum, acidic in coniferous zones, fertile in river basins.",
+      "typical_ranges": {
+        "N": [120, 280],
+        "P": [15, 45],
+        "K": [150, 300],
+        "S": [8.0, 20.0],
+        "Zn": [0.5, 1.5],
+        "Fe": [8.0, 30.0],
+        "Cu": [0.4, 1.1],
+        "Mn": [5.0, 16.0],
+        "B": [0.3, 0.8],
+        "ph": [5.0, 6.5],
+        "EC": [0.08, 0.35],
+        "OC": [1.0, 2.5]
+      },
+      "common_deficiencies": ["Phosphorus", "Boron", "Molybdenum"],
+      "predominant_regions": ["Jammu and Kashmir", "Himachal Pradesh", "Uttarakhand", "Sikkim", "Arunachal Pradesh"]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "model_version": "random_forest_v2",
   "model_type": "Random Forest",
-  "training_date": "2026-11-17T00:03:56.045337",
+  "training_date": "2026-11-24T23:16:25.423702",
   "dataset": "unified_crop_soil_dataset.csv",
   "dataset_nature": "VERIFIED_MULTI_SOURCE_OPEN_DATA",
   "seed": 42,
@@ -53,14 +53,14 @@
   ],
   "metrics": {
     "accuracy": 0.7971014492753623,
-    "precision_weighted": 0.7975675241389052,
+    "precision_weighted": 0.7972425255202107,
     "recall_weighted": 0.7971014492753623,
-    "f1_weighted": 0.7943929372390127,
-    "precision_macro": 0.7975675241389052,
+    "f1_weighted": 0.794283810943247,
+    "precision_macro": 0.7972425255202108,
     "recall_macro": 0.7971014492753624,
-    "f1_macro": 0.7943929372390125,
-    "cv_accuracy_mean": 0.7920289855072463,
-    "cv_accuracy_std": 0.013672436423270453
+    "f1_macro": 0.794283810943247,
+    "cv_accuracy_mean": 0.7927536231884058,
+    "cv_accuracy_std": 0.013093703622893233
   },
   "all_models": [
     {
@@ -84,11 +84,11 @@
     {
       "name": "Random Forest",
       "accuracy": 0.7971014492753623,
-      "precision_weighted": 0.7975675241389052,
+      "precision_weighted": 0.7972425255202107,
       "recall_weighted": 0.7971014492753623,
-      "f1_weighted": 0.7943929372390127,
-      "f1_macro": 0.7943929372390125,
-      "cv_mean": 0.7920289855072463
+      "f1_weighted": 0.794283810943247,
+      "f1_macro": 0.794283810943247,
+      "cv_mean": 0.7927536231884058
     },
     {
       "name": "HistGradientBoosting",
@@ -103,35 +103,35 @@
   "feature_importance": [
     {
       "feature": "rainfall",
-      "importance": 0.1658
+      "importance": 0.166
     },
     {
       "feature": "K",
-      "importance": 0.1393
+      "importance": 0.1388
     },
     {
       "feature": "N",
-      "importance": 0.1275
+      "importance": 0.128
     },
     {
       "feature": "humidity",
-      "importance": 0.1059
+      "importance": 0.106
     },
     {
       "feature": "temperature",
-      "importance": 0.0994
+      "importance": 0.0993
     },
     {
       "feature": "P",
-      "importance": 0.0676
+      "importance": 0.0674
     },
     {
       "feature": "ph",
-      "importance": 0.0471
+      "importance": 0.047
     },
     {
       "feature": "OC",
-      "importance": 0.0379
+      "importance": 0.038
     },
     {
       "feature": "Fe",
@@ -147,19 +147,19 @@
     },
     {
       "feature": "Zn",
-      "importance": 0.0295
-    },
-    {
-      "feature": "Mn",
-      "importance": 0.028
+      "importance": 0.0294
     },
     {
       "feature": "Cu",
-      "importance": 0.028
+      "importance": 0.0281
+    },
+    {
+      "feature": "Mn",
+      "importance": 0.0281
     },
     {
       "feature": "B",
-      "importance": 0.0278
+      "importance": 0.0277
     }
   ],
   "uses_scaler": false,

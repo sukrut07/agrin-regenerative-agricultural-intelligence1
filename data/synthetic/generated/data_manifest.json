@@ -1,0 +1,27 @@
+{
+  "manifest_version": "2.1.0",
+  "generated_at": "2026-11-24T17:56:39.860351+00:00",
+  "seed": 42,
+  "total_records": 500,
+  "synthetic_flag": true,
+  "data_provenance": "AgriN Synthetic Agricultural Engine (Faker + ICAR Agronomic Physics)",
+  "intended_use": "Software UI Testing, Sensor Telemetry Simulation, Pipeline Stress Testing",
+  "restricted_use": "DO NOT USE FOR FINAL ML MODEL EVALUATION OR ACCURACY CLAIMS",
+  "anomaly_distribution": {
+    "SENSOR_DRIFT": 6,
+    "NORMAL": 466,
+    "SALINITY_STRESS": 5,
+    "SENSOR_STUCK": 5,
+    "HEAT_STRESS": 5,
+    "NUTRIENT_DEFICIENCY": 3,
+    "DROUGHT": 4,
+    "WATERLOGGING": 6
+  },
+  "state_coverage_count": 28,
+  "crop_coverage_count": 54,
+  "files_generated": [
+    "synthetic_agricultural_dataset.json",
+    "crop_observations.csv",
+    "data_manifest.json"
+  ]
+}

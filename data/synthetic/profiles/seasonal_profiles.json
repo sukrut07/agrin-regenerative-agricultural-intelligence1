@@ -1,0 +1,49 @@
+{
+  "classification": "Indian Cropping Seasons & Climatological Modulation",
+  "seasons": {
+    "kharif": {
+      "name": "Kharif (Monsoon Season)",
+      "months": ["June", "July", "August", "September", "October"],
+      "rainfall_fraction_of_annual": [0.65, 0.85],
+      "temp_modulation_c": 1.5,
+      "relative_humidity_range": [65.0, 92.0],
+      "soil_moisture_range": [45.0, 85.0],
+      "primary_water_source": "Southwest Monsoon + Supplemental Canal/Drip",
+      "sowing_months": ["June", "July"],
+      "harvest_months": ["September", "October", "November"]
+    },
+    "rabi": {
+      "name": "Rabi (Winter Season)",
+      "months": ["October", "November", "December", "January", "February", "March", "April"],
+      "rainfall_fraction_of_annual": [0.05, 0.20],
+      "temp_modulation_c": -7.0,
+      "relative_humidity_range": [35.0, 65.0],
+      "soil_moisture_range": [25.0, 60.0],
+      "primary_water_source": "Tubewell / Residual Soil Moisture / Canal",
+      "sowing_months": ["October", "November"],
+      "harvest_months": ["February", "March", "April"]
+    },
+    "zaid": {
+      "name": "Zaid (Summer Season)",
+      "months": ["March", "April", "May", "June"],
+      "rainfall_fraction_of_annual": [0.02, 0.10],
+      "temp_modulation_c": 5.5,
+      "relative_humidity_range": [20.0, 48.0],
+      "soil_moisture_range": [15.0, 45.0],
+      "primary_water_source": "Dedicated Drip / Sprinkler Irrigation",
+      "sowing_months": ["February", "March"],
+      "harvest_months": ["May", "June"]
+    },
+    "perennial": {
+      "name": "Perennial (Multi-Year Agroforestry & Plantations)",
+      "months": ["All 12 Months"],
+      "rainfall_fraction_of_annual": [0.90, 1.00],
+      "temp_modulation_c": 0.0,
+      "relative_humidity_range": [35.0, 85.0],
+      "soil_moisture_range": [30.0, 75.0],
+      "primary_water_source": "Integrated Basin / Micro-Drip / Seasonal Rain",
+      "sowing_months": ["June", "July", "August"],
+      "harvest_months": ["Seasonal flushes or Year-round"]
+    }
+  }
+}

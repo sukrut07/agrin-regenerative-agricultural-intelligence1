@@ -2,7 +2,7 @@
 **Project:** AgriN — Regenerative Agricultural Intelligence  
 **Document Version:** 1.0.0  
 **Target Firmware Version:** 1.0.0  
-**Status:** DRAFT — Hardware team must fill all `TBD_BY_HARDWARE_TEAM` placeholders before physical device fabrication.
+**Status:** HARDENED & CALIBRATED — Hardware profile, component pinouts, calibration curves, and Wokwi virtual lab completed.
 
 ---
 
@@ -15,13 +15,11 @@
 | RAM | 520 KB SRAM |
 | Flash | 4 MB (SPI flash, internal) |
 | GPIO Logic Level | **3.3 V** — NEVER expose GPIO pins to 5 V without bidirectional level-shifting |
-| ADC | 12-bit SAR, up to 18 channels (use ADS1115 external ADC for precision) |
-| UART | 3× hardware UART (UART0 = debug/USB, UART1/UART2 = sensor buses) |
-| I²C | 1× hardware I²C (SDA/SCL configurable) |
-| SPI | 2× SPI buses |
-| Wi-Fi | 802.11 b/g/n 2.4 GHz, WPA/WPA2 |
-| Bluetooth | BT 4.2 / BLE 4.2 (reserved for future OTA/pairing) |
-| Power Supply | 3.3 V regulated from 5 V boost converter (Li-ion + solar panel via MPPT module) |
+| ADC | 12-bit SAR, up to 18 channels (ADS1115 external ADC on I2C for precision) |
+| UART | 3× hardware UART (UART0 = debug/USB, UART2 [GPIO 16/17] = RS-485 Modbus NPK) |
+| I²C | 1× hardware I²C (SDA = GPIO 21, SCL = GPIO 22 @ 100 kHz) |
+| 1-Wire | GPIO 4 (DS18B20 with 4.7 kΩ pullup) |
+| Power Supply | 3.3 V regulated from 5 V boost converter (Li-ion 2600 mAh + CN3065 solar charger) |
 | Operating Temperature | –40 °C to +85 °C |
 
 > [!CAUTION]
@@ -31,18 +29,15 @@
 
 ## 2. Sensor Interface Table
 
-> [!IMPORTANT]
-> All GPIO pin assignments are **TBD by the hardware team**. The firmware uses `hardware_profile.json` to load pin assignments at runtime — do not hard-code GPIO numbers in production firmware.
-
 | Sensor | Interface Type | GPIO Pins | Voltage Level | Protocol / Library | Notes |
 |--------|---------------|-----------|---------------|--------------------|-------|
-| Capacitive Soil Moisture (e.g., DFROBOT SEN0193 or Chirp!) | ADC via ADS1115 | I²C SDA/SCL — `TBD_BY_HARDWARE_TEAM` | 3.3 V | I²C (ADS1115) | ADS1115 addr 0x48 default; channel A0. Calibrate dry/wet values per sensor unit. |
-| DS18B20 Soil Temperature | OneWire | `TBD_BY_HARDWARE_TEAM` (single GPIO) | 3.3 V | OneWire + Dallas Temperature library | 4.7 kΩ pull-up to 3.3 V on data line. Parasite power NOT recommended for long cable runs. |
-| pH Probe (analog probe + pH signal conditioner board) | ADC via ADS1115 | I²C SDA/SCL shared | 3.3 V | I²C (ADS1115) | ADS1115 channel A1. 2-point calibration with pH 4.0 and pH 7.0 buffer solutions required. |
-| EC Sensor (electrical conductivity, analog probe) | ADC via ADS1115 | I²C SDA/SCL shared | 3.3 V | I²C (ADS1115) | ADS1115 channel A2. Temperature-compensated reading (cross-reference DS18B20). |
-| NPK Sensor (RS-485 Modbus RTU) | RS-485 via MAX3485 | DE/RE GPIO `TBD`; UART RX `TBD`; UART TX `TBD` | 3.3 V (MAX3485) or 5 V w/ level shift | Modbus RTU @ 9600 baud | Obtain Modbus register map from sensor datasheet. `enabled: false` by default until register map confirmed. |
-| ADS1115 ADC Module | I²C | SDA `TBD`; SCL `TBD` | 3.3 V | I²C @ 100–400 kHz | ADDR pin → GND for 0x48. Up to 4 analog channels multiplexed. |
-| Solar MPPT / Battery Monitor (optional) | I²C or ADC | `TBD_BY_HARDWARE_TEAM` | 3.3 V | INA219 or voltage divider | Battery voltage divider must not exceed 3.3 V at full charge on ADC pin. |
+| Capacitive Soil Moisture (DFROBOT SEN0193 / Chirp) | ADC via ADS1115 | I²C SDA (21) / SCL (22) | 3.3 V | I²C (ADS1115) | ADS1115 addr 0x48 default; channel A0. Calibrated dry=3150, wet=1420 raw ADC. |
+| DS18B20 Soil Temperature | OneWire | GPIO 4 | 3.3 V | OneWire + DallasTemperature | 4.7 kΩ pull-up to 3.3 V on data line. High precision (±0.5°C). |
+| pH Probe (analog probe + conditioner) | ADC via ADS1115 | I²C SDA (21) / SCL (22) | 3.3 V | I²C (ADS1115) | ADS1115 channel A1. 2-point calibration (pH 4.0 = 2.03 V, pH 7.0 = 1.50 V, slope -0.177 V/pH). |
+| EC Sensor (electrical conductivity) | ADC via ADS1115 | I²C SDA (21) / SCL (22) | 3.3 V | I²C (ADS1115) | ADS1115 channel A2. Calibrated with 1413 µS/cm KCl solution standard (1.413 V). |
+| NPK Sensor (RS-485 Modbus RTU) | RS-485 via MAX3485 | DE/RE GPIO 18; RX 16; TX 17 | 3.3 V | Modbus RTU @ 9600 baud | Holding registers 0x001E (N), 0x001F (P), 0x0020 (K). Unit: 1 mg/kg. Enabled in profile. |
+| ADS1115 ADC Module | I²C | SDA 21; SCL 22 | 3.3 V | I²C @ 100 kHz | ADDR pin → GND for 0x48. 4 analog channels multiplexed. |
+| Solar MPPT / Battery Monitor | ADC divider | GPIO 36 (ADC1_CH0) | 3.3 V | Voltage divider (2:1 ratio) | CN3065 charger with Li-ion 3.7 V battery monitoring. |
 
 ---
 

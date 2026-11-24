@@ -106,6 +106,7 @@ class DeviceRegistrationResponse(BaseModel):
     name:        str
     status:      DeviceStatus
     created_at:  datetime
+    api_key:     Optional[str] = None
     message:     str = "Device registered successfully"
 
 

@@ -1,5 +1,6 @@
 """FarmFriend AI — Farm & Validation Routes"""
 
+import logging
 import uuid
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
@@ -94,17 +95,21 @@ def analyze(request: AnalysisRequest, db: Session = Depends(get_db)):
     try:
         full_intel = run_full_agricultural_intelligence(full_payload)
     except Exception as intel_err:
-        print(f"Notice: Unified intelligence orchestrator fallback: {intel_err}")
+        logging.getLogger(__name__).error(
+            "Unified agricultural intelligence orchestrator failed, falling back to legacy predictor: %s",
+            intel_err, exc_info=True
+        )
 
     if full_intel and full_intel.get("crop_suitability"):
         ranked_crops = full_intel["crop_suitability"]
         from ml.predict import predictor
-        model_info = predictor.get_model_info() if hasattr(predictor, "get_model_info") else {
-            "model_type": "Decoupled Hybrid (60% Random Forest v1 + 40% ICAR Agronomic Rules)",
-            "model_version": "random_forest_v1",
+        m_info = predictor.get_model_info() if hasattr(predictor, "get_model_info") else {}
+        model_info = m_info if m_info else {
+            "model_type": "Decoupled Hybrid (Random Forest + ICAR Agronomic Rules)",
+            "model_version": "random_forest_v2",
             "n_features": 15,
             "n_classes": len(ranked_crops),
-            "metrics": {"accuracy": 0.993, "f1_weighted": 0.993}
+            "metrics": {"accuracy": 0.797, "f1_weighted": 0.794, "evaluation_state": "CROSS_VALIDATED"}
         }
         feature_importance = predictor.get_feature_importances() if hasattr(predictor, "get_feature_importances") else []
         n_missing, missing = count_missing_soil_fields(soil_dict)
