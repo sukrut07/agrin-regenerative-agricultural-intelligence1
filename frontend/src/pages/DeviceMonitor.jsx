@@ -143,8 +143,8 @@ const WOKWI_LAB_MEASUREMENTS = [
     const { t } = useLanguage()
     const navigate = useNavigate()
 
-    // Hardware mode: 'wokwi' (virtual lab) | 'physical' (live ESP32 hardware)
-    const [hardwareMode, setHardwareMode] = useState('wokwi')
+    // Default to 'physical' so we honestly report hardware disconnected unless real device telemetry exists
+    const [hardwareMode, setHardwareMode] = useState('physical')
     const [registeredDevices] = useState(() => {
       try {
         return JSON.parse(localStorage.getItem('agrin_registered_devices') || '[]')
@@ -240,46 +240,46 @@ const WOKWI_LAB_MEASUREMENTS = [
     }, [fetchData])
 
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="min-h-screen bg-[#F7F7F2] text-[#171814]">
         <HeaderNav />
 
         {/* Header Banner */}
-        <section className="bg-gradient-to-b from-[#103420] to-[#18462b] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-emerald-900/40">
+        <section className="bg-[#183B2A] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-[#E5E5DC]/15">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-500/30">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#E7D927] text-xs font-semibold mb-3 border border-white/15">
                 <Radio size={14} />
-                <span>IoT Telemetry & Ingestion Hub</span>
+                <span>Future ESP32 Hardware Readiness &amp; Data Input</span>
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight text-white">
                 {t('agrisense_title', 'AgriSense Hardware & Telemetry Monitor')}
               </h1>
-              <p className="text-emerald-100/80 text-sm mt-1 max-w-2xl leading-relaxed">
-                {t('agrisense_subtitle', 'Real-time telemetry ingestion, sensor calibration health, and Wokwi virtual lab integration.')}
+              <p className="text-[#F7F7F2]/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                {t('agrisense_subtitle', 'Hardware sensors are not currently connected. Enter soil readings manually for live ML analysis, or inspect the ESP32 Wokwi virtual bench.')}
               </p>
             </div>
 
             {/* Mode Switcher Toggle */}
-            <div className="bg-white/10 backdrop-blur p-2 rounded-2xl border border-white/20 self-start md:self-auto flex items-center gap-2">
-              <button
-                onClick={() => setHardwareMode('wokwi')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${hardwareMode === 'wokwi'
-                    ? 'bg-emerald-500 text-emerald-950 shadow-md'
-                    : 'text-white hover:bg-white/10'
-                  }`}
-              >
-                <Cpu size={15} />
-                <span>Wokwi Virtual Lab</span>
-              </button>
+            <div className="bg-white/10 p-1.5 rounded-2xl border border-white/15 self-start md:self-auto flex items-center gap-1.5">
               <button
                 onClick={() => setHardwareMode('physical')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${hardwareMode === 'physical'
-                    ? 'bg-emerald-500 text-emerald-950 shadow-md'
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${hardwareMode === 'physical'
+                    ? 'bg-[#E7D927] text-[#171814]'
                     : 'text-white hover:bg-white/10'
                   }`}
               >
                 <Radio size={15} />
                 <span>Physical Hardware (ESP32)</span>
+              </button>
+              <button
+                onClick={() => setHardwareMode('wokwi')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${hardwareMode === 'wokwi'
+                    ? 'bg-[#E7D927] text-[#171814]'
+                    : 'text-white hover:bg-white/10'
+                  }`}
+              >
+                <Cpu size={15} />
+                <span>Wokwi Lab (Synthetic)</span>
               </button>
             </div>
           </div>

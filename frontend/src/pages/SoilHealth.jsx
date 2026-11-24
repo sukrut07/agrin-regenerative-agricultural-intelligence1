@@ -15,7 +15,7 @@ import {
   Activity, FlaskConical, AlertTriangle, CheckCircle, Info,
   TrendingDown, TrendingUp, Sparkles, RefreshCw, ShieldAlert,
   FileText, Layers, MapPin, Compass, CheckSquare, Square,
-  Plus, Volume2, ShoppingBag, ArrowRight, X, Droplets,
+  Plus, Volume2, ArrowRight, X, Droplets,
   Sliders, ShieldCheck, CheckCircle2
 } from 'lucide-react'
 

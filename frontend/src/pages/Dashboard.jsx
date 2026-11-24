@@ -32,35 +32,40 @@ export default function Dashboard() {
     : []
 
   const allModels = modelInfo?.all_models || []
+  const recentAssessments = analytics?.recent_assessments || []
 
   const metrics = [
-    { label: 'Analyses Run', value: analytics?.total_analyses || 0, icon: <BarChart2 size={22} />, color: 'var(--ff-primary)', bg: 'var(--ff-soft)' },
-    { label: 'Feasibility Checks', value: analytics?.total_feasibility_checks || 0, icon: <Sprout size={22} />, color: '#3978B8', bg: '#EDF4FF' },
-    { label: 'What-If Simulations', value: analytics?.total_whatif_runs || 0, icon: <Zap size={22} />, color: '#D89B18', bg: '#FFF7E1' },
+    { label: 'Soil Assessments Completed', value: analytics?.total_analyses || 0,          icon: <BarChart2 size={22} />, color: '#183B2A', bg: '#EAF3EC' },
+    { label: 'Specific Crop Checks',       value: analytics?.total_feasibility_checks || 0, icon: <Sprout size={22} />,    color: '#398653', bg: '#F2F5EE' },
+    { label: 'What-If Simulations',        value: analytics?.total_whatif_runs || 0,        icon: <Zap size={22} />,       color: '#C88A14', bg: '#FDF6E2' },
   ]
 
   return (
     <div className="page-bg" style={{ minHeight: '100vh' }}>
-
-      {/* ── Top bar ───────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-4 flex items-center gap-3" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            background: 'var(--ff-soft)', border: '1px solid var(--ff-border)',
-            borderRadius: 10, padding: '6px 10px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', color: 'var(--ff-text-secondary)',
-          }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BarChart2 size={20} style={{ color: 'var(--ff-primary)' }} />
-          <h1 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--ff-text)' }}>Analytics Dashboard</h1>
-        </div>
-      </div>
+      <HeaderNav />
 
       <div className="ff-container" style={{ paddingTop: 28, paddingBottom: 48 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', color: '#77786F', textTransform: 'uppercase' }}>
+              Saved Assessments &amp; Model Provenance
+            </div>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#171814', marginTop: 4 }}>
+              My Reports &amp; Assessment History
+            </h1>
+          </div>
+          <button
+            onClick={() => navigate('/farm-details')}
+            style={{
+              padding: '10px 20px', borderRadius: 999, background: '#E7D927', color: '#171814',
+              fontWeight: 700, fontSize: '0.85rem', border: 'none', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 8
+            }}
+          >
+            <span>Start New Soil Analysis</span>
+            <ArrowRight size={15} />
+          </button>
+        </div>
 
         {/* ── Usage stats ───────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }} className="metrics-grid">
