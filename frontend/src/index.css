@@ -215,10 +215,8 @@ body {
    NAVIGATION
    ══════════════════════════════════════════════════════════════════════════ */
 .ff-nav {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--ff-border);
-  box-shadow: 0 1px 8px rgba(20, 50, 30, 0.05);
+  background: #183B2A;
+  border-bottom: 1px solid rgba(229, 229, 220, 0.14);
 }
 
 .ff-logo-icon {
