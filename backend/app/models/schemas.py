@@ -188,6 +188,8 @@ class AnalysisResponse(BaseModel):
     data_quality: Optional[Dict[str, Any]] = None
     weather_reasoning: Optional[List[Dict[str, Any]]] = None
     country_neutral_advisory: Optional[Dict[str, Any]] = None
+    pipeline_execution: Optional[Dict[str, Any]] = None
+    warnings: Optional[List[str]] = None
 
 
 

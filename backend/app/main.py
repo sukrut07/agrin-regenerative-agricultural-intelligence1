@@ -52,13 +52,27 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS
+# CORS — explicit trusted origins only (never wildcard "*" alongside allow_credentials=True)
+_EXTRA_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()
+]
+ALLOWED_ORIGINS = list(dict.fromkeys([
+    FRONTEND_URL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    *_EXTRA_ORIGINS,
+]))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000", "http://localhost:5173", "*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Device-Token", "X-Request-ID"],
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────

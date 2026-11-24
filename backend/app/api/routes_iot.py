@@ -10,7 +10,7 @@ All routes are prefixed with /api in main.py.
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Header, Query
 from sqlalchemy.orm import Session
 
 from backend.app.database.db import get_db

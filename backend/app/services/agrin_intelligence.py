@@ -33,6 +33,7 @@ CROP SUITABILITY       SOIL HEALTH          CROP HEALTH
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timezone
 import os
+import uuid
 
 try:
     from backend.app.services.geo_service import (
@@ -115,6 +116,11 @@ def run_full_agricultural_intelligence(
     timestamp_now = datetime.now(timezone.utc)
     request_id = farm_data.get("request_id") or farm_data.get("session_id") or f"req-{timestamp_now.strftime('%Y%m%d%H%M%S')}"
     farm_id = farm_data.get("farm_id") or farm_data.get("session_id") or "farm-session-001"
+    pipeline_id = f"pipe-{uuid.uuid4().hex[:12]}"
+    subsystem_statuses: Dict[str, str] = {}
+    pipeline_warnings: List[str] = []
+    pipeline_errors: List[Dict[str, str]] = []
+    missing_data_items: List[str] = []
 
     # 1. Location Layer Resolution
     state = farm_data.get("state", "Maharashtra")
@@ -146,8 +152,12 @@ def run_full_agricultural_intelligence(
                         district = nearest.get("district", nearest.get("name", ""))
                     if not state:
                         state = nearest.get("state", "")
-        except Exception:
-            pass
+            subsystem_statuses["location"] = "SUCCESS"
+        except Exception as geo_err:
+            subsystem_statuses["location"] = "DEGRADED"
+            pipeline_warnings.append(f"Coordinate lookup degraded: {geo_err}")
+    else:
+        subsystem_statuses["location"] = "SUCCESS" if district else "DEGRADED"
 
     if not geo_meta and district:
         d_info = find_district_by_name(district, state)
