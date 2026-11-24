@@ -165,20 +165,20 @@ export default function CropPlanner() {
   }, [selectedPlanId])
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#F7F7F2] text-[#171814]">
       <HeaderNav />
 
       {/* Header Banner */}
-      <section className="bg-gradient-to-b from-[#103420] to-[#18462b] text-white py-10 px-4 sm:px-6 lg:px-8 border-b border-emerald-900/40">
+      <section className="bg-[#183B2A] text-white py-10 px-4 sm:px-6 lg:px-8 border-b border-[#E5E5DC]/15">
         <div className="max-w-7xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-500/30">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#E7D927] text-xs font-semibold mb-3 border border-white/15">
             <Calendar size={14} />
             <span>3-Season Regenerative Rotation Engine</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
             {t('crop_planner_title', 'Multi-Season Crop Rotation Optimizer')}
           </h1>
-          <p className="text-emerald-100/80 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
+          <p className="text-[#F7F7F2]/80 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
             {t('crop_planner_subtitle', 'Plan nutrient-balancing rotations over 3 seasons to minimize chemical fertilizer, break pest cycles, and rebuild soil organic carbon.')}
           </p>
         </div>

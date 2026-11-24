@@ -158,29 +158,29 @@ export default function FarmEconomics() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#F7F7F2] text-[#171814]">
       <HeaderNav />
 
       {/* Top Banner */}
-      <section className="bg-gradient-to-b from-[#103420] to-[#18462b] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-emerald-900/40">
+      <section className="bg-[#183B2A] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-[#E5E5DC]/15">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-2 border border-emerald-500/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#E7D927] text-xs font-semibold mb-2 border border-white/15">
               <Wallet size={14} />
               <span>{t('nav_economics', 'AgriLedger — Farm P&L Accounting')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
               {t('economics_title', 'AgriLedger — Farm Economics & P&L')}
             </h1>
-            <p className="text-emerald-100/80 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+            <p className="text-[#F7F7F2]/80 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
               Track real cost of cultivation (seeds, fertilizers, diesel, labor) against harvest sales to maximize farm operating margin.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <button
               onClick={handleVoiceOverview}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-200 text-xs font-bold flex items-center gap-2 border border-white/20 transition-all backdrop-blur-sm shadow-sm"
+              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-[#E7D927] text-xs font-bold flex items-center gap-2 border border-white/20 transition-all cursor-pointer"
               title="Voice summary"
             >
               <Volume2 size={16} />
@@ -189,7 +189,7 @@ export default function FarmEconomics() {
 
             <button
               onClick={() => setShowExpenseModal(true)}
-              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-extrabold flex items-center gap-1.5 shadow-md transition-all"
+              className="px-4 py-2 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus size={16} />
               <span>{t('btn_add_expense', 'Add Expense')}</span>
@@ -197,7 +197,7 @@ export default function FarmEconomics() {
 
             <button
               onClick={() => setShowSaleModal(true)}
-              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-emerald-950 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 shadow-md transition-all"
+              className="px-4 py-2 rounded-full bg-[#E7D927] hover:bg-[#D6C81E] text-[#171814] text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus size={16} className="stroke-[2.5]" />
               <span>{t('btn_record_sale', 'Record Sale')}</span>

@@ -320,21 +320,21 @@ export default function SoilHealth() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#F7F7F2] text-[#171814]">
       <HeaderNav />
 
       {/* Top Banner */}
-      <section className="bg-gradient-to-b from-[#103420] to-[#18462b] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-emerald-900/40">
+      <section className="bg-[#183B2A] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-[#E5E5DC]/15">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-2 border border-emerald-500/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#E7D927] text-xs font-semibold mb-2 border border-white/15">
               <Activity size={14} />
               <span>{t('soil_fingerprint_title', 'Soil Intelligence Workspace')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
               {t('soil_health_title', 'Soil Health Card & Nutrient Diagnostics')}
             </h1>
-            <p className="text-emerald-100/80 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+            <p className="text-[#F7F7F2]/80 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
               Understand your soil at every depth layer. Measure compaction, plan representative sampling, and track real regeneration outcomes over time.
             </p>
           </div>
@@ -343,7 +343,7 @@ export default function SoilHealth() {
           <div className="flex items-center gap-2.5">
             <button
               onClick={handleVoiceDiagnosis}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-200 text-xs font-bold flex items-center gap-2 border border-white/20 transition-all backdrop-blur-sm shadow-sm"
+              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-[#E7D927] text-xs font-bold flex items-center gap-2 border border-white/20 transition-all cursor-pointer"
               title="Speak Soil Health Summary"
             >
               <Volume2 size={16} />
@@ -356,8 +356,8 @@ export default function SoilHealth() {
         <div className="max-w-7xl mx-auto mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('SHC')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'SHC'
-                ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${activeTab === 'SHC'
+                ? 'bg-[#E7D927] text-[#171814] font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
@@ -367,8 +367,8 @@ export default function SoilHealth() {
 
           <button
             onClick={() => setActiveTab('DEPTH')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'DEPTH'
-                ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${activeTab === 'DEPTH'
+                ? 'bg-[#E7D927] text-[#171814] font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
@@ -378,8 +378,8 @@ export default function SoilHealth() {
 
           <button
             onClick={() => setActiveTab('SAMPLING')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'SAMPLING'
-                ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${activeTab === 'SAMPLING'
+                ? 'bg-[#E7D927] text-[#171814] font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
@@ -389,8 +389,8 @@ export default function SoilHealth() {
 
           <button
             onClick={() => setActiveTab('TREATMENT')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'TREATMENT'
-                ? 'bg-emerald-500 text-emerald-950 shadow-md font-extrabold'
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${activeTab === 'TREATMENT'
+                ? 'bg-[#E7D927] text-[#171814] font-extrabold'
                 : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >

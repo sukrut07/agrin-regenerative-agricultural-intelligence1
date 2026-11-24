@@ -289,9 +289,9 @@ export default function DeviceMonitor() {
               <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Device ID Selector in Physical Mode */}
                 {hardwareMode === 'physical' && (
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                      <Radio size={15} className="text-emerald-600" />
+                  <div className="bg-white rounded-2xl p-4 border border-[#E5E5DC] shadow-xs mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#171814]">
+                      <Radio size={15} className="text-[#183B2A]" />
                       <span>Monitored Physical Device ID:</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -299,7 +299,8 @@ export default function DeviceMonitor() {
                         <select
                           value={selectedDevice}
                           onChange={(e) => setSelectedDevice(e.target.value)}
-                          className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-slate-50"
+                          className="farm-input text-xs font-semibold"
+                          style={{ width: 'auto', minHeight: 38, padding: '6px 12px' }}
                         >
                           {registeredDevices.map(d => (
                             <option key={d.device_id} value={d.device_id}>
@@ -313,11 +314,14 @@ export default function DeviceMonitor() {
                         value={selectedDevice}
                         onChange={(e) => setSelectedDevice(e.target.value)}
                         placeholder="Enter registered Device UUID"
-                        className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-mono w-64"
+                        className="farm-input text-xs font-mono-num"
+                        style={{ width: 240, minHeight: 38, padding: '6px 12px' }}
                       />
                       <button
+                        type="button"
                         onClick={fetchData}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800"
+                        className="btn-agrin-dark"
+                        style={{ padding: '9px 18px', fontSize: '12px' }}
                       >
                         Query Device
                       </button>
@@ -366,20 +370,26 @@ export default function DeviceMonitor() {
                     </p>
                       <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
                         <button
+                          type="button"
                           onClick={() => navigate('/farm-details')}
-                          className="px-4 py-2 rounded-xl bg-[#E7D927] text-[#171814] font-bold text-xs hover:bg-[#D6C81E] transition-colors cursor-pointer"
+                          className="btn-agrin-cta"
+                          style={{ padding: '10px 20px', fontSize: '12px' }}
                         >
                           Enter Soil Readings Manually
                         </button>
                         <button
+                          type="button"
                           onClick={() => setHardwareMode('wokwi')}
-                          className="px-4 py-2 rounded-xl bg-[#183B2A] text-white font-bold text-xs hover:bg-[#398653] transition-colors cursor-pointer"
+                          className="btn-agrin-dark"
+                          style={{ padding: '10px 20px', fontSize: '12px' }}
                         >
                           Preview Wokwi Simulator (Synthetic)
                         </button>
                         <button
+                          type="button"
                           onClick={() => navigate('/devices/register')}
-                          className="px-4 py-2 rounded-xl bg-white text-slate-800 border border-slate-300 font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
+                          className="btn-agrin-outline"
+                          style={{ padding: '9px 20px', fontSize: '12px', background: '#FFFFFF' }}
                         >
                           Register ESP32 Node
                         </button>

@@ -91,39 +91,39 @@ export default function CropExplorer() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#F7F7F2] text-[#171814]">
       <HeaderNav />
 
       {/* Hero Header */}
-      <section className="bg-gradient-to-b from-[#103420] to-[#18462b] text-white py-10 px-4 sm:px-6 lg:px-8 border-b border-emerald-900/40">
+      <section className="bg-[#183B2A] text-white py-10 px-4 sm:px-6 lg:px-8 border-b border-[#E5E5DC]/15">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-500/30">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#E7D927] text-xs font-semibold mb-3 border border-white/15">
                 <Sprout size={14} />
                 <span>65+ ICAR-Benchmarked Crops Across 15 Agro-Climatic Zones</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
                 {t('crop_explorer_title', 'Pan-India Crop Knowledge Explorer')}
               </h1>
-              <p className="text-emerald-100/80 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
+              <p className="text-[#F7F7F2]/80 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
                 {t('crop_explorer_subtitle', 'Explore scientific agronomic bounds, soil compatibility, water needs, and regenerative benefits for crops across India.')}
               </p>
             </div>
 
             {/* Quick stats counter */}
-            <div className="flex items-center gap-4 bg-white/10 backdrop-blur p-3.5 rounded-2xl border border-white/15 self-start md:self-auto">
+            <div className="flex items-center gap-4 bg-white/10 p-3.5 rounded-2xl border border-white/15 self-start md:self-auto">
               <div className="text-center px-3 border-r border-white/15">
-                <div className="text-2xl font-black text-emerald-400">{crops.length || 65}</div>
-                <div className="text-[11px] text-emerald-100 font-medium">Total Crops</div>
+                <div className="text-2xl font-black text-[#E7D927] font-mono-num">{crops.length || 65}</div>
+                <div className="text-[11px] text-[#F7F7F2]/80 font-medium">Total Crops</div>
               </div>
               <div className="text-center px-3 border-r border-white/15">
-                <div className="text-2xl font-black text-amber-400">{categories.length || 9}</div>
-                <div className="text-[11px] text-emerald-100 font-medium">Categories</div>
+                <div className="text-2xl font-black text-[#E7D927] font-mono-num">{categories.length || 9}</div>
+                <div className="text-[11px] text-[#F7F7F2]/80 font-medium">Categories</div>
               </div>
               <div className="text-center px-3">
-                <div className="text-2xl font-black text-cyan-300">100%</div>
-                <div className="text-[11px] text-emerald-100 font-medium">Verified ICAR</div>
+                <div className="text-2xl font-black text-white font-mono-num">100%</div>
+                <div className="text-[11px] text-[#F7F7F2]/80 font-medium">Verified ICAR</div>
               </div>
             </div>
           </div>

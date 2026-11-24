@@ -90,20 +90,20 @@ export default function AgriVision() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#F7F7F2] text-[#171814]">
       <HeaderNav />
 
       {/* Hero Banner */}
-      <section className="bg-gradient-to-b from-[#103420] to-[#18462b] text-white py-10 px-4 sm:px-6 lg:px-8 border-b border-emerald-900/40">
+      <section className="bg-[#183B2A] text-white py-10 px-4 sm:px-6 lg:px-8 border-b border-[#E5E5DC]/15">
         <div className="max-w-7xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-500/30">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#E7D927] text-xs font-semibold mb-3 border border-white/15">
             <Satellite size={14} />
             <span>Copernicus Sentinel-2 & Plant-Level Computer Vision</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
             {t('nav_agrivision', 'AgriVision Remote & Plant Intelligence')}
           </h1>
-          <p className="text-emerald-100/80 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
+          <p className="text-[#F7F7F2]/80 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
             Multi-spectral satellite field observation combined with on-device computer vision screening for leaf anomalies.
           </p>
 
@@ -111,8 +111,8 @@ export default function AgriVision() {
           <div className="mt-8 flex items-center gap-3">
             <button
               onClick={() => setActiveTab('satellite')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'satellite'
-                  ? 'bg-emerald-500 text-emerald-950 shadow-md'
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${activeTab === 'satellite'
+                  ? 'bg-[#E7D927] text-[#171814]'
                   : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
             >
@@ -121,8 +121,8 @@ export default function AgriVision() {
             </button>
             <button
               onClick={() => setActiveTab('disease')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'disease'
-                  ? 'bg-emerald-500 text-emerald-950 shadow-md'
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${activeTab === 'disease'
+                  ? 'bg-[#E7D927] text-[#171814]'
                   : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
             >

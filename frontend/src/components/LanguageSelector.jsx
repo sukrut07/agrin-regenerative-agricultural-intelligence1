@@ -24,11 +24,11 @@ export default function LanguageSelector({ variant = 'default' }) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap"
         style={{
-          background: variant === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'var(--ff-soft, #f0f7f2)',
-          border: '1px solid var(--ff-border, #d2e4d6)',
-          color: variant === 'dark' ? '#ffffff' : 'var(--ff-primary, #1e5e3a)',
+          background: variant === 'dark' ? 'rgba(255, 255, 255, 0.10)' : '#F2F5EE',
+          border: variant === 'dark' ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid #E5E5DC',
+          color: variant === 'dark' ? '#FFFFFF' : '#183B2A',
           cursor: 'pointer'
         }}
         title="Select Language / भाषा निवडा / भाषा चुनें"

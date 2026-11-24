@@ -125,7 +125,7 @@ useEffect(() => {
 }, [])
 
 return (
-  <div className="min-h-screen bg-[#f8faf9] text-gray-800 font-sans">
+  <div className="min-h-screen bg-[#F7F7F2] text-[#171814]">
     <HeaderNav />
 
     {/* Main Container */}

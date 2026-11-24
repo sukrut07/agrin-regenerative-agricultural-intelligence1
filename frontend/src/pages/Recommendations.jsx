@@ -28,7 +28,7 @@ export default function Recommendations() {
   const [comparisonResult, setComparisonResult] = useState(null)
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
 
-  // Feedback state (Phase 12)
+  // Farmer Feedback state (Phase 12)
   const [didFollow, setDidFollow] = useState('')
   const [outcome, setOutcome] = useState('')
   const [yieldObs, setYieldObs] = useState('')
@@ -37,9 +37,27 @@ export default function Recommendations() {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [submittingFeedback, setSubmittingFeedback] = useState(false)
 
+  useEffect(() => {
+    if (!analysisResult) {
+      navigate('/farm-details', { replace: true })
+    }
+  }, [analysisResult, navigate])
+
   if (!analysisResult) {
-    navigate('/farm-details')
-    return null
+    return (
+      <div className="page-bg min-h-screen flex flex-col">
+        <HeaderNav />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="ff-card p-8 text-center max-w-md w-full">
+            <h2 className="text-lg font-extrabold text-[#171814] mb-2">No Soil Assessment Loaded</h2>
+            <p className="text-sm text-[#77786F] mb-5">Enter your farm and Soil Health Card details to generate a crop suitability report.</p>
+            <button type="button" className="btn-agrin-cta" onClick={() => navigate('/farm-details')}>
+              Start Soil Analysis
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Unified response fields (Phase 3)
@@ -205,95 +223,103 @@ export default function Recommendations() {
       <div className="no-print"><HeaderNav /></div>
 
       {/* ── Top Action Toolbar ───────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-3 flex items-center justify-between no-print" style={{ borderTop: '1px solid var(--ff-border)' }}>
-        <div>
-          <h1 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ff-text)' }}>
-            Crop Suitability &amp; Soil Analysis Report
-          </h1>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>
-            {district}, {state} · {season.toUpperCase()} season · Source: <strong>{isDemoMode ? 'Sample Dataset' : 'Manual Input'}</strong> · ID: <code>{activeSessionId.slice(0, 12)}</code>
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            className="btn-secondary"
-            onClick={handlePrint}
-            style={{ padding: '8px 16px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}
-          >
-            <Printer size={15} /> Print / Save PDF
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => navigate('/dashboard')}
-            style={{ padding: '8px 16px', fontSize: '0.82rem' }}
-          >
-            My Reports
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => navigate('/farm-details')}
-            style={{ padding: '8px 16px', fontSize: '0.82rem' }}
-          >
-            New Assessment
-          </button>
-          <button
-            className="btn-want"
-            onClick={() => navigate('/i-want-to-grow')}
-            style={{ padding: '8px 16px', fontSize: '0.82rem' }}
-          >
-            <Sprout size={15} /> Check Specific Crop
-          </button>
+      <div className="bg-white border-b border-[#E5E5DC] no-print">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#77772B]">
+              [ AGRIN SUITABILITY DECISION REPORT ]
+            </div>
+            <h1 className="text-base sm:text-lg font-extrabold text-[#171814] mt-0.5">
+              Crop Suitability &amp; Soil Analysis Report
+            </h1>
+            <p className="text-xs text-[#77786F] mt-0.5">
+              {district}, {state} · {season.toUpperCase()} season · Source: <strong className="text-[#171814]">{isDemoMode ? 'Sample Dataset' : 'Manual Input'}</strong> · ID: <code className="font-mono-num">{activeSessionId.slice(0, 12)}</code>
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={handlePrint}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              <Printer size={14} /> Print / PDF
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={() => navigate('/dashboard')}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              My Reports
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={() => navigate('/farm-details')}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              New Assessment
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-cta"
+              onClick={() => navigate('/i-want-to-grow')}
+              style={{ padding: '8px 18px', fontSize: '12px' }}
+            >
+              <Sprout size={14} /> Check Specific Crop
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Pipeline Status & Degraded Warnings Strip */}
       {warnings && warnings.length > 0 && (
-        <div className="ff-container-narrow no-print" style={{ paddingTop: 14 }}>
-          <div style={{
-            background: '#FDF6E2', border: '1px solid #F3DFAA', borderRadius: 12,
-            padding: '10px 16px', fontSize: '0.78rem', color: '#92400E'
-          }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 no-print">
+          <div className="bg-[#FDF6E2] border border-[#E8D59B] rounded-xl px-4 py-2.5 text-xs text-[#8A5D0A]">
             <strong>Pipeline Notice ({pipeline_execution?.status || 'PARTIAL_DEGRADED'}):</strong> {warnings.join(' · ')}
           </div>
         </div>
       )}
 
-      <div className="ff-container-narrow" style={{ paddingTop: 20, paddingBottom: 48 }}>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
-        {/* ── DEMO SCENARIO TOOLBAR (Phase 19) ─────────────────────────────────── */}
-        <div className="no-print" style={{
-          background: isDemoMode ? '#FEF3C7' : '#F3F4F6',
-          border: isDemoMode ? '2px dashed #D97706' : '1px solid #E5E7EB',
-          borderRadius: 12, padding: '12px 16px', marginBottom: 20,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: '1.2rem' }}>🧪</span>
+        {/* ── SAMPLE SCENARIO TOOLBAR ──────────────────────────────────── */}
+        <div className={`no-print rounded-2xl px-4 py-3.5 mb-5 flex flex-wrap items-center justify-between gap-3 ${
+          isDemoMode
+            ? 'bg-[#FDF6E2] border-2 border-dashed border-[#C88A14]'
+            : 'bg-white border border-[#E5E5DC]'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              isDemoMode ? 'bg-[#C88A14] text-white' : 'bg-[#F2F5EE] text-[#77772B]'
+            }`}>
+              <Sparkles size={16} />
+            </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: isDemoMode ? '#92400E' : '#374151' }}>
-                {isDemoMode ? '⚠️ DEMO DATA — NOT REAL FARM DATA' : 'Demonstration Scenario Mode'}
+              <div className={`font-bold text-xs sm:text-sm ${isDemoMode ? 'text-[#8A5D0A]' : 'text-[#171814]'}`}>
+                {isDemoMode ? 'Sample Dataset Active — Illustrative Data Only' : 'Sample Regional Farm Profiles'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: isDemoMode ? '#B45309' : '#6B7280' }}>
-                Switch between pre-configured regional agricultural scenarios to evaluate intelligence behaviors.
+              <div className={`text-xs ${isDemoMode ? 'text-[#9B6A00]' : 'text-[#77786F]'}`}>
+                Switch regional sample scenarios to inspect suitability behavior.
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex items-center gap-2">
             <select
+              aria-label="Load a sample scenario"
               value={selectedDemoId}
               onChange={(e) => handleLoadDemo(e.target.value)}
               disabled={loadingDemo}
-              style={{
-                fontSize: '0.8rem', padding: '6px 12px', borderRadius: 8,
-                border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#1F2937'
-              }}
+              className="farm-input text-xs sm:text-sm"
+              style={{ minWidth: 220, padding: '7px 12px', minHeight: 38 }}
             >
-              <option value="">Load a Demo Scenario...</option>
+              <option value="">Load a sample scenario...</option>
               {DEMO_SCENARIOS.map(sc => (
                 <option key={sc.id} value={sc.id}>{sc.title}</option>
               ))}
             </select>
-            {loadingDemo && <RefreshCw size={14} className="animate-spin text-amber-700" />}
+            {loadingDemo && <RefreshCw size={14} className="animate-spin text-[#8A5D0A]" />}
           </div>
         </div>
 
@@ -317,35 +343,30 @@ export default function Recommendations() {
         {/* =================================================================== */}
         {/* PHASE 3: SINGLE UNIFIED "FARM INTELLIGENCE REPORT" (Requirement 2)  */}
         {/* =================================================================== */}
-        <div className="ff-card animate-fade-in" style={{
-          marginBottom: 28, padding: 24, border: '2px solid #059669',
-          background: 'linear-gradient(180deg, #F9FDFB 0%, #FFFFFF 100%)', borderRadius: 14,
-          boxShadow: '0 4px 20px -2px rgba(5, 150, 105, 0.12)'
+        <div className="ff-card animate-fade-in p-6 mb-7" style={{
+          border: '2px solid #183B2A',
+          background: '#FFFFFF',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #E5E7EB', paddingBottom: 14, marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E5DC] pb-4 mb-5">
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', color: '#059669', textTransform: 'uppercase' }}>
-                AGRIN PRIMARY RESULT EXPERIENCE
+              <div className="text-[11px] font-bold tracking-[0.1em] text-[#77772B] uppercase">
+                [ AGRIN PRIMARY RESULT EXPERIENCE ]
               </div>
-              <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--ff-text)', margin: '2px 0 0 0' }}>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-[#171814] mt-0.5">
                 AgriN Farm Intelligence Report
               </h2>
-              <div style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginTop: 4 }}>
-                📍 {district}, {state}, India · Season: <strong>{season}</strong> · Generated: {reportDate}
+              <div className="text-xs text-[#77786F] mt-1">
+                {district}, {state}, India · Season: <strong className="text-[#171814]">{season}</strong> · Generated: {reportDate}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                fontSize: '0.78rem', fontWeight: 700, padding: '6px 12px', borderRadius: 20,
-                background: data_quality?.data_quality_level === 'HIGH' ? '#DCFCE7' : data_quality?.data_quality_level === 'MEDIUM' ? '#FEF3C7' : '#FEE2E2',
-                color: data_quality?.data_quality_level === 'HIGH' ? '#166534' : data_quality?.data_quality_level === 'MEDIUM' ? '#92400E' : '#991B1B'
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{
+                background: data_quality?.data_quality_level === 'HIGH' ? '#EAF5EE' : data_quality?.data_quality_level === 'MEDIUM' ? '#FDF6E2' : '#FDECEC',
+                color: data_quality?.data_quality_level === 'HIGH' ? '#183B2A' : data_quality?.data_quality_level === 'MEDIUM' ? '#8A5D0A' : '#C93F3F'
               }}>
                 Data Quality: {data_quality?.data_quality_level || 'MEDIUM'}
               </span>
-              <span style={{
-                fontSize: '0.78rem', fontWeight: 700, padding: '6px 12px', borderRadius: 20,
-                background: '#E0F2FE', color: '#0369A1'
-              }}>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-[#EDF4FA] text-[#2E6CA4]">
                 Confidence: {confidence?.confidence_level || 'MEDIUM'}
               </span>
             </div>

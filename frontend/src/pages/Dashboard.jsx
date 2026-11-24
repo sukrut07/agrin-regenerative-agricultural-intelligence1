@@ -47,20 +47,17 @@ export default function Dashboard() {
           <div className="ff-container" style={{ paddingTop: 28, paddingBottom: 48 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
               <div>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', color: '#77786F', textTransform: 'uppercase' }}>
-                  Saved Assessments &amp; Model Provenance
+                <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#77772B', textTransform: 'uppercase' }}>
+                  [ SAVED ASSESSMENTS &amp; MODEL PROVENANCE ]
                 </div>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#171814', marginTop: 4 }}>
                   My Reports &amp; Assessment History
                 </h1>
               </div>
               <button
+                type="button"
                 onClick={() => navigate('/farm-details')}
-                style={{
-                  padding: '10px 20px', borderRadius: 999, background: '#E7D927', color: '#171814',
-                  fontWeight: 700, fontSize: '0.85rem', border: 'none', cursor: 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: 8
-                }}
+                className="btn-agrin-cta"
               >
                 <span>Start New Soil Analysis</span>
                 <ArrowRight size={15} />
@@ -105,9 +102,10 @@ export default function Dashboard() {
                     Enter manual Soil Health Card readings to save your first field suitability report.
                   </p>
                   <button
+                    type="button"
                     onClick={() => navigate('/farm-details')}
-                    className="btn-primary"
-                    style={{ fontSize: '0.82rem', padding: '8px 18px' }}
+                    className="btn-agrin-cta"
+                    style={{ fontSize: '0.82rem', padding: '10px 20px' }}
                   >
                     Analyse My Soil
                   </button>
