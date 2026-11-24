@@ -70,10 +70,11 @@ def get_device(
 def update_device_status(
     device_id: str,
     request: DeviceStatusUpdateRequest,
+    x_device_token: str | None = Header(default=None, alias="X-Device-Token"),
     db: Session = Depends(get_db),
 ):
-    """Update the operational status of a device."""
-    return iot_service.update_device_status(db, device_id, request)
+    """Update the operational status of a device (requires X-Device-Token)."""
+    return iot_service.update_device_status(db, device_id, request, device_token=x_device_token)
 
 
 @router.post(
@@ -86,10 +87,11 @@ def update_device_status(
 def receive_heartbeat(
     device_id: str,
     request: DeviceHeartbeatRequest,
+    x_device_token: str | None = Header(default=None, alias="X-Device-Token"),
     db: Session = Depends(get_db),
 ):
-    """Record a periodic keep-alive heartbeat from an IoT device."""
-    return iot_service.process_heartbeat(db, device_id, request)
+    """Record a periodic keep-alive heartbeat from an authenticated IoT device."""
+    return iot_service.process_heartbeat(db, device_id, request, device_token=x_device_token)
 
 
 @router.get(
@@ -118,13 +120,14 @@ def list_device_sensors(
 )
 def ingest_telemetry(
     payload: TelemetryIngestRequest,
+    x_device_token: str | None = Header(default=None, alias="X-Device-Token"),
     db: Session = Depends(get_db),
 ):
     """
     Primary ingestion endpoint for ESP32 sensor telemetry.
-    Validates, deduplicates, persists, and queues for intelligence processing.
+    Requires valid X-Device-Token; validates, deduplicates, persists, and queues for intelligence processing.
     """
-    return iot_service.ingest_telemetry(db, payload)
+    return iot_service.ingest_telemetry(db, payload, device_token=x_device_token)
 
 
 @router.get(

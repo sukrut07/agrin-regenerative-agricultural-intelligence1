@@ -8,6 +8,7 @@ This layer is DB-agnostic (receives a SQLAlchemy Session) and stateless;
 all persistence is committed here.
 """
 
+import hmac
 import logging
 import secrets
 from datetime import datetime, timezone
@@ -133,10 +134,14 @@ def get_device_status(db: Session, device_id: str) -> DeviceStatusResponse:
 
 
 def update_device_status(
-    db: Session, device_id: str, request: DeviceStatusUpdateRequest
+    db: Session,
+    device_id: str,
+    request: DeviceStatusUpdateRequest,
+    device_token: Optional[str] = None,
 ) -> DeviceStatusResponse:
-    """Update device status and optional metadata."""
+    """Update device status and optional metadata (requires valid device token)."""
     device = _get_device_or_404(db, device_id)
+    _verify_device_token(device, device_token)
     device.status = request.status.value
     if request.is_active is not None:
         device.is_active = request.is_active
@@ -158,13 +163,18 @@ def list_device_sensors(db: Session, device_id: str):
 # ── Heartbeat ──────────────────────────────────────────────────────────────────
 
 def process_heartbeat(
-    db: Session, device_id: str, request: DeviceHeartbeatRequest
+    db: Session,
+    device_id: str,
+    request: DeviceHeartbeatRequest,
+    device_token: Optional[str] = None,
 ) -> DeviceHeartbeatResponse:
     """
     Record heartbeat, update device last_seen_at and diagnostics.
     Transition OFFLINE device → ONLINE when heartbeat arrives.
+    Requires valid X-Device-Token matching registered device api_key.
     """
     device = _get_device_or_404(db, device_id)
+    _verify_device_token(device, device_token)
 
     ts = request.timestamp or datetime.utcnow()
 
@@ -207,14 +217,23 @@ def process_heartbeat(
 # ── Telemetry Ingestion ────────────────────────────────────────────────────────
 
 def ingest_telemetry(
-    db: Session, payload: TelemetryIngestRequest
+    db: Session,
+    payload: TelemetryIngestRequest,
+    device_token: Optional[str] = None,
 ) -> TelemetryIngestResponse:
     """
-    Validate, deduplicate, persist telemetry, and trigger downstream intelligence.
+    Validate, authenticate, deduplicate, persist telemetry, and trigger downstream intelligence.
 
     Returns DUPLICATE status if the same payload_hash already exists.
     """
     device = _get_device_or_404(db, payload.device_id)
+    _verify_device_token(device, device_token)
+
+    if not device.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Device {payload.device_id} is deactivated and cannot ingest telemetry."
+        )
 
     # Security: Verify farm_id ownership
     if payload.farm_id and payload.farm_id != device.farm_id:
@@ -226,6 +245,20 @@ def ingest_telemetry(
             status_code=403,
             detail=f"Security violation: Payload farm_id '{payload.farm_id}' does not match registered device farm_id."
         )
+
+    # Security: Verify field association belongs to the same farm_id when supplied
+    if payload.field_id:
+        field = db.query(Field).filter(Field.field_id == payload.field_id).first()
+        if field and field.farm_id != device.farm_id:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Security violation: Field '{payload.field_id}' does not belong to device farm '{device.farm_id}'."
+            )
+        if device.field_id and payload.field_id != device.field_id:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Security violation: Device '{payload.device_id}' is bound to field '{device.field_id}', not '{payload.field_id}'."
+            )
 
     # Security: Validate temporal bounds (protect against replay / extreme clock drift)
     if payload.timestamp:
@@ -386,3 +419,19 @@ def _get_device_or_404(db: Session, device_id: str) -> Device:
     if not device:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     return device
+
+
+def _verify_device_token(device: Device, supplied_token: Optional[str]) -> None:
+    """Enforce X-Device-Token authentication against the device's registered api_key."""
+    if not device.api_key:
+        logger.warning("Device %s has no provisioned api_key; rejecting write operation.", device.device_id)
+        raise HTTPException(
+            status_code=401,
+            detail="Device credentials not provisioned. Re-register device to obtain X-Device-Token."
+        )
+    if not supplied_token or not hmac.compare_digest(supplied_token.strip(), device.api_key):
+        logger.warning("Unauthorized IoT request for device %s (missing or invalid X-Device-Token).", device.device_id)
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: Missing or invalid X-Device-Token header."
+        )

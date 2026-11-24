@@ -53,13 +53,21 @@ def get_analytics(db: Session = Depends(get_db)):
             else: score_buckets["80-100"] += 1
 
     # Model info
-    model_info = {}
+    model_info = {
+        "model_version": None,
+        "model_type": None,
+        "metrics": None,
+        "metrics_status": "UNAVAILABLE",
+        "reason": "Model metadata not loaded.",
+    }
     try:
         from ml.predict import predictor
         predictor.load()
-        model_info = predictor.get_model_info()
-    except Exception:
-        pass
+        loaded_info = predictor.get_model_info()
+        if loaded_info and loaded_info.get("metrics"):
+            model_info = loaded_info
+    except Exception as exc:
+        model_info["reason"] = f"Model metadata unavailable: {exc}"
 
     return {
         "total_analyses": total_analyses,
