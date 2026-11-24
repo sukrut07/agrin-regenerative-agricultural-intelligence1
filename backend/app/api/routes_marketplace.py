@@ -287,10 +287,14 @@ def get_amendments_matching_deficiency(
 
     if deficiency in ("ph_high", "alkaline", "sodic"):
         # Match Gypsum or sulfur amendments
-        query = query.filter(MarketplaceListing.title.ilike("%gypsum%") | MarketplaceListing.category == "SOIL_AMENDMENTS")
+        query = query.filter((MarketplaceListing.title.ilike("%gypsum%")) | (MarketplaceListing.category == "SOIL_AMENDMENTS"))
     elif deficiency in ("low_oc", "organic_carbon"):
         # Match vermicompost or green manure seeds
-        query = query.filter(MarketplaceListing.title.ilike("%vermicompost%") | MarketplaceListing.title.ilike("%daincha%") | MarketplaceListing.category == "FERTILIZERS")
+        query = query.filter(
+            (MarketplaceListing.title.ilike("%vermicompost%")) |
+            (MarketplaceListing.title.ilike("%daincha%")) |
+            (MarketplaceListing.category == "FERTILIZERS")
+        )
     elif deficiency in ("zinc_deficit", "micronutrient"):
         query = query.filter(MarketplaceListing.category == "SOIL_AMENDMENTS")
     else:

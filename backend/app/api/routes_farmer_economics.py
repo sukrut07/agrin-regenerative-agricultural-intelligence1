@@ -37,9 +37,13 @@ def _ensure_seed_economics(db: Session, farm_id: str):
     count = db.query(FarmExpense).filter(FarmExpense.farm_id == farm_id).count()
     if count == 0:
         for exp in SEED_EXPENSES:
-            db.add(FarmExpense(**exp))
+            e = dict(exp)
+            e["farm_id"] = farm_id
+            db.add(FarmExpense(**e))
         for sale in SEED_SALES:
-            db.add(FarmSale(**sale))
+            s = dict(sale)
+            s["farm_id"] = farm_id
+            db.add(FarmSale(**s))
         db.commit()
 
 

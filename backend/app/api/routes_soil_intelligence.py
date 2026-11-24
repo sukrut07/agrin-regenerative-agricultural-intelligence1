@@ -204,7 +204,7 @@ def create_sampling_route(
         title=route.title,
         num_zones=route.num_zones,
         target_depth_cm=route.target_depth_cm,
-        waypoints=route.waypoints_json,
+        waypoints_json=route.waypoints_json,
         sampling_instructions=route.sampling_instructions,
         status=route.status,
         created_at=route.created_at
@@ -233,7 +233,7 @@ def get_field_sampling_route(
         title=route.title,
         num_zones=route.num_zones,
         target_depth_cm=route.target_depth_cm,
-        waypoints=route.waypoints_json,
+        waypoints_json=route.waypoints_json,
         sampling_instructions=route.sampling_instructions,
         status=route.status,
         created_at=route.created_at
@@ -265,7 +265,9 @@ def mark_sample_point_collected(
     if not updated:
         raise HTTPException(status_code=404, detail="Point ID not found in route")
 
-    route.waypoints_json = waypoints
+    from sqlalchemy.orm.attributes import flag_modified
+    route.waypoints_json = [dict(p) for p in waypoints]
+    flag_modified(route, "waypoints_json")
     route.status = "COMPLETED" if all_collected else "IN_PROGRESS"
     db.commit()
     db.refresh(route)

@@ -69,8 +69,8 @@ def test_soil_sampling_route_planner():
     assert res.status_code == 200
     route = res.json()
     assert route["num_zones"] == 5
-    assert len(route["waypoints"]) == 5
-    assert route["waypoints"][0]["point_id"] == "SMP-01"
+    assert len(route["waypoints_json"]) == 5
+    assert route["waypoints_json"][0]["point_id"] == "SMP-01"
 
     # Mark first point collected
     route_id = route["id"]

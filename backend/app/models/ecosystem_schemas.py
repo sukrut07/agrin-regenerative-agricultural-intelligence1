@@ -123,7 +123,7 @@ class SoilSamplingRouteResponse(BaseModel):
     title: str
     num_zones: int
     target_depth_cm: int
-    waypoints: List[Dict[str, Any]]
+    waypoints_json: List[Dict[str, Any]]
     sampling_instructions: Optional[str]
     status: str
     created_at: datetime
