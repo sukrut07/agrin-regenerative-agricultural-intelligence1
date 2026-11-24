@@ -172,24 +172,33 @@ def run_full_agricultural_intelligence(
     weather_failure_limitation = None
     try:
         weather_info = get_weather_data(district=district, state=state, lat=lat, lon=lon)
-        observer.mark_step("weather_fetched", status="SUCCESS", details={
-            "is_live": weather_info.get("is_live_data", True),
+        is_live_weather_flag = bool(weather_info.get("is_live_data", True))
+        subsystem_statuses["weather"] = "SUCCESS" if is_live_weather_flag else "DEGRADED"
+        if not is_live_weather_flag:
+            weather_failure_limitation = "Live weather telemetry unavailable; using district climatological benchmark."
+            pipeline_warnings.append(weather_failure_limitation)
+        observer.mark_step("weather_fetched", status="SUCCESS" if is_live_weather_flag else "FALLBACK", details={
+            "is_live": is_live_weather_flag,
             "temperature": weather_info.get("temperature")
         })
     except Exception as e:
+        subsystem_statuses["weather"] = "DEGRADED"
         observer.mark_step("weather_failed", status="FALLBACK", details={"error": str(e)})
         weather_failure_limitation = f"Live weather API unreachable ({str(e)}). Fallen back to regional climatological benchmark."
+        pipeline_warnings.append(weather_failure_limitation)
         try:
             weather_info = get_weather_forecast(district, state)
-        except Exception:
+        except Exception as forecast_err:
+            subsystem_statuses["weather"] = "FAILED"
+            pipeline_errors.append({"subsystem": "weather", "error": str(forecast_err)})
             weather_info = {
-                "temperature": 27.5,
-                "humidity": 65.0,
-                "rainfall": 750.0,
-                "source": "Regional Climatological Fallback",
+                "temperature": resolved_inputs.get("temperature") if "resolved_inputs" in locals() else farm_data.get("temperature"),
+                "humidity": farm_data.get("humidity"),
+                "rainfall": farm_data.get("rainfall"),
+                "source": "Unavailable (No live or climatology data)",
                 "is_live_data": False,
-                "freshness": "Climatological Normal",
-                "confidence": "Medium",
+                "freshness": "UNAVAILABLE",
+                "confidence": "Low",
                 "risk_alerts": []
             }
 
@@ -210,16 +219,24 @@ def run_full_agricultural_intelligence(
     resolved_inputs["district"] = district
 
     # 3. Soil Intelligence Layer
-    soil_profile = assess_soil_health(
-        soil_data=resolved_inputs,
-        soil_type=resolved_inputs.get("soil_type")
-    )
-    observer.mark_step("soil_analysis_completed", status="SUCCESS", details={"score": soil_profile.get("score")})
+    try:
+        soil_profile = assess_soil_health(
+            soil_data=resolved_inputs,
+            soil_type=resolved_inputs.get("soil_type")
+        )
+        subsystem_statuses["soil"] = "SUCCESS"
+        observer.mark_step("soil_analysis_completed", status="SUCCESS", details={"score": soil_profile.get("score")})
+    except Exception as soil_err:
+        subsystem_statuses["soil"] = "FAILED"
+        pipeline_errors.append({"subsystem": "soil", "error": str(soil_err)})
+        observer.mark_step("soil_analysis_completed", status="ERROR", details={"error": str(soil_err)})
+        raise RuntimeError(f"Critical soil intelligence subsystem failure: {soil_err}") from soil_err
 
     # 4. Crop Suitability Analysis (Decoupled ML + Agronomic Rule Gates)
     suitability_analysis = {}
     top_crop_score = 70.0
     top_crop_name = None
+    model_version_used = None
     try:
         s_dict = {
             "N": resolved_inputs.get("N"),
@@ -250,6 +267,7 @@ def run_full_agricultural_intelligence(
         }
         crop_res = get_ranked_crops(s_dict, e_dict, f_dict, top_n=10)
         crop_recs = crop_res.get("ranked_crops", [])
+        model_version_used = (crop_res.get("model_info") or {}).get("model_version")
         suitability_analysis = {
             "top_crops": crop_recs,
             "engine": "Decoupled Hybrid (60% Random Forest ML + 40% ICAR Agronomic Rules)",
@@ -258,8 +276,11 @@ def run_full_agricultural_intelligence(
         if crop_recs:
             top_crop_score = crop_recs[0].get("final_score") or crop_recs[0].get("suitability_score", 70.0)
             top_crop_name = crop_recs[0].get("crop")
+        subsystem_statuses["crop_suitability"] = "SUCCESS" if crop_recs else "DEGRADED"
         observer.mark_step("crop_ranking_completed", status="SUCCESS", details={"crops_count": len(crop_recs)})
     except Exception as e:
+        subsystem_statuses["crop_suitability"] = "FAILED"
+        pipeline_errors.append({"subsystem": "crop_suitability", "error": str(e)})
         suitability_analysis = {
             "error": str(e),
             "top_crops": []
@@ -421,7 +442,7 @@ def run_full_agricultural_intelligence(
             f"Soil Health Card test values ({len([k for k, v in resolved_inputs.items() if v is not None and k in ['N','P','K','pH','EC','OC','Zn','Fe','B']])}/12 parameters evaluated)",
             f"Meteorological observations from {weather_src_label}",
             f"ICAR Agro-Climatic Zone framework for {acz_info.get('name', 'India') if acz_info else state}",
-            "Decoupled Random Forest v1 model (60%) + ICAR agronomic rules (40%)"
+            f"Decoupled {model_version_used or 'Random Forest'} model (60%) + ICAR agronomic rules (40%)"
         ],
         "confidence": f"{confidence_assessment.get('confidence_level', 'MEDIUM')} ({confidence_assessment.get('confidence_score', 0.8) * 100:.0f}%)",
         "limitations": [lim for lim in [
@@ -638,11 +659,47 @@ def run_full_agricultural_intelligence(
     }
 
     # Complete telemetry tracking
+    completed_at = datetime.now(timezone.utc)
     observer.complete(
         total_crops=len(crop_recs),
         confidence_level=confidence_assessment.get("confidence_level", "MEDIUM"),
         resilience_score=resilience_assessment.get("overall_resilience_score", 70.0)
     )
+
+    subsystem_statuses.setdefault("regenerative", "SUCCESS" if regenerative_plan else "DEGRADED")
+    subsystem_statuses.setdefault("resilience", "SUCCESS" if resilience_assessment else "DEGRADED")
+    subsystem_statuses.setdefault("confidence", "SUCCESS")
+    subsystem_statuses["satellite"] = satellite_obs.get("status", "NOT_CONNECTED") if satellite_obs else "NOT_CONNECTED"
+    subsystem_statuses["crop_disease"] = crop_health_status.get("model_status") or crop_health_status.get("status", "MODEL_NOT_DEPLOYED")
+
+    missing_data_items = list(confidence_assessment.get("metadata", {}).get("missing_core_fields", []))
+    core_failed = any(subsystem_statuses.get(k) == "FAILED" for k in ("soil", "crop_suitability"))
+    core_degraded = any(subsystem_statuses.get(k) in ("DEGRADED", "FAILED") for k in ("location", "weather", "soil", "crop_suitability"))
+    pipeline_status = "FAILED" if core_failed else ("PARTIAL_DEGRADED" if core_degraded else "COMPLETE")
+
+    pipeline_execution = {
+        "pipeline_id": pipeline_id,
+        "session_id": request_id,
+        "model_version": model_version_used,
+        "status": pipeline_status,
+        "subsystem_statuses": subsystem_statuses,
+        "execution_timestamps": {
+            "started_at": timestamp_now.isoformat(),
+            "completed_at": completed_at.isoformat(),
+        },
+        "source_classifications": {
+            "weather": "LIVE_EXTERNAL" if is_live_weather else "CLIMATOLOGY_FALLBACK",
+            "soil": "FARMER_OR_LAB_INPUT",
+            "crop_suitability": "ML_PLUS_ICAR_RULES",
+            "satellite": "SYNTHETIC" if (satellite_obs and satellite_obs.get("is_synthetic")) else subsystem_statuses["satellite"],
+            "crop_disease": "SYNTHETIC" if (crop_health_status and crop_health_status.get("is_synthetic")) else subsystem_statuses["crop_disease"],
+        },
+        "missing_data": missing_data_items,
+        "warnings": pipeline_warnings,
+        "errors": pipeline_errors,
+        "confidence": confidence_assessment.get("confidence_level", "MEDIUM"),
+        "limitations": unified_limitations,
+    }
 
     # Record farm memory snapshot
     try:
@@ -657,10 +714,12 @@ def run_full_agricultural_intelligence(
         pass
 
     return {
-        "status": "success",
+        "status": "success" if not core_failed else "degraded",
         "platform": "AgriN: Regenerative Agricultural Intelligence",
         "version": "2.5.0",
         "evaluated_at": timestamp_now.isoformat(),
+        "pipeline_execution": pipeline_execution,
+        "warnings": pipeline_warnings,
         # ── Primary Unified Experience ───────────────────────────────────────
         "farm_intelligence_report": farm_intelligence_report,
         "farm_intelligence_snapshot": farm_intelligence_snapshot,
