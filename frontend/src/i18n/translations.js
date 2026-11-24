@@ -152,7 +152,68 @@ export const translations = {
     method_estimate: "Location-based Estimate",
 
     // Disclaimer
-    disclaimer_text: "AgriN provides evidence-backed agronomic decision support. Recommendations do not replace professional agricultural extension services or laboratory soil assays."
+    disclaimer_text: "AgriN provides evidence-backed agronomic decision support. Recommendations do not replace professional agricultural extension services or laboratory soil assays.",
+
+    // Ecosystem & Dual Mode
+    mode_simple: "Simple Mode",
+    mode_advanced: "Advanced Mode",
+    nav_agrimarket: "AgriMarket",
+    nav_economics: "Farm Economics",
+    nav_sampling_route: "Sampling Planner",
+    nav_treatment_tracker: "Treatment Tracker",
+    nav_soil_depth: "Depth Intelligence",
+
+    // Soil Fingerprint & Depth
+    soil_fingerprint_title: "Field Soil Health Fingerprint",
+    soil_depth_title: "Stratified Soil Depth Intelligence",
+    depth_layer_topsoil: "Topsoil (0–15 cm)",
+    depth_layer_rootzone: "Root-Zone (15–30 cm)",
+    depth_layer_subsoil: "Subsoil (30–60 cm)",
+    compaction_label: "Soil Compaction",
+    infiltration_label: "Infiltration Rate",
+    water_holding_label: "Water Holding Capacity",
+    hardpan_warning: "Hardpan compaction detected at 15-30cm depth. Tap root development restricted.",
+
+    // Sampling Route Planner
+    sampling_planner_title: "Soil Sampling Route Planner",
+    sampling_planner_subtitle: "Zoned GPS collection grid following standard 'W' pattern for representative field testing.",
+    btn_mark_collected: "Mark Sample Collected",
+    sampling_checklist: "Field Sampling Checklist",
+
+    // Treatment Outcome Tracker
+    treatment_tracker_title: "Soil Treatment Outcome Tracker",
+    treatment_tracker_subtitle: "Measure whether compost, gypsum, lime, or green manuring improved your soil indicators.",
+    log_treatment_btn: "Log New Treatment",
+    before_treatment: "Before Treatment",
+    after_treatment: "After Treatment",
+    net_improvement: "Net Soil Improvement",
+
+    // AgriMarket
+    market_title: "AgriMarket — Nearby Agricultural Marketplace",
+    market_subtitle: "Buy produce, discover seeds & bio-inputs, and book nearby tractor & machinery rentals.",
+    category_all: "All Items",
+    category_produce: "Farm Produce",
+    category_seeds: "Seeds & Saplings",
+    category_fertilizers: "Biofertilizers & Compost",
+    category_amendments: "Soil Amendments (Gypsum/Lime)",
+    category_rentals: "Machinery Rentals",
+    category_services: "Drone & Field Services",
+    filter_district: "District",
+    filter_rental_only: "Rentals Only",
+    mandi_price_title: "Live Agmarknet APMC Price Intelligence",
+    btn_contact_seller: "Contact Seller / Book",
+    btn_post_listing: "Post Listing",
+    enquiry_modal_title: "Send Inquiry to Seller",
+
+    // Farm Economics (AgriLedger)
+    economics_title: "AgriLedger — Farm Economics & P&L",
+    total_expenses: "Total Cost of Cultivation",
+    total_revenue: "Gross Harvest Revenue",
+    net_profit: "Net Farm Profit",
+    cost_per_ha: "Cost per Hectare",
+    profit_margin: "Profit Margin",
+    btn_add_expense: "Add Expense",
+    btn_record_sale: "Record Sale"
   },
 
   hi: {
@@ -303,7 +364,68 @@ export const translations = {
     method_estimate: "स्थान-आधारित अनुमान उपयोग करें",
 
     // Disclaimer
-    disclaimer_text: "एग्री-एन साक्ष्य-आधारित कृषि निर्णय समर्थन प्रदान करता है। यह आधिकारिक प्रयोगशाला परीक्षणों का विकल्प नहीं है।"
+    disclaimer_text: "एग्री-एन साक्ष्य-आधारित कृषि निर्णय समर्थन प्रदान करता है। यह आधिकारिक प्रयोगशाला परीक्षणों का विकल्प नहीं है।",
+
+    // Ecosystem & Dual Mode
+    mode_simple: "सरल किसान मोड",
+    mode_advanced: "विशेषज्ञ मोड",
+    nav_agrimarket: "एग्री-मार्केट",
+    nav_economics: "खेत अर्थशास्त्र (बहीखाता)",
+    nav_sampling_route: "मिट्टी नमूना योजनाकार",
+    nav_treatment_tracker: "उपचार परिणाम ट्रैकर",
+    nav_soil_depth: "मिट्टी गहराई विश्लेषण",
+
+    // Soil Fingerprint & Depth
+    soil_fingerprint_title: "खेत मृदा स्वास्थ्य फिंगरप्रिंट",
+    soil_depth_title: "स्तरीकृत मृदा गहराई बुद्धिमत्ता",
+    depth_layer_topsoil: "ऊपरी परत (0–15 सेमी)",
+    depth_layer_rootzone: "जड़ क्षेत्र (15–30 सेमी)",
+    depth_layer_subsoil: "निचली परत (30–60 सेमी)",
+    compaction_label: "मिट्टी का कड़ापन (कंपैक्शन)",
+    infiltration_label: "जल रिसाव दर",
+    water_holding_label: "जल धारण क्षमता",
+    hardpan_warning: "15-30 सेमी गहराई पर सख्त परत (हार्डपैन) पाई गई। गहरी जड़ों के विकास में बाधा।",
+
+    // Sampling Route Planner
+    sampling_planner_title: "मृदा नमूना संग्रह मार्ग योजनाकार",
+    sampling_planner_subtitle: "मानक 'W' पैटर्न के अनुसार सटीक जीपीएस वेपॉइंट्स पर आधारित नमूना संग्रह।",
+    btn_mark_collected: "नमूना एकत्र हुआ दर्ज करें",
+    sampling_checklist: "फील्ड नमूना संग्रह चेकलिस्ट",
+
+    // Treatment Outcome Tracker
+    treatment_tracker_title: "मृदा उपचार एवं परिणाम ट्रैकर",
+    treatment_tracker_subtitle: "मापें कि जिप्सम, चूना, कम्पोस्ट या ढैंचा हरी खाद से मिट्टी में क्या सुधार हुआ।",
+    log_treatment_btn: "नया उपचार दर्ज करें",
+    before_treatment: "उपचार से पहले",
+    after_treatment: "उपचार के बाद",
+    net_improvement: "शुद्ध मृदा सुधार",
+
+    // AgriMarket
+    market_title: "एग्री-मार्केट — नजदीकी कृषि बाजार",
+    market_subtitle: "फसल बेचें, प्रमाणित बीज व जैविक खाद खरीदें और नजदीकी ट्रैक्टर व मशीनरी किराए पर लें।",
+    category_all: "सभी श्रेणियां",
+    category_produce: "कृषि उपज (अनाज/दलहन)",
+    category_seeds: "बीज एवं पौधे",
+    category_fertilizers: "जैविक खाद एवं वर्मीकम्पोस्ट",
+    category_amendments: "मृदा सुधारक (जिप्सम/चूना)",
+    category_rentals: "मशीनरी किराया (ट्रैक्टर)",
+    category_services: "ड्रोन छिड़काव एवं सेवाएं",
+    filter_district: "जिला",
+    filter_rental_only: "केवल किराए हेतु",
+    mandi_price_title: "लाइव एगमार्कनेट एपीएमसी मंडी भाव",
+    btn_contact_seller: "विक्रेता से संपर्क करें / बुक करें",
+    btn_post_listing: "नया विज्ञापन जोड़ें",
+    enquiry_modal_title: "विक्रेता को पूछताछ भेजें",
+
+    // Farm Economics (AgriLedger)
+    economics_title: "एग्री-लेजर — खेत अर्थशास्त्र एवं लाभ-हानि",
+    total_expenses: "कुल खेती लागत",
+    total_revenue: "कुल उपज बिक्री",
+    net_profit: "शुद्ध मुनाफा",
+    cost_per_ha: "प्रति हेक्टेयर लागत",
+    profit_margin: "मुनाफा प्रतिशत",
+    btn_add_expense: "खर्च जोड़ें",
+    btn_record_sale: "बिक्री दर्ज करें"
   },
 
   mr: {
@@ -454,6 +576,67 @@ export const translations = {
     method_estimate: "गाव/तालुकानिहाय अंदाज वापरा",
 
     // Disclaimer
-    disclaimer_text: "अॅग्री-एन शास्त्रीय तथ्यांवर आधारित निर्णय सहाय्य प्रदान करते. हे अधिकृत कृषी प्रयोगशाळा तपासणीचा पर्याय नाही."
+    disclaimer_text: "अॅग्री-एन शास्त्रीय तथ्यांवर आधारित निर्णय सहाय्य प्रदान करते. हे अधिकृत कृषी प्रयोगशाळा तपासणीचा पर्याय नाही.",
+
+    // Ecosystem & Dual Mode
+    mode_simple: "सरल शेतकरी मोड",
+    mode_advanced: "तज्ज्ञ मोड",
+    nav_agrimarket: "अॅग्री-मार्केट",
+    nav_economics: "शेती अर्थकारण",
+    nav_sampling_route: "माती नमुना योजना",
+    nav_treatment_tracker: "उपचार परिणाम",
+    nav_soil_depth: "खोलीनिहाय माती",
+
+    // Soil Fingerprint & Depth
+    soil_fingerprint_title: "वावराचा मृदा आरोग्य फिंगरप्रिंट",
+    soil_depth_title: "स्तरीकृत माती खोली बुद्धिमत्ता",
+    depth_layer_topsoil: "वरचा थर (०–१५ सेंमी)",
+    depth_layer_rootzone: "मुळांचा पट्टा (१५–३० सेंमी)",
+    depth_layer_subsoil: "खालचा थर (३०–६० सेंमी)",
+    compaction_label: "मातीचा कडकपणा / कठीणपणा",
+    infiltration_label: "पाणी मुरण्याचा वेग",
+    water_holding_label: "ओलावा टिकवून ठेवण्याची क्षमता",
+    hardpan_warning: "१५ ते ३० सेंमी खोलीवर मातीचा कडक थर (हार्डपॅन) आढळला. मुळे खोल जाण्यास अडथळा.",
+
+    // Sampling Route Planner
+    sampling_planner_title: "माती नमुना संकलन मार्ग नियोजक",
+    sampling_planner_subtitle: "मानक 'W' पद्धतीनुसार अचूक जीपीएस बिंदूवर आधारित प्रातिनिधिक माती नमुना संकलन.",
+    btn_mark_collected: "नमुना गोळा केला",
+    sampling_checklist: "माती नमुना तपासणी यादी",
+
+    // Treatment Outcome Tracker
+    treatment_tracker_title: "मृदा उपचार व सुधारणा परिणाम",
+    treatment_tracker_subtitle: "जिप्सम, चुना, शेणखत किंवा ढैंचा पिकाने मातीत काय सुधारणा झाली ते तपासा.",
+    log_treatment_btn: "नवीन उपचार नोंदवा",
+    before_treatment: "उपचारापूर्वी",
+    after_treatment: "उपचारानंतर",
+    net_improvement: "एकूण सुपीकता वाढ",
+
+    // AgriMarket
+    market_title: "अॅग्री-मार्केट — स्थानिक शेती बाजार",
+    market_subtitle: "शेतमाल विका, दर्जेदार बियाणे व सेंद्रिय खते शोधा आणि ट्रॅक्टर व अवजारे भाड्याने घ्या.",
+    category_all: "सर्व प्रकार",
+    category_produce: "शेतमाल (अन्नधान्य/कडधान्य)",
+    category_seeds: "बियाणे आणि रोपे",
+    category_fertilizers: "गांडूळ खत व जिवाणू खते",
+    category_amendments: "जमीन सुधारके (जिप्सम/चुना)",
+    category_rentals: "ट्रॅक्टर व अवजारे भाड्याने",
+    category_services: "ड्रोन फवारणी व सेवा",
+    filter_district: "जिल्हा",
+    filter_rental_only: "फक्त भाड्याने",
+    mandi_price_title: "थेट ॲगमार्कनेट कृषी उत्पन्न बाजार समिती (APMC) दर",
+    btn_contact_seller: "विक्रेत्याशी संपर्क साधा / बुक करा",
+    btn_post_listing: "नवीन जाहिरात द्या",
+    enquiry_modal_title: "विक्रेत्याला चौकशी पाठवा",
+
+    // Farm Economics (AgriLedger)
+    economics_title: "अॅग्री-लेजर — शेती हिशोब व नफा-तोटा",
+    total_expenses: "एकूण उत्पादन खर्च",
+    total_revenue: "एकूण पीक विक्री",
+    net_profit: "निव्वळ नफा",
+    cost_per_ha: "प्रति हेक्टरी खर्च",
+    profit_margin: "नफ्याचे प्रमाण",
+    btn_add_expense: "खर्च नोंदवा",
+    btn_record_sale: "विक्री नोंदवा"
   }
 };

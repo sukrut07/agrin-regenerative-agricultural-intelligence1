@@ -186,6 +186,75 @@ export const getSyntheticSample = (limit = 10) =>
 export const getSyntheticScenarios = () =>
   apiCall('/synthetic/scenarios');
 
+// ── Soil Intelligence Ecosystem Endpoints ────────────────────────────────────
+export const getFieldSoilFingerprints = (fieldId) =>
+  apiCall(`/soil-intelligence/fingerprints/${encodeURIComponent(fieldId)}`);
+
+export const saveSoilFingerprint = (data) =>
+  apiCall('/soil-intelligence/fingerprints', { method: 'POST', body: JSON.stringify(data) });
+
+export const getSoilDepthAnalysis = (fieldId) =>
+  apiCall(`/soil-intelligence/depth-analysis/${encodeURIComponent(fieldId)}`);
+
+export const getSamplingRoute = (fieldId) =>
+  apiCall(`/soil-intelligence/sampling-routes/${encodeURIComponent(fieldId)}`);
+
+export const createSamplingRoute = (data) =>
+  apiCall('/soil-intelligence/sampling-routes', { method: 'POST', body: JSON.stringify(data) });
+
+export const toggleSampleCollected = (routeId, pointId) =>
+  apiCall(`/soil-intelligence/sampling-routes/${encodeURIComponent(routeId)}/collect/${encodeURIComponent(pointId)}`, { method: 'POST' });
+
+export const getSoilTreatments = (fieldId) =>
+  apiCall(`/soil-intelligence/treatments/${encodeURIComponent(fieldId)}`);
+
+export const logSoilTreatment = (data) =>
+  apiCall('/soil-intelligence/treatments', { method: 'POST', body: JSON.stringify(data) });
+
+// ── AgriMarket Endpoints ─────────────────────────────────────────────────────
+export const getMarketplaceListings = (params = {}) => {
+  const q = new URLSearchParams();
+  if (params.category) q.append('category', params.category);
+  if (params.district) q.append('district', params.district);
+  if (params.is_rental !== undefined) q.append('is_rental', params.is_rental);
+  if (params.search) q.append('search', params.search);
+  if (params.max_price) q.append('max_price', params.max_price);
+  const qs = q.toString();
+  return apiCall(`/marketplace/listings${qs ? `?${qs}` : ''}`);
+};
+
+export const createMarketplaceListing = (data) =>
+  apiCall('/marketplace/listings', { method: 'POST', body: JSON.stringify(data) });
+
+export const getMarketplaceListingDetail = (listingId) =>
+  apiCall(`/marketplace/listings/${encodeURIComponent(listingId)}`);
+
+export const submitMarketplaceEnquiry = (data) =>
+  apiCall('/marketplace/enquiries', { method: 'POST', body: JSON.stringify(data) });
+
+export const getPriceBenchmarks = () =>
+  apiCall('/marketplace/price-benchmarks');
+
+export const getSoilAmendmentsMatch = (deficiency, district = 'Parbhani') =>
+  apiCall(`/marketplace/soil-amendments-match?deficiency=${encodeURIComponent(deficiency)}&district=${encodeURIComponent(district)}`);
+
+// ── AgriLedger: Farm Economics ───────────────────────────────────────────────
+export const getFarmExpenses = (farmId) =>
+  apiCall(`/economics/expenses/${encodeURIComponent(farmId)}`);
+
+export const addFarmExpense = (data) =>
+  apiCall('/economics/expenses', { method: 'POST', body: JSON.stringify(data) });
+
+export const getFarmSales = (farmId) =>
+  apiCall(`/economics/sales/${encodeURIComponent(farmId)}`);
+
+export const recordFarmSale = (data) =>
+  apiCall('/economics/sales', { method: 'POST', body: JSON.stringify(data) });
+
+export const getFarmPnL = (farmId) =>
+  apiCall(`/economics/pnl/${encodeURIComponent(farmId)}`);
+
+
 
 
 
