@@ -8,102 +8,119 @@ import {
   Layers, ArrowUpRight, Plus, RefreshCw, Cpu,
   CheckCircle2, Compass, Wind, Sun, Clock, ShieldCheck, Sprout
 } from 'lucide-react'
-import { getLiveWeather } from '../services/api'
+import { getLiveWeather, getFieldsForFarm } from '../services/api'
+
+// Illustrative reference plots ONLY shown when no persisted farm fields exist in DB
+const ILLUSTRATIVE_SAMPLE_FIELDS = [
+  {
+    id: 'demo-fld-01',
+    name: 'North Plot (Sample)',
+    crop: 'Cotton',
+    variety: 'Bt RCH-2',
+    season: 'Kharif',
+    area_ha: 2.4,
+    soil_type: 'Deep Black Soil (Vertisol)',
+    moisture: 68.2,
+    ph: 6.8,
+    temperature: 27.4,
+    organic_carbon: 0.72,
+    ec: 0.42,
+    npk: { N: 185, P: 24, K: 210 },
+    health_status: 'OPTIMAL',
+    ndvi_score: null,
+    sensor_node: 'Wokwi Virtual Lab (Illustrative)',
+    is_simulated: true,
+    last_reading_time: 'Sample baseline',
+    alerts: [
+      {
+        type: 'warning',
+        title: 'Illustrative Irrigation Example',
+        desc: 'Sample soil moisture is 68.2%. Connect your AgriSense node or submit Soil Health Card values for live field advisories.'
+      }
+    ]
+  },
+  {
+    id: 'demo-fld-02',
+    name: 'South Slope (Sample)',
+    crop: 'Soybean',
+    variety: 'KDS-726 (Sangam)',
+    season: 'Kharif',
+    area_ha: 1.8,
+    soil_type: 'Medium Black Loam',
+    moisture: 54.0,
+    ph: 7.1,
+    temperature: 28.1,
+    organic_carbon: 0.65,
+    ec: 0.38,
+    npk: { N: 140, P: 18, K: 175 },
+    health_status: 'ATTENTION',
+    ndvi_score: null,
+    sensor_node: 'Illustrative Baseline',
+    is_simulated: true,
+    last_reading_time: 'Sample baseline',
+    alerts: [
+      {
+        type: 'warning',
+        title: 'Illustrative Phosphorus Deficit',
+        desc: 'Sample P is 18 kg/ha. Replace with your own field soil report for farm-specific remediation.'
+      }
+    ]
+  },
+]
 
 export default function FieldIntelligence() {
   const { t } = useLanguage()
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedFieldId, setSelectedFieldId] = useState('fld-01')
+  const [fields, setFields] = useState(ILLUSTRATIVE_SAMPLE_FIELDS)
+  const [usingDemoFields, setUsingDemoFields] = useState(true)
+  const [selectedFieldId, setSelectedFieldId] = useState(ILLUSTRATIVE_SAMPLE_FIELDS[0].id)
   const [weatherData, setWeatherData] = useState(null)
   const [loadingWeather, setLoadingWeather] = useState(true)
-  const [layerMode, setLayerMode] = useState('ndvi') // 'ndvi' | 'moisture' | 'rgb'
+  const [weatherError, setWeatherError] = useState(null)
+  const [layerMode, setLayerMode] = useState('boundary') // 'boundary' | 'moisture' | 'ndvi'
 
-  // Pre-configured realistic fields for Pan-India demonstration
-  const fields = [
-    {
-      id: 'fld-01',
-      name: 'North Plot (Acre 1-3)',
-      crop: 'Cotton',
-      variety: 'Bt RCH-2',
-      season: 'Kharif',
-      area_ha: 2.4,
-      soil_type: 'Deep Black Soil (Vertisol)',
-      moisture: 68.2,
-      ph: 6.8,
-      temperature: 27.4,
-      organic_carbon: 0.72,
-      ec: 0.42,
-      npk: { N: 185, P: 24, K: 210 },
-      health_status: 'OPTIMAL',
-      ndvi_score: 0.76,
-      sensor_node: 'AgriSense-001 (Wokwi Sim)',
-      is_simulated: true,
-      last_reading_time: '3 mins ago',
-      alerts: [
-        {
-          type: 'warning',
-          title: 'Irrigation Advisory',
-          desc: 'Soil moisture is 68.2%. Hold irrigation for 48 hours; regional forecast shows 28mm rainfall approaching.'
-        }
-      ]
-    },
-    {
-      id: 'fld-02',
-      name: 'South Slope (Plot B)',
-      crop: 'Soybean',
-      variety: 'KDS-726 (Sangam)',
-      season: 'Kharif',
-      area_ha: 1.8,
-      soil_type: 'Medium Black Loam',
-      moisture: 54.0,
-      ph: 7.1,
-      temperature: 28.1,
-      organic_carbon: 0.65,
-      ec: 0.38,
-      npk: { N: 140, P: 18, K: 175 },
-      health_status: 'ATTENTION',
-      ndvi_score: 0.68,
-      sensor_node: 'AgriSense-002',
-      is_simulated: true,
-      last_reading_time: '8 mins ago',
-      alerts: [
-        {
-          type: 'warning',
-          title: 'Phosphorus Limitation',
-          desc: 'Available P is 18 kg/ha (Deficit). Foliar spray of 19:19:19 recommended at pod initiation stage.'
-        }
-      ]
-    },
-    {
-      id: 'fld-03',
-      name: 'Riverbank Orchard',
-      crop: 'Pomegranate / Turmeric',
-      variety: 'Bhagwa / Selam',
-      season: 'Perennial',
-      area_ha: 3.2,
-      soil_type: 'Clay Loam with Drip',
-      moisture: 72.5,
-      ph: 7.4,
-      temperature: 26.2,
-      organic_carbon: 0.88,
-      ec: 0.51,
-      npk: { N: 210, P: 32, K: 280 },
-      health_status: 'EXCELLENT',
-      ndvi_score: 0.84,
-      sensor_node: 'AgriSense-003',
-      is_simulated: true,
-      last_reading_time: '12 mins ago',
-      alerts: []
+  const loadPersistedFields = async () => {
+    try {
+      const persisted = await getFieldsForFarm('farm-parbhani-01')
+      if (Array.isArray(persisted) && persisted.length > 0) {
+        const mapped = persisted.map(f => ({
+          id: f.field_id,
+          name: f.name,
+          crop: 'Unassigned Crop',
+          variety: f.irrigation_type || 'Unspecified Irrigation',
+          season: 'Active Season',
+          area_ha: f.area_hectares || '—',
+          soil_type: f.soil_type || 'Soil test pending',
+          moisture: null,
+          ph: null,
+          temperature: null,
+          organic_carbon: null,
+          ec: null,
+          npk: { N: null, P: null, K: null },
+          health_status: 'UNASSESSED',
+          ndvi_score: null,
+          sensor_node: 'No Sensor Linked',
+          is_simulated: false,
+          last_reading_time: 'Awaiting sensor / SHC input',
+          alerts: []
+        }))
+        setFields(mapped)
+        setSelectedFieldId(mapped[0].id)
+        setUsingDemoFields(false)
+      }
+    } catch {
+      // Keep illustrative sample mode if backend unreachable or unseeded
     }
-  ]
+  }
 
   const activeField = fields.find(f => f.id === selectedFieldId) || fields[0]
 
   useEffect(() => {
+    loadPersistedFields()
     getLiveWeather('Parbhani')
       .then(res => setWeatherData(res))
-      .catch(() => {})
+      .catch(err => setWeatherError(err?.message || 'Weather API unreachable'))
       .finally(() => setLoadingWeather(false))
   }, [])
 
@@ -134,10 +151,17 @@ export default function FieldIntelligence() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              {t('badge_simulated', 'SIMULATED WOKWI LAB')}
-            </span>
+            {usingDemoFields ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                <span className="w-2 h-2 rounded-full bg-purple-600" />
+                {t('badge_simulated', 'SYNTHETIC / ILLUSTRATIVE SAMPLES')}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                PERSISTED FARM FIELDS
+              </span>
+            )}
 
             <button
               onClick={() => setIsModalOpen(true)}
@@ -178,8 +202,12 @@ export default function FieldIntelligence() {
           <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-gray-500">{t('kpi_avg_moisture', 'Soil Moisture')}</p>
-              <p className="text-2xl font-black text-emerald-950 mt-1">{activeField.moisture}%</p>
-              <span className="text-[11px] text-emerald-700 font-bold">Optimal Range</span>
+              <p className="text-2xl font-black text-emerald-950 mt-1">
+                {activeField.moisture != null ? `${activeField.moisture}%` : 'Unavailable'}
+              </p>
+              <span className="text-[11px] text-slate-600 font-bold">
+                {activeField.is_simulated ? 'SYNTHETIC SAMPLE' : 'NO SENSOR LINKED'}
+              </span>
             </div>
             <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
               <Droplets size={22} />
@@ -189,8 +217,12 @@ export default function FieldIntelligence() {
           <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-gray-500">{t('kpi_soil_ph', 'Soil pH')}</p>
-              <p className="text-2xl font-black text-emerald-950 mt-1">{activeField.ph}</p>
-              <span className="text-[11px] text-gray-600 font-medium">Neutral (Ideal)</span>
+              <p className="text-2xl font-black text-emerald-950 mt-1">
+                {activeField.ph != null ? activeField.ph : 'Unavailable'}
+              </p>
+              <span className="text-[11px] text-gray-600 font-medium">
+                {activeField.is_simulated ? 'SYNTHETIC SAMPLE' : 'Awaiting SHC Test'}
+              </span>
             </div>
             <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
               <Compass size={22} />
@@ -200,8 +232,12 @@ export default function FieldIntelligence() {
           <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-gray-500">{t('kpi_organic_carbon', 'Organic Carbon')}</p>
-              <p className="text-2xl font-black text-emerald-950 mt-1">{activeField.organic_carbon}%</p>
-              <span className="text-[11px] text-emerald-700 font-bold">+0.08% / season</span>
+              <p className="text-2xl font-black text-emerald-950 mt-1">
+                {activeField.organic_carbon != null ? `${activeField.organic_carbon}%` : 'Unavailable'}
+              </p>
+              <span className="text-[11px] text-slate-600 font-bold">
+                {activeField.is_simulated ? 'SYNTHETIC SAMPLE' : 'Awaiting Lab Report'}
+              </span>
             </div>
             <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
               <ShieldCheck size={22} />
@@ -239,22 +275,22 @@ export default function FieldIntelligence() {
               {/* Layer Mode Selector */}
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-xs font-bold">
                 <button
-                  onClick={() => setLayerMode('ndvi')}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${layerMode === 'ndvi' ? 'bg-white text-emerald-800 shadow-xs' : 'text-gray-600'}`}
+                  onClick={() => setLayerMode('boundary')}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${layerMode === 'boundary' ? 'bg-white text-emerald-800 shadow-xs' : 'text-gray-600'}`}
                 >
-                  NDVI (0.76)
+                  Boundary Schematic
                 </button>
                 <button
                   onClick={() => setLayerMode('moisture')}
                   className={`px-2.5 py-1 rounded-lg transition-all ${layerMode === 'moisture' ? 'bg-white text-emerald-800 shadow-xs' : 'text-gray-600'}`}
                 >
-                  Moisture Heatmap
+                  Moisture Overlay (Demo)
                 </button>
                 <button
-                  onClick={() => setLayerMode('rgb')}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${layerMode === 'rgb' ? 'bg-white text-emerald-800 shadow-xs' : 'text-gray-600'}`}
+                  onClick={() => setLayerMode('ndvi')}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${layerMode === 'ndvi' ? 'bg-white text-emerald-800 shadow-xs' : 'text-gray-600'}`}
                 >
-                  Sentinel-2 True Color
+                  NDVI (Not Connected)
                 </button>
               </div>
             </div>
@@ -295,9 +331,13 @@ export default function FieldIntelligence() {
                 <circle cx="280" cy="150" r="7" fill="#10b981" stroke="#ffffff" strokeWidth="2" />
 
                 {/* Annotation Labels */}
-                <text x="295" y="145" fill="#ffffff" fontSize="11" fontWeight="bold">AgriSense Node-01</text>
-                <text x="295" y="160" fill="#a7f3d0" fontSize="9">Moisture: 68.2% · Temp: 27.4°C</text>
-                <text x="110" y="295" fill="rgba(255,255,255,0.7)" fontSize="10">Plot 1A: Cotton (Bt RCH-2)</text>
+                <text x="295" y="145" fill="#ffffff" fontSize="11" fontWeight="bold">{activeField.sensor_node}</text>
+                <text x="295" y="160" fill="#a7f3d0" fontSize="9">
+                  {activeField.moisture != null ? `Sample Moisture: ${activeField.moisture}%` : 'No sensor telemetry ingested'}
+                </text>
+                <text x="110" y="295" fill="rgba(255,255,255,0.7)" fontSize="10">
+                  {activeField.name}: {activeField.crop} ({activeField.is_simulated ? 'Illustrative Schematic' : 'Persisted Plot'})
+                </text>
               </svg>
 
               {/* Floating Map Legend */}
@@ -385,20 +425,22 @@ export default function FieldIntelligence() {
               <div className="pt-2 border-t border-gray-100 space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-gray-700">
                   <span>Soil Nutrients (kg/ha)</span>
-                  <span className="text-[10px] text-gray-400 font-normal">ESTIMATED</span>
+                  <span className="text-[10px] text-gray-400 font-normal">
+                    {activeField.is_simulated ? 'SYNTHETIC SAMPLE' : 'UNAVAILABLE'}
+                  </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2 rounded-lg bg-gray-50 border border-gray-100">
                     <span className="text-[10px] text-gray-500 font-bold block">N (Nitrogen)</span>
-                    <span className="text-sm font-black text-gray-800">{activeField.npk.N}</span>
+                    <span className="text-sm font-black text-gray-800">{activeField.npk.N ?? '—'}</span>
                   </div>
                   <div className="p-2 rounded-lg bg-gray-50 border border-gray-100">
                     <span className="text-[10px] text-gray-500 font-bold block">P (Phosphorus)</span>
-                    <span className="text-sm font-black text-gray-800">{activeField.npk.P}</span>
+                    <span className="text-sm font-black text-gray-800">{activeField.npk.P ?? '—'}</span>
                   </div>
                   <div className="p-2 rounded-lg bg-gray-50 border border-gray-100">
                     <span className="text-[10px] text-gray-500 font-bold block">K (Potassium)</span>
-                    <span className="text-sm font-black text-gray-800">{activeField.npk.K}</span>
+                    <span className="text-sm font-black text-gray-800">{activeField.npk.K ?? '—'}</span>
                   </div>
                 </div>
               </div>
@@ -409,25 +451,27 @@ export default function FieldIntelligence() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sun size={18} className="text-amber-400" />
-                  <h3 className="text-sm font-bold">Open-Meteo Live Forecast</h3>
+                  <h3 className="text-sm font-bold">Open-Meteo Weather Telemetry</h3>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-800 text-emerald-200">
-                  REAL-TIME
+                  {weatherError ? 'UNAVAILABLE' : (weatherData?.is_live_data === false ? 'CLIMATOLOGY FALLBACK' : 'LIVE API')}
                 </span>
               </div>
 
               {loadingWeather ? (
                 <div className="py-6 text-center text-xs text-emerald-200">Fetching live weather telemetry...</div>
+              ) : weatherError ? (
+                <div className="py-4 text-xs text-amber-200">Weather service unreachable: {weatherError}</div>
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-baseline justify-between">
                     <div>
-                      <span className="text-3xl font-black">{weatherData?.temperature || 27.5}°C</span>
-                      <span className="text-xs text-emerald-300 block">Clear sky / Sub-tropical</span>
+                      <span className="text-3xl font-black">{weatherData?.temperature ?? '—'}°C</span>
+                      <span className="text-xs text-emerald-300 block">{weatherData?.source || 'Open-Meteo'}</span>
                     </div>
                     <div className="text-right text-xs text-emerald-200">
-                      <div>Humidity: {weatherData?.humidity || 62}%</div>
-                      <div>Rainfall: {weatherData?.rainfall || 0.0} mm</div>
+                      <div>Humidity: {weatherData?.humidity ?? '—'}%</div>
+                      <div>Rainfall: {weatherData?.rainfall ?? '—'} mm</div>
                     </div>
                   </div>
 
@@ -455,7 +499,7 @@ export default function FieldIntelligence() {
       <AddYourFieldModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onFieldCreated={() => {}}
+        onFieldCreated={loadPersistedFields}
       />
     </div>
   )
