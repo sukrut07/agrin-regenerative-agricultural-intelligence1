@@ -54,41 +54,49 @@ export default function HeaderNav() {
 
   return (
               <header
-                className="sticky top-0 z-40 w-full text-white"
                 style={{
+                  position: 'sticky', top: 0, zIndex: 40, width: '100%',
                   backgroundColor: '#183B2A',
                   borderBottom: '1px solid rgba(229, 229, 220, 0.14)',
+                  fontFamily: "'Manrope','Inter',system-ui,sans-serif",
                 }}
               >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="flex items-center justify-between h-16">
+                <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
                     {/* Brand Logo */}
-                    <Link to="/" className="flex items-center gap-2.5 group">
-                      <div className="w-9 h-9 rounded-xl bg-[#E7D927] flex items-center justify-center text-[#183B2A] transition-transform group-hover:scale-105">
-                        <Sprout size={20} className="stroke-[2.5]" />
+                    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: '#E7D927', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#183B2A', flexShrink: 0 }}>
+                        <Sprout size={19} strokeWidth={2.5} />
                       </div>
-                      <div>
-                        <span className="font-extrabold text-base tracking-tight text-white leading-none block">
+                      <div style={{ lineHeight: 1.2 }}>
+                        <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.4px', color: '#fff', display: 'block' }}>
                           {t('app_title', 'AgriN')}
                         </span>
-                        <span className="text-[11px] text-[#E5E5DC]/75 font-medium block leading-none mt-1">
+                        <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(229,229,220,0.7)', display: 'block', marginTop: 1 }}>
                           Soil Intelligence &amp; Crop Suitability
                         </span>
                       </div>
                     </Link>
 
                     {/* Desktop Focused Navigation */}
-                    <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+                    <nav style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="agrin-desktop-nav" aria-label="Main navigation">
                       {navItems.map((item) => {
                         const active = isNavActive(item)
                         return (
                           <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${active
-                                ? 'bg-[#E7D927] text-[#171814] font-bold'
-                                : 'text-[#F7F7F2]/85 hover:text-white hover:bg-white/10'
-                              }`}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 5,
+                              padding: '7px 13px', borderRadius: 8,
+                              fontSize: 12, fontWeight: active ? 800 : 600,
+                              textDecoration: 'none', whiteSpace: 'nowrap',
+                              transition: 'background .15s, color .15s',
+                              background: active ? '#E7D927' : 'transparent',
+                              color: active ? '#171814' : 'rgba(247,247,242,0.85)',
+                            }}
+                            onMouseEnter={e => { if (!active) { e.currentTarget.style.background='rgba(255,255,255,0.1)'; e.currentTarget.style.color='#fff' }}}
+                            onMouseLeave={e => { if (!active) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='rgba(247,247,242,0.85)' }}}
                           >
                             {item.icon}
                             <span>{item.label}</span>
@@ -97,31 +105,38 @@ export default function HeaderNav() {
                       })}
                     </nav>
 
-                      {/* Right Controls */}
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          onClick={toggleMode}
-                          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/20 text-[#F7F7F2] hover:bg-white/10 transition-colors"
-                          title="Switch between Simple Farmer Mode and Advanced Mode"
-                        >
-                          <UserCheck size={14} className="text-[#E7D927]" />
-                          <span>{isSimpleMode ? t('mode_simple', 'Simple Mode') : t('mode_advanced', 'Advanced Mode')}</span>
-                        </button>
+                    {/* Right Controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button
+                        onClick={toggleMode}
+                        title="Switch between Simple Farmer Mode and Advanced Mode"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(247,247,242,0.9)', cursor: 'pointer', transition: 'background .15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+                        onMouseLeave={e => e.currentTarget.style.background='transparent'}
+                        className="agrin-desktop-nav"
+                      >
+                        <UserCheck size={13} style={{ color: '#E7D927' }} />
+                        <span>{isSimpleMode ? t('mode_simple', 'Simple Mode') : t('mode_advanced', 'Advanced Mode')}</span>
+                      </button>
 
-                        <LanguageSelector variant="dark" />
+                      <LanguageSelector variant="dark" />
 
-                        <Link
-                          to="/farm-details"
-                          className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#E7D927] hover:bg-[#D6C81E] text-[#171814] transition-colors"
-                        >
-                          <span>Analyse My Soil</span>
-                          <ArrowRight size={14} />
-                        </Link>
+                      <Link
+                        to="/farm-details"
+                        className="btn-agrin-cta agrin-desktop-nav"
+                        style={{ fontSize: 12, padding: '7px 16px' }}
+                      >
+                        <span>Analyse My Soil</span>
+                        <ArrowRight size={13} />
+                      </Link>
 
                       <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="p-2 rounded-lg text-[#F7F7F2] hover:bg-white/10 lg:hidden"
+                        style={{ padding: 8, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(247,247,242,0.9)', transition: 'background .15s' }}
+                        className="agrin-hamburger"
                         aria-label="Toggle navigation menu"
+                        onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+                        onMouseLeave={e => e.currentTarget.style.background='none'}
                       >
                         {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
                       </button>
@@ -131,8 +146,8 @@ export default function HeaderNav() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden px-4 pt-2 pb-4 space-y-2 bg-[#143123] border-t border-white/10">
-          <div className="grid grid-cols-1 gap-1">
+        <div style={{ padding: '12px 20px 20px', background: '#122D1F', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {navItems.map((item) => {
               const active = isNavActive(item)
               return (
@@ -140,9 +155,14 @@ export default function HeaderNav() {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                    active ? 'bg-[#E7D927] text-[#171814] font-bold' : 'text-[#F7F7F2]/90 hover:bg-white/10'
-                  }`}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px', borderRadius: 10,
+                    fontSize: 13, fontWeight: active ? 800 : 600,
+                    textDecoration: 'none',
+                    background: active ? '#E7D927' : 'transparent',
+                    color: active ? '#171814' : 'rgba(247,247,242,0.9)',
+                  }}
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -150,21 +170,22 @@ export default function HeaderNav() {
               )
             })}
           </div>
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2">
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <button
               onClick={toggleMode}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-white/10 text-[#F7F7F2]"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.1)', color: 'rgba(247,247,242,0.9)', border: 'none', cursor: 'pointer' }}
             >
-              <UserCheck size={14} className="text-[#E7D927]" />
+              <UserCheck size={13} style={{ color: '#E7D927' }} />
               <span>{isSimpleMode ? 'Simple Mode' : 'Advanced Mode'}</span>
             </button>
             <Link
               to="/farm-details"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-[#E7D927] text-[#171814]"
+              className="btn-agrin-cta"
+              style={{ fontSize: 12, padding: '8px 18px' }}
             >
               <span>Analyse My Soil</span>
-              <ArrowRight size={14} />
+              <ArrowRight size={13} />
             </Link>
           </div>
         </div>

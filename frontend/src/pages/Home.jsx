@@ -22,7 +22,7 @@ const STEPS = [
   { num: '01', icon: <FlaskConical size={22} />, title: 'Enter Soil Data', body: 'Input your Soil Health Card readings — pH, NPK, EC, Organic Carbon and more. Or load a sample dataset to see the platform in action.' },
   { num: '02', icon: <Cpu size={22} />,          title: 'ML Model Runs',   body: 'A trained Random Forest model and ICAR/TNAU agronomic rule engine validate your readings and calculate crop suitability scores.' },
   { num: '03', icon: <BarChart3 size={22} />,    title: 'Get Your Report', body: 'Receive an explainable suitability report with SHAP-driven factor analysis, soil constraints, and actionable crop recommendations.' },
-  { num: '04', icon: <Leaf size={22} />,         title: 'Act & Improve',   body: 'Follow targeted improvement suggestions to build soil health over successive seasons. Track your field's history over time.' },
+  { num: '04', icon: <Leaf size={22} />,         title: 'Act & Improve',   body: "Follow targeted improvement suggestions to build soil health over successive seasons. Track your field's history over time." },
 ]
 
 const HIGHLIGHTS = [
