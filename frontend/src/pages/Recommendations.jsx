@@ -760,7 +760,7 @@ export default function Recommendations() {
 
         {/* ── PRIORITIZED ADVISORY & RISK MANAGEMENT QUEUE (Requirement 3, 4, 5) ─ */}
         <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Shield size={20} className="text-emerald-700" />
               <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-text)', margin: 0 }}>
@@ -772,8 +772,43 @@ export default function Recommendations() {
             </span>
           </div>
 
+          {prioritized_advisories.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((level) => {
+                const count = level === 'ALL'
+                  ? prioritized_advisories.length
+                  : prioritized_advisories.filter(a => a.priority === level).length
+                const active = priorityFilter === level
+                return (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setPriorityFilter(level)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                      active
+                        ? 'bg-[#183B2A] text-white border-[#183B2A]'
+                        : 'bg-[#F7F7F2] text-[#4C5340] border-[#E5E5DC] hover:bg-[#EFEFE6]'
+                    }`}
+                  >
+                    <span>{level}</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-white text-[#171814]'}`}>
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {(prioritized_advisories.length > 0 ? prioritized_advisories : []).map((adv, idx) => {
+            {priorityFilter !== 'ALL' && prioritized_advisories.filter(a => a.priority === priorityFilter).length === 0 && (
+              <div className="text-xs text-[#77786F] bg-[#F7F7F2] border border-[#E5E5DC] rounded-lg px-4 py-3">
+                No {priorityFilter} priority advisories recorded for this soil and crop profile.
+              </div>
+            )}
+            {(prioritized_advisories.length > 0 ? prioritized_advisories : [])
+              .filter(adv => priorityFilter === 'ALL' || adv.priority === priorityFilter)
+              .map((adv, idx) => {
               const prioColor = adv.priority === 'CRITICAL' ? { bg: '#FEE2E2', border: '#F87171', text: '#991B1B' } :
                                 adv.priority === 'HIGH' ? { bg: '#FEF3C7', border: '#FBBF24', text: '#92400E' } :
                                 adv.priority === 'MEDIUM' ? { bg: '#E0F2FE', border: '#7DD3FC', text: '#0369A1' } :
@@ -885,7 +920,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 4. SOIL HEALTH & ACTIONABLE CONSTRAINTS ──────────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-soil" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Leaf size={20} className="text-emerald-700" />
@@ -897,6 +932,8 @@ export default function Recommendations() {
               {soilOverallStatus}{soil_health.score != null ? ` (${Math.round(soil_health.score)}/100)` : ''}
             </span>
           </div>
+
+          <SoilHealthCharts soilHealth={soil_health} soilData={soilData} />
 
           {/* Indicators Matrix */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
@@ -973,7 +1010,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 6. FARM RESILIENCE (DECOUPLED FROM CONFIDENCE - PHASE 7) ─────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-resilience" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Shield size={20} className="text-emerald-700" />
@@ -995,6 +1032,8 @@ export default function Recommendations() {
           <p style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginBottom: 14 }}>
             {farm_resilience.tier_description || 'Evaluates 5 biophysical pillars independently of data completeness.'}
           </p>
+
+          <ResilienceVisuals components={farm_resilience?.components || {}} weights={farm_resilience?.weights || {}} />
 
           {/* 5 Components */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
@@ -1023,7 +1062,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 7. DATA CONFIDENCE (DECOUPLED FROM RESILIENCE) ────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, background: '#F8FAFC' }}>
+        <div id="section-confidence" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, background: '#F8FAFC' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <BarChart3 size={20} className="text-slate-700" />
@@ -1042,6 +1081,8 @@ export default function Recommendations() {
           <p style={{ fontSize: '0.78rem', color: '#475569', marginBottom: 12 }}>
             Data Confidence measures input completeness, sensor freshness, and administrative resolution — strictly separated from biological soil resilience.
           </p>
+
+          <ConfidenceVisuals confidence={confidence || {}} dataQuality={data_quality || {}} />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
             <ConfidenceDimCard label="Input Completeness" score={confidence.factors?.completeness ?? confidence.dimensions?.input_completeness} />
