@@ -290,13 +290,13 @@ export default function Recommendations() {
             ? 'bg-[#FDF6E2] border-2 border-dashed border-[#C88A14]'
             : 'bg-white border border-[#E5E5DC]'
         }`}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
               isDemoMode ? 'bg-[#C88A14] text-white' : 'bg-[#F2F5EE] text-[#77772B]'
             }`}>
               <Sparkles size={16} />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className={`font-bold text-xs sm:text-sm ${isDemoMode ? 'text-[#8A5D0A]' : 'text-[#171814]'}`}>
                 {isDemoMode ? 'Sample Dataset Active — Illustrative Data Only' : 'Sample Regional Farm Profiles'}
               </div>
@@ -305,14 +305,14 @@ export default function Recommendations() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <select
               aria-label="Load a sample scenario"
               value={selectedDemoId}
               onChange={(e) => handleLoadDemo(e.target.value)}
               disabled={loadingDemo}
-              className="farm-input text-xs sm:text-sm"
-              style={{ minWidth: 220, padding: '7px 12px', minHeight: 38 }}
+              className="farm-input w-full sm:w-64 text-xs sm:text-sm"
+              style={{ padding: '7px 12px', minHeight: 38 }}
             >
               <option value="">Load a sample scenario...</option>
               {DEMO_SCENARIOS.map(sc => (
