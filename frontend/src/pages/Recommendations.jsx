@@ -15,7 +15,7 @@ export default function Recommendations() {
   const {
     analysisResult, setAnalysisResult, setSelectedCrop,
     farmData, setFarmData, soilData, setSoilData, envData, setEnvData,
-    sessionId, setSessionId, dataSource, setDataSource
+    sessionId, setSessionId, dataSource, setDataSource, prepareForApi
   } = useApp()
 
   const [expandedCrop, setExpandedCrop] = useState(null)
@@ -93,6 +93,52 @@ export default function Recommendations() {
   const state = location_context.state || farmData.state || 'India'
   const season = farm_context.season || farmData.season || 'Kharif'
   const reportDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  // Safely resolve nested backend objects (never render raw objects in JSX)
+  const rawZone = location_context.agro_climatic_zone
+  const zoneLabel = typeof rawZone === 'object' && rawZone !== null
+    ? `${rawZone.name || 'Agro-Climatic Zone'}${rawZone.id ? ` (${rawZone.id})` : ''}`
+    : (rawZone || 'Standard Agro-Ecological Zone')
+
+  const tempValue = weather_context?.temperature && typeof weather_context.temperature === 'object'
+    ? weather_context.temperature.value
+    : (weather_context?.temperature ?? envData.temperature)
+  const humidityValue = weather_context?.humidity && typeof weather_context.humidity === 'object'
+    ? weather_context.humidity.value
+    : (weather_context?.humidity ?? envData.humidity)
+  const rainfallValue = weather_context?.rainfall && typeof weather_context.rainfall === 'object'
+    ? weather_context.rainfall.value
+    : (weather_context?.rainfall ?? envData.rainfall)
+  const weatherSource = weather_context?.source
+    || (typeof weather_context?.temperature === 'object' ? weather_context.temperature?.source : null)
+    || weather_context?.weather_source
+    || 'Open-Meteo Real-Time Weather API'
+  const weatherFreshness = weather_context?.is_live
+    ? 'LIVE'
+    : (weather_context?.freshness_level || (typeof weather_context?.temperature === 'object' ? weather_context.temperature?.freshness : null) || 'CLIMATOLOGY')
+  const weatherObservedAt = typeof weather_context?.temperature === 'object' && weather_context.temperature?.observed_at
+    ? new Date(weather_context.temperature.observed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    : null
+
+  const soilPhVal = soil_health?.chemical_properties?.pH?.value ?? soil_health?.ph?.value ?? soilData.ph
+  const soilPhStatus = soil_health?.chemical_properties?.pH?.classification ?? soil_health?.ph?.status ?? (soilPhVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilOcVal = soil_health?.organic_matter?.value ?? soil_health?.organic_carbon?.value ?? soilData.OC
+  const soilOcStatus = soil_health?.organic_matter?.classification ?? soil_health?.organic_carbon?.status ?? (soilOcVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilEcVal = soil_health?.chemical_properties?.EC?.value ?? soil_health?.electrical_conductivity?.value ?? soilData.EC
+  const soilEcStatus = soil_health?.chemical_properties?.EC?.classification ?? soil_health?.electrical_conductivity?.status ?? (soilEcVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilNVal = soil_health?.nutrient_status?.N?.value ?? soil_health?.nitrogen?.value ?? soilData.N
+  const soilNStatus = soil_health?.nutrient_status?.N?.status ?? soil_health?.nitrogen?.status ?? (soilNVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilPVal = soil_health?.nutrient_status?.P?.value ?? soil_health?.phosphorus?.value ?? soilData.P
+  const soilPStatus = soil_health?.nutrient_status?.P?.status ?? soil_health?.phosphorus?.status ?? (soilPVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilKVal = soil_health?.nutrient_status?.K?.value ?? soil_health?.potassium?.value ?? soilData.K
+  const soilKStatus = soil_health?.nutrient_status?.K?.status ?? soil_health?.potassium?.status ?? (soilKVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilOverallStatus = soil_health?.status || soil_health?.overall_status || soil_health?.overall_rating || 'EVALUATED'
+  const soilConstraintsList = soil_health?.soil_constraints || soil_health?.constraints || []
+  const resilienceScore = farm_resilience?.score ?? farm_resilience?.overall_resilience_score
+  const resilienceTier = (farm_resilience?.resilience_tier || 'MODERATE').replace(/_/g, ' ')
+  const missingFieldsList = (confidence?.metadata?.missing_core_fields && confidence.metadata.missing_core_fields.length >= 0)
+    ? confidence.metadata.missing_core_fields
+    : (confidence?.missing_fields || [])
 
   // Crops to display (prefer crop_suitability with rich scores; fallback to ranked_crops)
   const cropsToDisplay = crop_suitability.length > 0 ? crop_suitability : ranked_crops
@@ -181,9 +227,9 @@ export default function Recommendations() {
     try {
       const res = await compareCrops({
         candidate_crops: selectedForCompare,
-        farm_data: farmData,
-        soil_data: soilData,
-        env_data: envData
+        farm_data: prepareForApi(farmData),
+        soil_data: prepareForApi(soilData),
+        env_data: prepareForApi(envData)
       })
       setComparisonResult(res)
     } catch (err) {
@@ -398,10 +444,10 @@ export default function Recommendations() {
                 <span>🧪</span> SOIL HEALTH
               </div>
               <div style={{ fontSize: '0.82rem', color: '#713F12', marginBottom: 6 }}>
-                Overall Condition: <strong>{soil_health.overall_rating || 'MODERATE'}</strong> ({soil_health.score || 70}/100)
+                Overall Condition: <strong>{soilOverallStatus}</strong> ({soil_health.score != null ? Math.round(soil_health.score) : 70}/100)
               </div>
               <div style={{ fontSize: '0.78rem', color: '#713F12', lineHeight: 1.5 }}>
-                <div><strong>Constraints:</strong> {soil_health.soil_constraints?.length > 0 ? soil_health.soil_constraints.map(c => c.name).join(', ') : 'None critical detected'}</div>
+                <div><strong>Constraints:</strong> {soilConstraintsList.length > 0 ? soilConstraintsList.map(c => c.name || c.factor || String(c)).join(', ') : 'None critical detected'}</div>
                 <div style={{ marginTop: 4 }}><strong>Improvement Opportunity:</strong> {soil_health.recommended_improvement_areas?.[0] || 'Maintain balanced organic matter incorporation.'}</div>
               </div>
             </div>
@@ -429,7 +475,7 @@ export default function Recommendations() {
                 <span>🌦️</span> CLIMATE & WEATHER
               </div>
               <div style={{ fontSize: '0.82rem', color: '#0C4A6E', marginBottom: 4 }}>
-                Conditions: Temp {weather_context.temperature?.value ?? (envData.temperature || 28)}°C · RH {weather_context.humidity?.value ?? (envData.humidity || 65)}% · Rain {weather_context.rainfall?.value ?? (envData.rainfall || 750)} mm
+                Conditions: Temp {tempValue ?? 'N/A'}°C · RH {humidityValue ?? 'N/A'}% · Rain {rainfallValue ?? 'N/A'} mm
               </div>
               <div style={{ fontSize: '0.78rem', color: '#0369A1', lineHeight: 1.5, marginTop: 4 }}>
                 <div><strong>Upcoming Risk:</strong> {weather_context.risk_alerts?.[0] || 'No extreme meteorological thresholds breached.'}</div>
@@ -443,11 +489,11 @@ export default function Recommendations() {
                 <span>🛡️</span> FARM RESILIENCE
               </div>
               <div style={{ fontSize: '0.82rem', color: '#581C87', marginBottom: 6 }}>
-                Resilience Score: <strong>{farm_resilience.overall_resilience_score || farm_resilience.score || 70}/100</strong> ({farm_resilience.resilience_tier || 'MODERATE'})
+                Resilience Score: <strong>{resilienceScore != null ? Math.round(resilienceScore) : 70}/100</strong> ({resilienceTier})
               </div>
               <div style={{ fontSize: '0.78rem', color: '#581C87', lineHeight: 1.5 }}>
-                <div><strong>Weakest Dimension:</strong> {farm_resilience.weakest_pillar || 'Soil Organic Carbon buffer'}</div>
-                <div style={{ marginTop: 2 }}><strong>Intervention:</strong> {farm_resilience.improvement_opportunities?.[0] || 'In-situ rainwater conservation and mulching.'}</div>
+                <div><strong>Weakest Dimension:</strong> {farm_resilience.weakest_pillar || farm_resilience.vulnerabilities?.[0] || farm_intelligence_report?.farm_resilience?.weakest_dimensions || 'No critical weakness detected'}</div>
+                <div style={{ marginTop: 2 }}><strong>Intervention:</strong> {farm_resilience.improvement_opportunities?.[0] || farm_intelligence_report?.farm_resilience?.improvement_opportunities?.[0] || 'In-situ rainwater conservation and mulching.'}</div>
               </div>
             </div>
 
@@ -457,11 +503,11 @@ export default function Recommendations() {
                 <span>📊</span> DATA CONFIDENCE
               </div>
               <div style={{ fontSize: '0.82rem', color: '#1E293B', marginBottom: 4 }}>
-                Quality Rating: <strong>{data_quality?.data_quality_level || 'MEDIUM'}</strong> ({data_quality?.score ? Math.round(data_quality.score * 100) : 75}%)
+                Quality Rating: <strong>{data_quality?.data_quality_level || 'MEDIUM'}</strong> ({data_quality?.score != null ? Math.round(data_quality.score * 100) : 75}%)
               </div>
               <div style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.5 }}>
-                <div><strong>What is Known:</strong> {data_quality?.missing_data_guidance?.known_inputs?.slice(0, 2)?.join(', ') || 'District agro-climatic baseline, season'}</div>
-                <div style={{ marginTop: 2 }}><strong>Missing to Improve:</strong> {data_quality?.missing_data_guidance?.missing_inputs?.[0] || 'None critical'}</div>
+                <div><strong>What is Known:</strong> {(data_quality?.missing_data_guidance?.known_parameters || data_quality?.missing_data_guidance?.known_inputs)?.slice(0, 3)?.join(', ') || 'District agro-climatic baseline, season'}</div>
+                <div style={{ marginTop: 2 }}><strong>Missing to Improve:</strong> {(data_quality?.missing_data_guidance?.missing_parameters || data_quality?.missing_data_guidance?.missing_inputs)?.[0] || 'All core inputs provided'}</div>
               </div>
             </div>
           </div>
@@ -491,25 +537,30 @@ export default function Recommendations() {
               <div style={{ fontSize: '0.72rem', color: '#6B7280', marginTop: 4 }}>
                 Sub-District: {location_context.sub_district || farmData.sub_district || 'District Centroid'}
               </div>
-              <div style={{ fontSize: '0.68rem', color: '#059669', marginTop: 4 }}>
-                Zone: {location_context.agro_climatic_zone || 'Standard Agro-Ecological Zone'}
+              <div style={{ fontSize: '0.68rem', color: '#183B2A', fontWeight: 600, marginTop: 4 }}>
+                Zone: {zoneLabel}
               </div>
             </div>
 
-            {/* Weather Card with Freshness (Phase 9) */}
+            {/* Weather Card with Freshness */}
             <div style={{ background: '#F0F9FF', padding: '12px 14px', borderRadius: 10, border: '1px solid #BAE6FD' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: '#0369A1', fontWeight: 600 }}>Weather Observation</div>
-                <FreshnessBadge freshness={weather_context?.freshness_level || 'RECENT'} />
+                <FreshnessBadge freshness={weatherFreshness} />
               </div>
               <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0C4A6E', marginTop: 3 }}>
-                {weather_context.temperature != null ? `${weather_context.temperature}°C` : `${envData.temperature || 28}°C`}
+                {tempValue != null && tempValue !== '' ? `${tempValue}°C` : 'N/A'}
                 <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#0284C7', marginLeft: 8 }}>
-                  RH: {weather_context.humidity != null ? `${weather_context.humidity}%` : `${envData.humidity || 65}%`}
+                  RH: {humidityValue != null && humidityValue !== '' ? `${humidityValue}%` : 'N/A'}
                 </span>
+                {rainfallValue != null && rainfallValue !== '' && (
+                  <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#0369A1', marginLeft: 8 }}>
+                    · {rainfallValue}mm
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: '0.72rem', color: '#0369A1', marginTop: 4 }}>
-                Source: {weather_context.weather_source || 'Open-Meteo & Climatology'}
+                Source: {weatherSource}{weatherObservedAt ? ` (${weatherObservedAt})` : ''}
               </div>
               {weather_context.forecast_summary && (
                 <div style={{ fontSize: '0.68rem', color: '#075985', marginTop: 2 }}>
@@ -522,10 +573,10 @@ export default function Recommendations() {
             <div style={{ background: '#FEFCE8', padding: '12px 14px', borderRadius: 10, border: '1px solid #FEF08A' }}>
               <div style={{ fontSize: '0.72rem', color: '#854D0E', fontWeight: 600 }}>Soil Foundation</div>
               <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#713F12', marginTop: 2, textTransform: 'capitalize' }}>
-                {farm_context.soil_type || farmData.soil_type || 'Regional Vertisol / Alluvium'}
+                {String(farm_context.soil_type || farmData.soil_type || 'Regional Vertisol / Alluvium').replace(/_/g, ' ')}
               </div>
               <div style={{ fontSize: '0.72rem', color: '#854D0E', marginTop: 4 }}>
-                pH: {soil_health.ph?.value != null ? soil_health.ph.value : (soilData.ph || '7.2')} · OC: {soil_health.organic_carbon?.value != null ? `${soil_health.organic_carbon.value}%` : (soilData.OC ? `${soilData.OC}%` : '0.50%')}
+                pH: {soilPhVal != null && soilPhVal !== '' ? soilPhVal : 'Not provided'} · OC: {soilOcVal != null && soilOcVal !== '' ? `${soilOcVal}%` : 'Not provided'}
               </div>
               <div style={{ fontSize: '0.68rem', color: '#A16207', marginTop: 4 }}>
                 Water: {farm_context.water_source || farmData.water_source || (farmData.irrigation_available === 'yes' ? 'Irrigated' : 'Rainfed')}

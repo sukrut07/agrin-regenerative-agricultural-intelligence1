@@ -35,18 +35,32 @@ def compute_confidence(
     """
     # 1. Completeness Score (0.30 weight)
     core_keys = [
-        "N", "P", "K", "pH", "EC", "OC",
-        "temperature", "humidity", "rainfall",
-        "season", "state", "district"
+        ("N", "nitrogen"),
+        ("P", "phosphorus"),
+        ("K", "potassium"),
+        ("pH", "ph"),
+        ("EC", "ec"),
+        ("OC", "organic_carbon"),
+        ("temperature",),
+        ("humidity",),
+        ("rainfall",),
+        ("season",),
+        ("state",),
+        ("district",),
     ]
     present_count = 0
     missing_keys: List[str] = []
-    for k in core_keys:
-        val = provided_fields.get(k)
-        if val is not None and val != "" and val != "unknown":
+    for aliases in core_keys:
+        val = None
+        for alias in aliases:
+            candidate = provided_fields.get(alias)
+            if candidate is not None and candidate != "" and candidate != "unknown":
+                val = candidate
+                break
+        if val is not None:
             present_count += 1
         else:
-            missing_keys.append(k)
+            missing_keys.append(aliases[0])
 
     completeness_score = present_count / len(core_keys)
 

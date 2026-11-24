@@ -431,6 +431,16 @@ def run_full_agricultural_intelligence(
     limiting_notes = [f.get("note") for f in top_c.get("limiting_factors", []) if f.get("note")]
     supporting_notes = [f.get("note") for f in top_c.get("supporting_factors", []) if f.get("note")]
 
+    shc_param_groups = [
+        ("N", "nitrogen"), ("P", "phosphorus"), ("K", "potassium"),
+        ("S",), ("Zn",), ("Fe",), ("Cu",), ("Mn",), ("B",),
+        ("pH", "ph"), ("EC", "ec"), ("OC", "organic_carbon")
+    ]
+    shc_eval_count = sum(
+        1 for aliases in shc_param_groups
+        if any(resolved_inputs.get(a) is not None and resolved_inputs.get(a) != "" for a in aliases)
+    )
+
     unified_explanation = {
         "what": f"Prioritize planting {top_name} for the {resolved_inputs.get('season', 'current')} season with targeted soil condition management.",
         "why": [
@@ -439,10 +449,10 @@ def run_full_agricultural_intelligence(
             *( [f"Limiting consideration: {limiting_notes[0]}"] if limiting_notes else [] )
         ],
         "based_on": [
-            f"Soil Health Card test values ({len([k for k, v in resolved_inputs.items() if v is not None and k in ['N','P','K','pH','EC','OC','Zn','Fe','B']])}/12 parameters evaluated)",
+            f"Soil Health Card test values ({shc_eval_count}/12 parameters evaluated)",
             f"Meteorological observations from {weather_src_label}",
             f"ICAR Agro-Climatic Zone framework for {acz_info.get('name', 'India') if acz_info else state}",
-            f"Decoupled {model_version_used or 'Random Forest'} model (60%) + ICAR agronomic rules (40%)"
+            f"Decoupled {model_version_used or 'Random Forest'} model (50%) + ICAR agronomic rules (50%)"
         ],
         "confidence": f"{confidence_assessment.get('confidence_level', 'MEDIUM')} ({confidence_assessment.get('confidence_score', 0.8) * 100:.0f}%)",
         "limitations": [lim for lim in [
