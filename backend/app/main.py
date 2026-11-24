@@ -18,7 +18,8 @@ from backend.app.database.db import init_db
 from backend.app.api import (
     routes_farmer, routes_prediction, routes_whatif,
     routes_ai, routes_analytics, routes_feedback, routes_intelligence,
-    routes_iot, routes_crops, routes_synthetic
+    routes_iot, routes_crops, routes_synthetic,
+    routes_soil_intelligence, routes_marketplace, routes_farmer_economics
 )
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
@@ -71,6 +72,9 @@ app.include_router(routes_intelligence.router, prefix="/api", tags=["Agricultura
 app.include_router(routes_iot.router, prefix="/api", tags=["IoT & Hardware"])
 app.include_router(routes_crops.router, prefix="/api", tags=["Crop Catalogue & Knowledge"])
 app.include_router(routes_synthetic.router, prefix="/api", tags=["Synthetic Data Engine"])
+app.include_router(routes_soil_intelligence.router, prefix="/api", tags=["Soil Intelligence"])
+app.include_router(routes_marketplace.router, prefix="/api", tags=["AgriMarket"])
+app.include_router(routes_farmer_economics.router, prefix="/api", tags=["Farm Economics (AgriLedger)"])
 
 
 @app.get("/", tags=["Health"])

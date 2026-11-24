@@ -83,7 +83,7 @@ def get_field_fingerprints(
                 farm_id="farm_default",
                 depth_layer=depth,
                 n_val=n, p_val=p, k_val=k,
-                s_val=9.5, zn_val=0.55, fe=4.2, cu=0.8, mn=3.5, b=0.45,
+                s_val=9.5, zn_val=0.55, fe_val=4.2, cu_val=0.8, mn_val=3.5, b_val=0.45,
                 ph=ph, ec=ec, oc=oc,
                 moisture_pct=moist,
                 compaction_psi=comp,
