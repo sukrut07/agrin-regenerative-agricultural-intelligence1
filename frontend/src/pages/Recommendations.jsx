@@ -13,7 +13,11 @@ import {
   ReportKpiVisualStrip,
   CropSuitabilityChartCard,
   CropComparisonCharts,
+  ActionQueueVisuals,
+  WhyExplanationVisuals,
   SoilHealthCharts,
+  RegenerativeOpportunitiesVisuals,
+  classifyRegenFocus,
   ResilienceVisuals,
   ConfidenceVisuals,
 } from '../components/ReportCharts'
@@ -36,6 +40,8 @@ export default function Recommendations() {
   const [comparisonResult, setComparisonResult] = useState(null)
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
   const [priorityFilter, setPriorityFilter] = useState('ALL')
+  const [regenFocusFilter, setRegenFocusFilter] = useState('ALL')
+  const [regenPriorityFilter, setRegenPriorityFilter] = useState('ALL')
 
   // Farmer Feedback state (Phase 12)
   const [didFollow, setDidFollow] = useState('')
@@ -773,31 +779,38 @@ export default function Recommendations() {
           </div>
 
           {prioritized_advisories.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((level) => {
-                const count = level === 'ALL'
-                  ? prioritized_advisories.length
-                  : prioritized_advisories.filter(a => a.priority === level).length
-                const active = priorityFilter === level
-                return (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setPriorityFilter(level)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
-                      active
-                        ? 'bg-[#183B2A] text-white border-[#183B2A]'
-                        : 'bg-[#F7F7F2] text-[#4C5340] border-[#E5E5DC] hover:bg-[#EFEFE6]'
-                    }`}
-                  >
-                    <span>{level}</span>
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-white text-[#171814]'}`}>
-                      {count}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            <>
+              <ActionQueueVisuals
+                advisories={prioritized_advisories}
+                selectedPriority={priorityFilter}
+                onSelectPriority={setPriorityFilter}
+              />
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((level) => {
+                  const count = level === 'ALL'
+                    ? prioritized_advisories.length
+                    : prioritized_advisories.filter(a => a.priority === level).length
+                  const active = priorityFilter === level
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setPriorityFilter(level)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-[#183B2A] text-white border-[#183B2A]'
+                          : 'bg-[#F7F7F2] text-[#4C5340] border-[#E5E5DC] hover:bg-[#EFEFE6]'
+                      }`}
+                    >
+                      <span>{level}</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-white text-[#171814]'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </>
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -814,9 +827,9 @@ export default function Recommendations() {
                                 adv.priority === 'MEDIUM' ? { bg: '#E0F2FE', border: '#7DD3FC', text: '#0369A1' } :
                                 { bg: '#F3F4F6', border: '#D1D5DB', text: '#374151' }
               return (
-                <div key={idx} style={{
+                <div key={idx} className="agrin-interactive-card" style={{
                   background: '#FFFFFF', border: `1px solid ${prioColor.border}`, borderLeft: `6px solid ${prioColor.border}`,
-                  borderRadius: 8, padding: 14
+                  borderRadius: 12, padding: 14
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -861,23 +874,35 @@ export default function Recommendations() {
         </div>
 
         {/* ── 3. WHY? (EXPLANATION ENGINE - PHASE 8) ───────────────────────── */}
-        <div className="ai-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-why" className="ai-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div className="ai-sparkle">✦</div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-primary)', margin: 0 }}>
-              3. Why AgriN Recommends This
-            </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="ai-sparkle">✦</div>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-primary)', margin: 0 }}>
+                3. Why AgriN Recommends This
+              </h2>
+            </div>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-white border border-[#E5E5DC] text-[#183B2A]">
+              Explainable Hybrid Reasoning
+            </span>
           </div>
 
+          <WhyExplanationVisuals
+            topCrop={cropsToDisplay[0] || {}}
+            explanation={explanation}
+            confidence={confidence}
+            soilHealth={soil_health}
+          />
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 12 }}>
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>WHAT</div>
               <div style={{ fontSize: '0.85rem', color: 'var(--ff-text)', marginTop: 4, lineHeight: 1.5 }}>
                 {explanation.what || `Cultivate high-suitability cultivars adapted to ${district}'s ${season} agro-climate.`}
               </div>
             </div>
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>WHY</div>
               {Array.isArray(explanation.why) ? (
                 <ul style={{ paddingLeft: 16, margin: '4px 0 0 0', fontSize: '0.82rem', color: 'var(--ff-text)', lineHeight: 1.55 }}>
@@ -894,7 +919,7 @@ export default function Recommendations() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>BASED ON</div>
               <ul style={{ paddingLeft: 16, margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--ff-text-secondary)', lineHeight: 1.5 }}>
                 {(explanation.based_on || [
@@ -907,12 +932,12 @@ export default function Recommendations() {
               </ul>
             </div>
 
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>CONFIDENCE & LIMITATIONS</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginTop: 4, lineHeight: 1.5 }}>
                 <strong>Reliability:</strong> {explanation.confidence || `${confidence.confidence_level || 'MODERATE'} confidence based on available data.`}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: 4 }}>
+              <div style={{ fontSize: '0.75rem', color: '#77786F', marginTop: 4 }}>
                 {explanation.limitations?.join('; ') || 'Continuous soil testing improves precision.'}
               </div>
             </div>
@@ -967,41 +992,89 @@ export default function Recommendations() {
         </div>
 
         {/* ── 5. REGENERATIVE OPPORTUNITIES ───────────────────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, borderLeft: '4px solid #059669' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div id="section-regen" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, borderLeft: '4px solid #183B2A' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Sparkles size={20} className="text-emerald-700" />
+              <Sparkles size={20} className="text-[#183B2A]" />
               <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-text)', margin: 0 }}>
                 5. Regenerative Agriculture Opportunities
               </h2>
             </div>
-            <span style={{ fontSize: '0.72rem', background: '#D1FAE5', color: '#065F46', padding: '4px 10px', borderRadius: 20, fontWeight: 700 }}>
-              Ecological Stewardship
+            <span style={{ fontSize: '0.72rem', background: '#EAF5EE', color: '#183B2A', padding: '4px 12px', borderRadius: 999, fontWeight: 700 }}>
+              Ecological Stewardship ({regenerative_opportunities?.length || 0} Practices)
             </span>
           </div>
 
           {regenerative_opportunities && regenerative_opportunities.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-              {regenerative_opportunities.map((opp, idx) => (
-                <div key={idx} style={{ background: '#F0FDF4', borderRadius: 10, padding: 14, border: '1px solid #BBF7D0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#065F46' }}>{opp.practice}</div>
-                    <span style={{ fontSize: '0.68rem', background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>
-                      {opp.confidence || 'HIGH'}
-                    </span>
+            <>
+              <RegenerativeOpportunitiesVisuals
+                opportunities={regenerative_opportunities}
+                activeFocus={regenFocusFilter}
+                activePriority={regenPriorityFilter}
+                onSelectFocus={setRegenFocusFilter}
+                onSelectPriority={setRegenPriorityFilter}
+              />
+
+              {(() => {
+                const filteredOpps = regenerative_opportunities.filter((opp) => {
+                  const focusMatch = regenFocusFilter === 'ALL' || classifyRegenFocus(opp) === regenFocusFilter
+                  const prioMatch = regenPriorityFilter === 'ALL' || String(opp.confidence || 'HIGH').toUpperCase() === regenPriorityFilter
+                  return focusMatch && prioMatch
+                })
+                if (filteredOpps.length === 0) {
+                  return (
+                    <div className="text-xs text-[#77786F] bg-[#F7F7F2] border border-[#E5E5DC] rounded-xl px-4 py-3">
+                      No regenerative practices match the active filter combination. Click <strong>Clear filters</strong> above to view all {regenerative_opportunities.length} opportunities.
+                    </div>
+                  )
+                }
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {filteredOpps.map((opp, idx) => {
+                      const focusLabel = classifyRegenFocus(opp)
+                      const prioLevel = String(opp.confidence || 'HIGH').toUpperCase()
+                      return (
+                        <div
+                          key={`${opp.practice}-${idx}`}
+                          style={{ animationDelay: `${idx * 55}ms` }}
+                          className="bg-[#F5FAF6] border border-[#C7E5D0] rounded-2xl p-4 flex flex-col justify-between gap-2.5 agrin-interactive-card animate-chart-reveal"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <div className="text-sm font-extrabold text-[#183B2A] leading-snug">
+                                {opp.practice}
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  prioLevel === 'HIGH' ? 'bg-[#183B2A] text-[#E7D927]' : 'bg-[#FDF6E2] text-[#8A5D0A] border border-[#FDE68A]'
+                                }`}>
+                                  {opp.confidence || 'High'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="inline-block text-[10px] font-bold uppercase tracking-wider text-[#398653] bg-white border border-[#C7E5D0] px-2 py-0.5 rounded-full mb-2">
+                              {focusLabel}
+                            </div>
+
+                            <div className="text-xs text-[#183B2A] font-semibold mb-1.5">
+                              Trigger: {opp.trigger}
+                            </div>
+                            <div className="text-xs text-[#4C5340] leading-relaxed">
+                              {opp.why}
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-[#183B2A] bg-[#DCFCE7] border border-[#BBF7D0] px-3 py-2 rounded-xl">
+                            <strong>Objective:</strong> {opp.objective}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#15803D', fontWeight: 600, marginBottom: 4 }}>
-                    Trigger: {opp.trigger}
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--ff-text)', lineHeight: 1.5, marginBottom: 6 }}>
-                    {opp.why}
-                  </div>
-                  <div style={{ fontSize: '0.74rem', color: '#047857', background: '#DCFCE7', padding: '6px 10px', borderRadius: 6 }}>
-                    <strong>Objective:</strong> {opp.objective}
-                  </div>
-                </div>
-              ))}
-            </div>
+                )
+              })()}
+            </>
           ) : (
             <p style={{ fontSize: '0.85rem', color: 'var(--ff-text-secondary)' }}>
               Standard conservation tillage and legume cover crops recommended to sustain baseline organic carbon.

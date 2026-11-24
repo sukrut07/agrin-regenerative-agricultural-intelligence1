@@ -688,6 +688,34 @@
     animation-delay: 0.3s;
   }
 
+  @keyframes chartCardReveal {
+    from {
+      opacity: 0;
+      transform: translateY(18px) scale(0.99);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-chart-reveal {
+    animation: chartCardReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .agrin-interactive-card {
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.2s ease;
+  }
+
+  .agrin-interactive-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(24, 59, 42, 0.09);
+    border-color: rgba(24, 59, 42, 0.35);
+  }
+
   /* ══════════════════════════════════════════════════════════════════════════
    CHART TOOLTIP
    ══════════════════════════════════════════════════════════════════════════ */
