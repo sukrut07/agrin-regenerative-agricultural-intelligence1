@@ -48,7 +48,7 @@ export default function DeviceRegistration() {
         }
         const filtered = existing.filter(d => d.device_id !== entry.device_id)
         localStorage.setItem('agrin_registered_devices', JSON.stringify([entry, ...filtered].slice(0, 10)))
-      } catch {}
+      } catch { }
     } catch (err) {
       console.error('Registration error:', err)
       setError(
@@ -246,7 +246,7 @@ export default function DeviceRegistration() {
               </div>
               <p>Add these credentials into your ESP32 <code className="text-emerald-400">hardware_profile.json</code>:</p>
               <pre className="p-3 rounded-lg bg-slate-950 font-mono text-slate-400 text-[11px] overflow-x-auto">
-{`"backend": {
+                {`"backend": {
   "device_id": "${result.device_id}",
   "api_base_url": "http://YOUR_SERVER_IP:8000",
   "telemetry_endpoint": "/api/telemetry/ingest",

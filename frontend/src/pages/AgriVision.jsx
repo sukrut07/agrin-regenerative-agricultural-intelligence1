@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import HeaderNav from '../components/HeaderNav'
 import { useLanguage } from '../context/LanguageContext'
+import { getSatelliteStatus, diagnoseCropDisease } from '../services/api'
 import {
   Satellite, Eye, UploadCloud, AlertCircle, CheckCircle2,
   Sparkles, Layers, ShieldCheck, Info, RefreshCw, ZoomIn, Camera
@@ -59,7 +60,34 @@ export default function AgriVision() {
   const [activeTab, setActiveTab] = useState('satellite') // 'satellite' | 'disease'
   const [selectedSatelliteIndex, setSelectedSatelliteIndex] = useState('NDVI') // NDVI, NDMI, EVI
   const [selectedDiseaseCase, setSelectedDiseaseCase] = useState(SAMPLE_DISEASE_CASES[0])
-  const [customImageUploaded, setCustomImageUploaded] = useState(false)
+  const [satStatus, setSatStatus] = useState(null)
+  const [loadingSat, setLoadingSat] = useState(true)
+  const [uploadResult, setUploadResult] = useState(null)
+  const [uploadingLeaf, setUploadingLeaf] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
+  const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    getSatelliteStatus()
+      .then(res => setSatStatus(res))
+      .catch(() => setSatStatus({ status: 'NOT_CONNECTED', message: 'Satellite provider status unreachable.' }))
+      .finally(() => setLoadingSat(false))
+  }, [])
+
+  const handleLeafUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLeaf(true)
+    setUploadError(null)
+    try {
+      const res = await diagnoseCropDisease(file, { allowDemo: false })
+      setUploadResult(res)
+    } catch (err) {
+      setUploadError(err?.message || 'Failed to screen leaf photo.')
+    } finally {
+      setUploadingLeaf(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -83,22 +111,20 @@ export default function AgriVision() {
           <div className="mt-8 flex items-center gap-3">
             <button
               onClick={() => setActiveTab('satellite')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'satellite'
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'satellite'
                   ? 'bg-emerald-500 text-emerald-950 shadow-md'
                   : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
+                }`}
             >
               <Satellite size={16} />
               <span>Sentinel-2 Satellite Indices</span>
             </button>
             <button
               onClick={() => setActiveTab('disease')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'disease'
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'disease'
                   ? 'bg-emerald-500 text-emerald-950 shadow-md'
                   : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
+                }`}
             >
               <Camera size={16} />
               <span>Leaf Disease Vision Screening</span>
@@ -121,12 +147,24 @@ export default function AgriVision() {
                 <div>
                   <div className="text-xs font-bold text-slate-800 flex items-center gap-2">
                     <span>Copernicus Sentinel-2 Constellation</span>
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      LIVE ORBIT FEED
-                    </span>
+                    {loadingSat ? (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                        CHECKING…
+                      </span>
+                    ) : satStatus?.status === 'CONNECTED' ? (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        CONNECTED
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                        NOT_CONNECTED (UNLINKED)
+                      </span>
+                    )}
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    GSD: 10m Ground Resolution • Cloud Cover: &lt; 8.2% • Last Pass: Yesterday 11:20 IST
+                    {satStatus?.status === 'CONNECTED'
+                      ? 'GSD: 10m Ground Resolution · Copernicus Data Space linked'
+                      : (satStatus?.message || 'No live Sentinel-2 API credentials configured. Live vegetation indices are UNAVAILABLE.')}
                   </div>
                 </div>
               </div>
@@ -141,11 +179,10 @@ export default function AgriVision() {
                   <button
                     key={idx.id}
                     onClick={() => setSelectedSatelliteIndex(idx.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      selectedSatelliteIndex === idx.id
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedSatelliteIndex === idx.id
                         ? 'bg-white text-emerald-800 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     {idx.label}
                   </button>
@@ -213,156 +250,178 @@ export default function AgriVision() {
 
                 {/* HUD Overlay */}
                 <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur p-3 rounded-xl border border-white/20 text-white text-xs space-y-1">
-                  <div className="font-bold flex items-center gap-1.5 text-emerald-400">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Sentinel-2B Tile 43QDF</span>
-                  </div>
-                  <div className="text-[11px] text-slate-300">Observation: Lat 19.26° N, Lon 76.77° E</div>
-                  <div className="text-[11px] text-slate-300">Atmospheric Correction: Sen2Cor 2.10</div>
-                </div>
-
-                {/* Color Legend */}
-                <div className="absolute bottom-4 right-4 bg-slate-900/85 backdrop-blur p-3 rounded-xl border border-white/20 text-white text-xs">
-                  <div className="font-bold mb-1 text-[11px]">Vegetation Index Scale</div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-rose-400">0.1 (Bare)</span>
-                    <div className="w-32 h-2.5 rounded bg-gradient-to-r from-red-500 via-amber-400 to-emerald-500" />
-                    <span className="text-[10px] text-emerald-400">0.9 (Dense)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Explanatory Index Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                  <h4 className="font-bold text-slate-900 mb-1">NDVI (Normalized Difference Vegetation)</h4>
-                  <p className="text-slate-600 leading-snug">
-                    Calculated as (NIR - Red) / (NIR + Red). Quantifies photosynthetic chlorophyll absorption. Values above 0.6 indicate vigorous vegetative development.
-                  </p>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                  <h4 className="font-bold text-slate-900 mb-1">NDMI (Normalized Difference Moisture)</h4>
-                  <p className="text-slate-600 leading-snug">
-                    Calculated as (NIR - SWIR) / (NIR + SWIR). Directly correlates with leaf water content and detects incipient drought stress 4 days before visible wilting.
-                  </p>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                  <h4 className="font-bold text-slate-900 mb-1">EVI (Enhanced Vegetation Index)</h4>
-                  <p className="text-slate-600 leading-snug">
-                    Corrects for atmospheric aerosols and soil background reflections, preventing saturation in dense closed-canopy crops like Sugarcane and Banana.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Disease Vision Screening */
-          <div className="space-y-8">
-            {/* Disclaimer Banner */}
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-              <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
-              <div className="text-xs text-amber-900">
-                <span className="font-bold uppercase tracking-wider block text-[10px] text-amber-700 mb-0.5">
-                  Scientific Integrity & Field Protocol
-                </span>
-                Computer vision models trained on PlantVillage datasets provide rapid screening triage. They are not absolute guarantees. High-value fungicide or biological applications should always be corroborated by local Krishi Vigyan Kendra (KVK) extension officers.
-              </div>
-            </div>
-
-            {/* Main Screening Interface */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Sample Cases Selector */}
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-3">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                  Select Benchmark Disease Case:
-                </h3>
-                {SAMPLE_DISEASE_CASES.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setSelectedDiseaseCase(item)}
-                    className={`w-full p-3.5 rounded-xl text-left border transition-all ${
-                      selectedDiseaseCase.id === item.id
-                        ? 'border-emerald-500 bg-emerald-50/70 shadow-sm ring-1 ring-emerald-400'
-                        : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-xs text-slate-900">{item.crop}</span>
-                      <span className="text-[10px] font-black text-emerald-800 bg-white px-2 py-0.5 rounded border border-slate-200">
-                        {item.confidence}
-                      </span>
+                    <div className="font-bold flex items-center gap-1.5 text-purple-300">
+                      <span className="w-2 h-2 rounded-full bg-purple-400" />
+                      <span>{satStatus?.status === 'CONNECTED' ? 'Sentinel-2B Tile' : 'ILLUSTRATIVE SCHEMATIC (SYNTHETIC)'}</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 line-clamp-1">{item.condition}</div>
-                  </button>
-                ))}
-
-                {/* Upload Custom Leaf Button */}
-                <div className="pt-3 border-t border-slate-100">
-                  <button
-                    onClick={() => alert('Leaf photo screening: Mobile camera upload is active. To test custom leaves, connect via mobile browser or camera interface.')}
-                    className="w-full py-2.5 rounded-xl border border-dashed border-emerald-500 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <UploadCloud size={16} />
-                    <span>Upload Leaf Photo</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Diagnosis & IPM Recommendations Panel */}
-              <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 inline-block mb-1">
-                      {selectedDiseaseCase.crop}
-                    </span>
-                    <h2 className="text-xl font-black text-slate-900 leading-tight">
-                      {selectedDiseaseCase.condition}
-                    </h2>
+                    <div className="text-[11px] text-slate-300">Reference Coordinates: Lat 19.26° N, Lon 76.77° E</div>
+                    <div className="text-[11px] text-amber-300">
+                      {satStatus?.status === 'CONNECTED' ? 'Live STAC Feed' : 'Provider NOT_CONNECTED — no live imagery claimed'}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                      Confidence: <strong className="text-emerald-700">{selectedDiseaseCase.confidence}</strong>
-                    </span>
+                  {/* Color Legend */}
+                  <div className="absolute bottom-4 right-4 bg-slate-900/85 backdrop-blur p-3 rounded-xl border border-white/20 text-white text-xs">
+                    <div className="font-bold mb-1 text-[11px]">Vegetation Index Scale</div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-rose-400">0.1 (Bare)</span>
+                      <div className="w-32 h-2.5 rounded bg-gradient-to-r from-red-500 via-amber-400 to-emerald-500" />
+                      <span className="text-[10px] text-emerald-400">0.9 (Dense)</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Visual Symptoms */}
-                <div>
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Field Pathology & Symptoms:
-                  </h4>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                    {selectedDiseaseCase.symptoms}
-                  </p>
-                </div>
-
-                {/* Biological Control Recommendation */}
-                <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-emerald-900 text-xs">
-                    <Sparkles size={16} className="text-emerald-600" />
-                    <span>Safe Biological & Organic Remediation:</span>
+                {/* Explanatory Index Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <h4 className="font-bold text-slate-900 mb-1">NDVI (Normalized Difference Vegetation)</h4>
+                    <p className="text-slate-600 leading-snug">
+                      Calculated as (NIR - Red) / (NIR + Red). Quantifies photosynthetic chlorophyll absorption. Values above 0.6 indicate vigorous vegetative development.
+                    </p>
                   </div>
-                  <p className="text-xs text-emerald-950 leading-relaxed">
-                    {selectedDiseaseCase.biological_control}
-                  </p>
-                </div>
-
-                {/* Regenerative Soil & Crop Immunity Practice */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-slate-800 text-xs">
-                    <ShieldCheck size={16} className="text-emerald-600" />
-                    <span>Regenerative IPM & Soil Immunity:</span>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <h4 className="font-bold text-slate-900 mb-1">NDMI (Normalized Difference Moisture)</h4>
+                    <p className="text-slate-600 leading-snug">
+                      Calculated as (NIR - SWIR) / (NIR + SWIR). Directly correlates with leaf water content and detects incipient drought stress 4 days before visible wilting.
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {selectedDiseaseCase.regenerative_ipm}
-                  </p>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <h4 className="font-bold text-slate-900 mb-1">EVI (Enhanced Vegetation Index)</h4>
+                    <p className="text-slate-600 leading-snug">
+                      Corrects for atmospheric aerosols and soil background reflections, preventing saturation in dense closed-canopy crops like Sugarcane and Banana.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            ) : (
+            /* Disease Vision Screening */
+            <div className="space-y-8">
+              {/* Disclaimer Banner */}
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-900">
+                  <span className="font-bold uppercase tracking-wider block text-[10px] text-amber-700 mb-0.5">
+                    Scientific Integrity & Field Protocol
+                  </span>
+                  Computer vision models trained on PlantVillage datasets provide rapid screening triage. They are not absolute guarantees. High-value fungicide or biological applications should always be corroborated by local Krishi Vigyan Kendra (KVK) extension officers.
+                </div>
+              </div>
+
+              {/* Main Screening Interface */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Sample Cases Selector */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-3">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Illustrative Reference Cases (Demo):
+                  </h3>
+                  {SAMPLE_DISEASE_CASES.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setSelectedDiseaseCase(item)}
+                      className={`w-full p-3.5 rounded-xl text-left border transition-all ${selectedDiseaseCase.id === item.id
+                          ? 'border-emerald-500 bg-emerald-50/70 shadow-sm ring-1 ring-emerald-400'
+                          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-xs text-slate-900">{item.crop}</span>
+                        <span className="text-[10px] font-black text-emerald-800 bg-white px-2 py-0.5 rounded border border-slate-200">
+                          {item.confidence}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 line-clamp-1">{item.condition}</div>
+                    </button>
+                  ))}
+
+                    {/* Upload Custom Leaf Button wired to /api/disease/diagnose */}
+                    <div className="pt-3 border-t border-slate-100 space-y-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleLeafUpload}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingLeaf}
+                        className="w-full py-2.5 rounded-xl border border-dashed border-emerald-500 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50 text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                      >
+                        <UploadCloud size={16} />
+                        <span>{uploadingLeaf ? 'Checking Model…' : 'Upload Leaf Photo (/api/disease/diagnose)'}</span>
+                      </button>
+                      {uploadError && (
+                        <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] text-rose-800">
+                          {uploadError}
+                        </div>
+                      )}
+                      {uploadResult && (
+                        <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 space-y-1">
+                          <div className="font-extrabold">
+                            Backend Status: {uploadResult.status || uploadResult.diagnosis_status || 'UNAVAILABLE'}
+                          </div>
+                          <div>{uploadResult.recommended_action || uploadResult.message}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Diagnosis & IPM Recommendations Panel */}
+                  <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 inline-block mb-1">
+                          {selectedDiseaseCase.crop}
+                        </span>
+                        <h2 className="text-xl font-black text-slate-900 leading-tight">
+                          {selectedDiseaseCase.condition}
+                        </h2>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                          Confidence: <strong className="text-emerald-700">{selectedDiseaseCase.confidence}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Visual Symptoms */}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Field Pathology & Symptoms:
+                      </h4>
+                      <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                        {selectedDiseaseCase.symptoms}
+                      </p>
+                    </div>
+
+                    {/* Biological Control Recommendation */}
+                    <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-emerald-900 text-xs">
+                        <Sparkles size={16} className="text-emerald-600" />
+                        <span>Safe Biological & Organic Remediation:</span>
+                      </div>
+                      <p className="text-xs text-emerald-950 leading-relaxed">
+                        {selectedDiseaseCase.biological_control}
+                      </p>
+                    </div>
+
+                    {/* Regenerative Soil & Crop Immunity Practice */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-slate-800 text-xs">
+                        <ShieldCheck size={16} className="text-emerald-600" />
+                        <span>Regenerative IPM & Soil Immunity:</span>
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {selectedDiseaseCase.regenerative_ipm}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
         )}
-      </main>
-    </div>
-  )
+            </main>
+          </div>
+        )
 }

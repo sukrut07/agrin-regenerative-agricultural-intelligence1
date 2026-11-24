@@ -143,196 +143,197 @@ export default function Home() {
                         fontSize: '0.7rem', fontWeight: 600,
                         background: '#FEF3C7', color: '#92400E',
                         padding: '4px 10px', borderRadius: 999,
-                        border: '1px solid #FDE68A',
+                      border: '1px solid #FDE68A',
                       }}>Illustrative</span>
-                    </div>
                   </div>
+                </div>
 
-                  <div style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Top Crop Recommendations
-                  </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Top Crop Recommendations
+                </div>
 
-                  {[
-                    { name: 'Soybean', local: 'सोयाबीन', score: 92, color: '#138A4B' },
-                    { name: 'Cotton',  local: 'कपास',    score: 78, color: '#20A65A' },
-                    { name: 'Maize',   local: 'मक्का',   score: 65, color: '#D89B18' },
-                  ].map((crop, i) => (
-                    <div key={i} style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '10px 12px',
-                      background: i === 0 ? 'var(--ff-soft)' : 'transparent',
-                      borderRadius: 10, marginBottom: 6,
-                      border: i === 0 ? '1px solid rgba(19,138,75,0.15)' : 'none',
-                    }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: 6,
-                        background: i === 0 ? 'var(--ff-light)' : '#F1F4F2',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '0.9rem', fontWeight: 700, color: crop.color,
-                      }}>#{i + 1}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ff-text)' }}>{crop.name} <span style={{ color: 'var(--ff-text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>({crop.local})</span></div>
-                        <div style={{ height: 5, borderRadius: 3, background: '#E8EFE9', marginTop: 4 }}>
-                          <div style={{ width: `${crop.score}%`, height: '100%', borderRadius: 3, background: crop.color }} />
-                        </div>
+                {[
+                  { name: 'Soybean', local: 'सोयाबीन', score: 92, color: '#138A4B' },
+                  { name: 'Cotton', local: 'कपास', score: 78, color: '#20A65A' },
+                  { name: 'Maize', local: 'मक्का', score: 65, color: '#D89B18' },
+                ].map((crop, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 12px',
+                    background: i === 0 ? 'var(--ff-soft)' : 'transparent',
+                    borderRadius: 10, marginBottom: 6,
+                    border: i === 0 ? '1px solid rgba(19,138,75,0.15)' : 'none',
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 6,
+                      background: i === 0 ? 'var(--ff-light)' : '#F1F4F2',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.9rem', fontWeight: 700, color: crop.color,
+                    }}>#{i + 1}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ff-text)' }}>{crop.name} <span style={{ color: 'var(--ff-text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>({crop.local})</span></div>
+                      <div style={{ height: 5, borderRadius: 3, background: '#E8EFE9', marginTop: 4 }}>
+                        <div style={{ width: `${crop.score}%`, height: '100%', borderRadius: 3, background: crop.color }} />
                       </div>
-                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: crop.color }}>{crop.score}</div>
                     </div>
-                  ))}
-                </div>
-
-                <div style={{
-                  background: 'var(--ff-soft)',
-                  borderRadius: 12, padding: '10px 14px',
-                  border: '1px solid rgba(19,138,75,0.12)',
-                }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--ff-primary)', fontWeight: 600, marginBottom: 3 }}>
-                    ✦ AgriN Illustrative Explanation
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: crop.color }}>{crop.score}</div>
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--ff-text-secondary)', lineHeight: 1.5 }}>
-                    Soybean is highly suitable for your soil. Nitrogen and pH are in the optimal range.
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* Floating decorative elements */}
               <div style={{
-                position: 'absolute', top: -14, right: -14,
-                width: 52, height: 52, borderRadius: 14,
-                background: 'linear-gradient(135deg, #138A4B, #20A65A)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 16px rgba(19,138,75,0.35)',
+                background: 'var(--ff-soft)',
+                borderRadius: 12, padding: '10px 14px',
+                border: '1px solid rgba(19,138,75,0.12)',
               }}>
-                <span style={{ fontSize: 24 }}>🌱</span>
+                <div style={{ fontSize: '0.75rem', color: 'var(--ff-primary)', fontWeight: 600, marginBottom: 3 }}>
+                  ✦ AgriN Illustrative Explanation
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--ff-text-secondary)', lineHeight: 1.5 }}>
+                  Soybean is highly suitable for your soil. Nitrogen and pH are in the optimal range.
+                </div>
+              </div>
+            </div>
+
+            {/* Floating decorative elements */}
+            <div style={{
+              position: 'absolute', top: -14, right: -14,
+              width: 52, height: 52, borderRadius: 14,
+              background: 'linear-gradient(135deg, #138A4B, #20A65A)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(19,138,75,0.35)',
+            }}>
+              <span style={{ fontSize: 24 }}>🌱</span>
+            </div>
+            <div style={{
+              position: 'absolute', bottom: -10, left: -14,
+              width: 44, height: 44, borderRadius: 12,
+              background: 'var(--ff-warning-bg)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(216,155,24,0.2)',
+              border: '1px solid rgba(216,155,24,0.2)',
+            }}>
+              <span style={{ fontSize: 20 }}>🧪</span>
+            </div>
+          </div>
+        </div>
+    </div>
+
+        {/* ── Feature Cards ──────────────────────────────────────────── */ }
+  <div style={{ background: 'white', borderTop: '1px solid var(--ff-border)', paddingTop: 64, paddingBottom: 64 }}>
+    <div className="ff-container">
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 10 }}>
+          Everything You Need to Make Better Crop Decisions
+        </h2>
+        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '1rem', maxWidth: 520, margin: '0 auto' }}>
+          Built on ICAR/TNAU agricultural science, powered by machine learning.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }} className="feature-grid">
+        <FeatureCard
+          emoji="🌱"
+          icon={<FlaskConical size={22} style={{ color: 'var(--ff-primary)' }} />}
+          title="12 Soil Parameters"
+          desc="Enter all Soil Health Card values — Macronutrients, micronutrients, pH, EC, Organic Carbon."
+          accent="var(--ff-primary)"
+          bg="var(--ff-soft)"
+        />
+        <FeatureCard
+          emoji="🤖"
+          icon={<BarChart3 size={22} style={{ color: 'var(--ff-info)' }} />}
+          title="ML + Rule Engine"
+          desc="79.7% cross-validated Random Forest ensemble combined with ICAR/TNAU agronomic gates."
+          accent="var(--ff-info)"
+          bg="#EDF4FF"
+        />
+        <FeatureCard
+          emoji="⚡"
+          icon={<Zap size={22} style={{ color: 'var(--ff-warning)' }} />}
+          title="What-If Simulator"
+          desc="Change any condition and instantly see how crop suitability scores respond."
+          accent="var(--ff-warning)"
+          bg="var(--ff-warning-bg)"
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* ── How It Works ───────────────────────────────────────────── */ }
+  <div id="how-it-works" style={{ paddingTop: 64, paddingBottom: 64 }}>
+    <div className="ff-container">
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 10 }}>
+          How It Works
+        </h2>
+        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.95rem' }}>
+          Four simple steps from soil data to crop decisions
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
+        {[
+          { step: 1, label: 'Farm Details', desc: 'Location, season, soil type, irrigation', emoji: '📍' },
+          { step: 2, label: 'Soil Test Values', desc: 'Enter 12 Soil Health Card parameters', emoji: '🧪' },
+          { step: 3, label: 'AI Analysis', desc: 'ML model + agricultural rules engine', emoji: '🤖' },
+          { step: 4, label: 'Explore Results', desc: 'Rankings, feasibility + what-if', emoji: '📊' },
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              className="ff-card"
+              style={{ width: 170, textAlign: 'center', padding: '20px 16px' }}
+            >
+              <div style={{
+                width: 48, height: 48, borderRadius: 14,
+                background: 'var(--ff-soft)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 12px',
+                border: '1px solid rgba(19,138,75,0.15)',
+              }}>
+                <span style={{ fontSize: 22 }}>{item.emoji}</span>
               </div>
               <div style={{
-                position: 'absolute', bottom: -10, left: -14,
-                width: 44, height: 44, borderRadius: 12,
-                background: 'var(--ff-warning-bg)',
+                width: 22, height: 22, borderRadius: '50%',
+                background: 'var(--ff-primary)',
+                color: 'white',
+                fontSize: '0.7rem', fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(216,155,24,0.2)',
-                border: '1px solid rgba(216,155,24,0.2)',
+                margin: '0 auto 8px',
               }}>
-                <span style={{ fontSize: 20 }}>🧪</span>
+                {item.step}
               </div>
+              <p style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--ff-text)', marginBottom: 4 }}>{item.label}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)', lineHeight: 1.4 }}>{item.desc}</p>
             </div>
+            {i < 3 && (
+              <ArrowRight size={20} style={{ color: 'var(--ff-primary)', opacity: 0.5, flexShrink: 0 }} />
+            )}
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* ── Feature Cards ──────────────────────────────────────────── */}
-        <div style={{ background: 'white', borderTop: '1px solid var(--ff-border)', paddingTop: 64, paddingBottom: 64 }}>
-          <div className="ff-container">
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 10 }}>
-                Everything You Need to Make Better Crop Decisions
-              </h2>
-              <p style={{ color: 'var(--ff-text-secondary)', fontSize: '1rem', maxWidth: 520, margin: '0 auto' }}>
-                Built on ICAR/TNAU agricultural science, powered by machine learning.
-              </p>
-            </div>
+      <div style={{ textAlign: 'center', marginTop: 40 }}>
+        <button
+          className="btn-primary"
+          onClick={() => navigate('/farm-details')}
+          style={{ fontSize: '1rem', padding: '14px 36px' }}
+        >
+          <Sprout size={20} />
+          Get Started — It's Free
+        </button>
+      </div>
+    </div>
+  </div>
+      </main >
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }} className="feature-grid">
-              <FeatureCard
-                emoji="🌱"
-                icon={<FlaskConical size={22} style={{ color: 'var(--ff-primary)' }} />}
-                title="12 Soil Parameters"
-                desc="Enter all Soil Health Card values — Macronutrients, micronutrients, pH, EC, Organic Carbon."
-                accent="var(--ff-primary)"
-                bg="var(--ff-soft)"
-              />
-              <FeatureCard
-                emoji="🤖"
-                icon={<BarChart3 size={22} style={{ color: 'var(--ff-info)' }} />}
-                title="ML + Rule Engine"
-                desc="79.7% cross-validated Random Forest ensemble combined with ICAR/TNAU agronomic gates."
-                accent="var(--ff-info)"
-                bg="#EDF4FF"
-              />
-              <FeatureCard
-                emoji="⚡"
-                icon={<Zap size={22} style={{ color: 'var(--ff-warning)' }} />}
-                title="What-If Simulator"
-                desc="Change any condition and instantly see how crop suitability scores respond."
-                accent="var(--ff-warning)"
-                bg="var(--ff-warning-bg)"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* ── How It Works ───────────────────────────────────────────── */}
-        <div id="how-it-works" style={{ paddingTop: 64, paddingBottom: 64 }}>
-          <div className="ff-container">
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 10 }}>
-                How It Works
-              </h2>
-              <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.95rem' }}>
-                Four simple steps from soil data to crop decisions
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
-              {[
-                { step: 1, label: 'Farm Details',       desc: 'Location, season, soil type, irrigation', emoji: '📍' },
-                { step: 2, label: 'Soil Test Values',   desc: 'Enter 12 Soil Health Card parameters',     emoji: '🧪' },
-                { step: 3, label: 'AI Analysis',        desc: 'ML model + agricultural rules engine',      emoji: '🤖' },
-                { step: 4, label: 'Explore Results',    desc: 'Rankings, feasibility + what-if',           emoji: '📊' },
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div
-                    className="ff-card"
-                    style={{ width: 170, textAlign: 'center', padding: '20px 16px' }}
-                  >
-                    <div style={{
-                      width: 48, height: 48, borderRadius: 14,
-                      background: 'var(--ff-soft)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      margin: '0 auto 12px',
-                      border: '1px solid rgba(19,138,75,0.15)',
-                    }}>
-                      <span style={{ fontSize: 22 }}>{item.emoji}</span>
-                    </div>
-                    <div style={{
-                      width: 22, height: 22, borderRadius: '50%',
-                      background: 'var(--ff-primary)',
-                      color: 'white',
-                      fontSize: '0.7rem', fontWeight: 700,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      margin: '0 auto 8px',
-                    }}>
-                      {item.step}
-                    </div>
-                    <p style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--ff-text)', marginBottom: 4 }}>{item.label}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)', lineHeight: 1.4 }}>{item.desc}</p>
-                  </div>
-                  {i < 3 && (
-                    <ArrowRight size={20} style={{ color: 'var(--ff-primary)', opacity: 0.5, flexShrink: 0 }} />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: 40 }}>
-              <button
-                className="btn-primary"
-                onClick={() => navigate('/farm-details')}
-                style={{ fontSize: '1rem', padding: '14px 36px' }}
-              >
-                <Sprout size={20} />
-                Get Started — It's Free
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* ── Footer ──────────────────────────────────────────────────── */}
-      <footer style={{
-        borderTop: '1px solid var(--ff-border)',
-        padding: '20px 24px',
+    {/* ── Footer ──────────────────────────────────────────────────── */ }
+    < footer style = {{
+    borderTop: '1px solid var(--ff-border)',
+      padding: '20px 24px',
         background: 'white',
-      }}>
+      }
+}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
           <Shield size={13} style={{ color: 'var(--ff-text-muted)' }} />
           <span style={{ fontSize: '0.78rem', color: 'var(--ff-text-muted)', textAlign: 'center' }}>
@@ -342,10 +343,10 @@ export default function Home() {
         <p style={{ textAlign: 'center', fontSize: '0.72rem', color: '#C0CCC4', marginTop: 6 }}>
           AgriN Pan-India Architecture · Random Forest v2 (79.7% multi-source CV) · ICAR/TNAU/CRIDA benchmarks · 28 States &amp; 8 Union Territories
         </p>
-      </footer>
+      </footer >
 
-      {/* ── Responsive styles ────────────────────────────────────────── */}
-      <style>{`
+  {/* ── Responsive styles ────────────────────────────────────────── */ }
+  < style > {`
         @media (max-width: 768px) {
           .hero-grid { grid-template-columns: 1fr !important; }
           .feature-grid { grid-template-columns: 1fr !important; }
@@ -353,8 +354,8 @@ export default function Home() {
         @media (max-width: 640px) {
           .feature-grid { grid-template-columns: 1fr !important; }
         }
-      `}</style>
-    </div>
+      `}</style >
+    </div >
   )
 }
 
