@@ -1,17 +1,27 @@
 # 🧪 AgriN — Comprehensive Verification & Test Results Report
 
-**Execution Date**: November 26, 2026  
-**Platform**: macOS Darwin (Apple Silicon)  
-**Python Runtime**: Python 3.12.13 (`.venv/bin/python`)  
-**Node.js / Vite**: `vite v8.2.1`, `tsc && vite build`  
-**Backend Pytest Result**: **176 Passed, 4 Failed** (180 collected items, `27.39s`)  
-**Frontend Build Result**: **PASS** (`2,409 modules transformed`, `0` errors in `283ms`)
+> **Navigation:** [Root README](README.md) · [System Status](SYSTEM_STATUS.md) · [Implementation Report](IMPLEMENTATION_REPORT.md) · [Docs Hub](docs/README.md) · [Hardware Hub](hardware/README.md)
+
+**Execution Date:** November 26, 2026  
+**Platform:** macOS Darwin (Apple Silicon)  
+**Python Runtime:** Python 3.12.13 (`.venv/bin/python`)  
+**Node.js / Vite:** `vite v8.2.1`, `tsc && vite build`  
+**Backend Pytest Result:** **176 Passed, 4 Failed** (180 collected items, `27.39s`)  
+**Frontend Build Result:** **PASS** (`2,409 modules transformed`, `0` errors in `283ms`)
 
 ---
 
-## 📊 1. Backend Pytest Execution Summary
+## 📑 Table of Contents
+- [1. Backend Pytest Execution Summary](#1-backend-pytest-execution-summary)
+- [2. Detailed Notes on Observed Failures](#2-detailed-notes-on-observed-failures)
+- [3. Frontend Build Verification](#3-frontend-build-verification)
+- [4. Verification Matrix Summary](#4-verification-matrix-summary)
 
-Exact output summary from `.venv/bin/pytest --tb=no -r a` executed after pulling upstream `origin/main` (`3a75f8f`):
+---
+
+## 1. Backend Pytest Execution Summary
+
+Observed output from `.venv/bin/pytest --tb=no -r a` executed after pulling upstream `origin/main` (`3a75f8f`):
 
 ```text
 ============================= test session starts ==============================
@@ -46,7 +56,10 @@ tests/test_weather_service.py ..                                         [100%] 
 ================= 4 failed, 176 passed, 81 warnings in 27.39s ==================
 ```
 
-### Detailed Notes on Observed Failures (4 Items)
+---
+
+## 2. Detailed Notes on Observed Failures
+
 All 4 failing tests originated in upstream pre-token firmware suites added prior to enforcing mandatory `X-Device-Token` authentication on IoT ingestion/heartbeat routes (`tests/test_iot_device_management.py` passes all 13 token-authenticated tests):
 
 1. `tests/test_firmware_backend_contract.py::test_firmware_telemetry_payload_contract_success` — fails with `HTTP 401` (`Missing or invalid X-Device-Token header`) because the test sends `X-API-Key: agrisense_sec_default` rather than the registered device's `api_key` via `X-Device-Token`.
@@ -56,7 +69,7 @@ All 4 failing tests originated in upstream pre-token firmware suites added prior
 
 ---
 
-## ⚡ 2. Frontend Build Verification
+## 3. Frontend Build Verification
 
 ```bash
 $ cd frontend && npm run build
@@ -80,7 +93,7 @@ dist/assets/index-BQIg7nyq.js   1,159.20 kB │ gzip: 308.99 kB
 
 ---
 
-## 🏆 3. Verification Matrix Summary
+## 4. Verification Matrix Summary
 
 | Area | Verification Scope | Observed Outcome | Verdict |
 | :--- | :--- | :--- | :--- |

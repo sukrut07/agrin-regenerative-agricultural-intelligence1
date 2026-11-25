@@ -1,10 +1,21 @@
 # ⚙️ AgriN Backend — FastAPI Core Intelligence Service
 
-The AgriN backend (`backend/app/main.py`) is a modular FastAPI REST microservice backed by SQLAlchemy (SQLite by default) and `scikit-learn`. It serves crop suitability prediction, agronomic rule validation, Soil Health Card diagnostics, IoT device management and authenticated ingestion, synthetic agricultural data generation, AgriMarket & AgriLedger APIs, and BRICS interoperability schemas.
+> **Navigation:** [Root README](../README.md) · [Frontend](../frontend/README.md) · [Hardware](../hardware/README.md) · [Docs Hub](../docs/README.md) · [Test Results](../TEST_RESULTS.md)
+
+The AgriN backend ([app/main.py](app/main.py)) is a modular FastAPI REST microservice backed by SQLAlchemy (SQLite by default) and `scikit-learn`. It serves crop suitability prediction, agronomic rule validation, Soil Health Card diagnostics, IoT device management and authenticated ingestion, synthetic agricultural data generation, AgriMarket & AgriLedger economics APIs, and BRICS interoperability schemas.
 
 ---
 
-## 🏗 Actual Directory Architecture
+## 📑 Table of Contents
+- [1. Directory Architecture](#1-directory-architecture)
+- [2. IoT Security & Ingestion Model](#2-iot-security--ingestion-model)
+- [3. Mounted API Routers](#3-mounted-api-routers)
+- [4. Running Locally](#4-running-locally)
+- [5. Testing](#5-testing)
+
+---
+
+## 1. Directory Architecture
 
 ```text
 backend/app/
@@ -67,9 +78,9 @@ backend/app/
 
 ---
 
-## 🔑 IoT Security & Ingestion Model
+## 2. IoT Security & Ingestion Model
 
-The IoT ingestion pipeline (`backend/app/services/iot_service.py`) enforces authentication and replay checks:
+The IoT ingestion pipeline (`backend/app/services/iot_service.py`) enforces device identity and replay protection:
 
 1. **Per-Device API Token**: `POST /api/devices/register` issues a secure random token (`agrin_dev_*`) persisted in `Device.api_key`.
 2. **Header / Payload Verification**: `POST /api/telemetry/ingest` and heartbeat routes require a valid token via `X-Device-Token` or `Authorization: Bearer` (or payload `api_key`); unauthenticated requests receive `HTTP 401 Unauthorized`.
@@ -78,7 +89,9 @@ The IoT ingestion pipeline (`backend/app/services/iot_service.py`) enforces auth
 
 ---
 
-## 📡 Router Summary (Mounted under `/api` in `main.py`)
+## 3. Mounted API Routers
+
+All routers are mounted under `/api` inside [backend/app/main.py](app/main.py):
 
 | Router Module | Tag / Scope | Key Capabilities |
 | :--- | :--- | :--- |
@@ -98,7 +111,7 @@ The IoT ingestion pipeline (`backend/app/services/iot_service.py`) enforces auth
 
 ---
 
-## 🛠 Running the Backend Locally
+## 4. Running Locally
 
 ```bash
 # Activate Python 3.12 virtual environment
@@ -108,15 +121,15 @@ source .venv/bin/activate
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- OpenAPI JSON: `http://127.0.0.1:8000/openapi.json`
+- **Swagger UI:** `http://127.0.0.1:8000/docs`
+- **OpenAPI JSON:** `http://127.0.0.1:8000/openapi.json`
 
 ---
 
-## 🧪 Testing
+## 5. Testing
 
 ```bash
 .venv/bin/pytest tests/ -q
 ```
 
-See [../TEST_RESULTS.md](../TEST_RESULTS.md) for the exact per-file verification log (`176 passed, 4 failed` on the merged `main` branch, including the 4 upstream firmware contract tests currently missing `X-Device-Token` auth headers).
+See [TEST_RESULTS.md](../TEST_RESULTS.md) for the full observed per-file log (`176 passed, 4 failed` on merged `main`, including the 4 upstream firmware contract tests missing `X-Device-Token` auth headers).

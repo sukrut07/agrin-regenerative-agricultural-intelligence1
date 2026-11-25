@@ -1,34 +1,47 @@
 # 🎨 AgriN Frontend — React 19 + Vite Web Application
 
-The AgriN frontend is a responsive single-page application built on **React 19**, **Vite v8**, **Tailwind CSS v4**, and **Recharts v3**. It pairs an agricultural editorial design system (`Manrope` + `JetBrains Mono`, warm `#F7F7F2` canvas, `#183B2A` forest green, `#E7D927` harvest yellow accents) with interactive data visualizations across all core farmer decision workflows.
+> **Navigation:** [Root README](../README.md) · [Backend](../backend/README.md) · [Hardware](../hardware/README.md) · [Docs Hub](../docs/README.md) · [Test Results](../TEST_RESULTS.md)
+
+The AgriN frontend is a responsive single-page application built on **React 19**, **Vite v8**, **Tailwind CSS v4**, and **Recharts v3**. It pairs an editorial visual system (`Manrope` + `JetBrains Mono`, warm `#F7F7F2` canvas, `#183B2A` forest green, `#E7D927` harvest yellow accents) with interactive data visualizations across all core farmer workflows.
 
 ---
 
-## 🌐 Multilingual i18n & User Modes
+## 📑 Table of Contents
+- [1. Multilingual i18n & User Modes](#1-multilingual-i18n--user-modes)
+- [2. Interactive Visualization Suite (`ReportCharts.jsx`)](#2-interactive-visualization-suite-reportchartsjsx)
+- [3. Page & Component Hierarchy](#3-page--component-hierarchy)
+- [4. Development & Build Commands](#4-development--build-commands)
+
+---
+
+## 1. Multilingual i18n & User Modes
 
 - **Trilingual UI Support**: Runtime language switching across **English (`en`)**, **Hindi (`हिन्दी` - `hi`)**, and **Marathi (`मराठी` - `mr`)** via `src/i18n/translations.js`, `src/context/LanguageContext.jsx`, and `src/components/LanguageSelector.jsx`.
-- **Simple vs Advanced Mode**: Controlled via `src/context/UserModeContext.jsx` to let farmers focus on essential workflows or inspect deeper agronomic and technical diagnostics.
+- **Simple vs Advanced Mode**: Managed via `src/context/UserModeContext.jsx` so farmers can switch between core decision views and deeper agronomic telemetry panels.
 
 ---
 
-## 📊 Interactive Visualization Suite (`src/components/ReportCharts.jsx`)
+## 2. Interactive Visualization Suite (`ReportCharts.jsx`)
 
-The unified **AgriN Farm Intelligence Report** (`src/pages/Recommendations.jsx`) embeds scroll-triggered, animated Recharts visualizations built directly from `/api/analyze` and `/api/crops/compare` responses:
+The unified **AgriN Farm Intelligence Report** (`src/pages/Recommendations.jsx`) embeds scroll-triggered, animated Recharts visualizations powered by live `/api/analyze` and `/api/crops/compare` data:
 
-- **`ReportKpiVisualStrip`**: Animated SVG progress rings (`EditorialRing`) and count-up counters (`useCountUp`) linking directly to report sections.
-- **`CropSuitabilityChartCard`**: Interactive top-crop bar chart switching between **Overall Score**, **Rule Engine vs ML (50/50)**, and **Soil / Climate / Water / Season** factors, with bar click-to-inspect.
-- **`CropComparisonCharts`**: Side-by-side multi-dimensional `RadarChart` and grouped `BarChart` comparing 2–4 candidate crops.
-- **`ActionQueueVisuals`**: Clickable risk severity horizontal `BarChart` (`Critical`, `High`, `Medium`, `Low`) synchronized with the advisory queue filter pills, plus an agronomic domain mix bar chart.
-- **`WhyExplanationVisuals`**: Explainable hybrid score breakdown + evidence vs caveat signal counters and assessment trust profile for Section 3.
-- **`SoilHealthCharts`**: Animated component breakdown bars, pH spectrum position indicator, and horizontal ICAR nutrient benchmark comparison chart (`% of ICAR Optimal`).
-- **`RegenerativeOpportunitiesVisuals`**: Ecological pillar bar chart + interactive intervention priority `PieChart` donut (`High`, `Medium`, `Low`) synchronized with practice filters.
-- **`ResilienceVisuals` & `ConfidenceVisuals`**: 5-pillar biophysical resilience `RadarChart` + bar chart, and interactive switcher between 5-dimension Confidence Factors and 4-dimension Data Quality Metrics.
+| Exported Component | Visual Role | Interactive Behavior |
+| :--- | :--- | :--- |
+| **`ReportKpiVisualStrip`** | Executive KPI cards & rings | Animated `EditorialRing` & `useCountUp` metrics jumping to report sections |
+| **`CropSuitabilityChartCard`** | Top cultivar suitability bar chart | Mode switcher (`Overall Score`, `Rule Engine vs ML`, `Soil/Climate/Water/Season`) + click-to-inspect |
+| **`CropComparisonCharts`** | 2–4 candidate crop trade-offs | Multi-dimensional `RadarChart` + grouped comparison `BarChart` |
+| **`ActionQueueVisuals`** | Risk severity & domain mix | Clickable horizontal severity bars synchronized with `priorityFilter` pills |
+| **`WhyExplanationVisuals`** | Section 3 hybrid decision audit | Switches between `Score Breakdown` (`Final`, `Rules`, `ML`, `Fits`) and `Evidence Signals` |
+| **`SoilHealthCharts`** | SHC pillars & benchmark ratios | Animated pillar bars, pH spectrum marker & horizontal ICAR optimal percentage chart |
+| **`RegenerativeOpportunitiesVisuals`** | Section 5 ecological practices | Clickable Soil/Microclimate Pillar bars + Priority Impact `PieChart` donut filtering cards |
+| **`ResilienceVisuals`** | 5-pillar biophysical resilience | Animated resilience polygon `RadarChart` + pillar comparison bar chart |
+| **`ConfidenceVisuals`** | Data confidence vs data quality | Toggles between 5-dimension `Confidence Factors` and 4-dimension `Data Quality Metrics` |
 
-Viewport scroll reveals use `IntersectionObserver` (`useInViewAnimation`) and honor `@media (prefers-reduced-motion: reduce)` in `src/index.css`.
+Scroll-triggered reveals use `IntersectionObserver` (`useInViewAnimation`) and honor `@media (prefers-reduced-motion: reduce)` in `src/index.css`.
 
 ---
 
-## 📱 Page & Component Hierarchy
+## 3. Page & Component Hierarchy
 
 ```text
 frontend/src/
@@ -76,7 +89,7 @@ frontend/src/
 
 ---
 
-## 💻 Development & Build Commands
+## 4. Development & Build Commands
 
 ```bash
 cd frontend
@@ -94,4 +107,4 @@ npm run build
 npm run preview
 ```
 
-Latest verified build (`tsc && vite build`): `2,409 modules transformed`, `0` errors (`283ms`).
+Latest verified production build (`tsc && vite build`): `2,409 modules transformed`, `0` errors (`283ms`).

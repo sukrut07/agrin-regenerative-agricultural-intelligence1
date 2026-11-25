@@ -1,8 +1,18 @@
 # 📋 AgriN — Comprehensive Implementation & Technical Audit Report
 
+> **Navigation:** [Root README](README.md) · [System Status](SYSTEM_STATUS.md) · [Test Results](TEST_RESULTS.md) · [Docs Hub](docs/README.md) · [Hardware Hub](hardware/README.md)
+
 **Project**: AgriN — Regenerative Agricultural Intelligence Network (BRICS Track 4)  
 **Date**: November 26, 2026  
 **Status**: Upstream Hardware Readiness Merged • Editorial UI & Recharts Visual Suite Added • Backend `176 passed / 4 failed`, Frontend `2,409 modules` (`0` errors)
+
+---
+
+## 📑 Table of Contents
+- [1. Part 1: Resolution of Identified Technical Flaws](#-part-1-resolution-of-identified-technical-flaws)
+- [2. Part 2: Add-on Modules Implemented](#-part-2-add-on-modules-implemented)
+- [3. Part 3: Multilingual UI Enablement](#-part-3-multilingual-ui-enablement)
+- [4. Part 4: Quality Assurance & Recent Updates (Nov 25–26, 2026)](#-part-4-quality-assurance--recent-updates-nov-2526-2026)
 
 ---
 
@@ -120,4 +130,7 @@ This report documents the resolution of all identified architectural flaws, the 
 ### Verification Snapshot
 - **Backend Pytest Suite**: `176 passed, 4 failed` in `27.39s` (`180` collected items; the 4 failures are in upstream pre-token firmware fixtures in `tests/test_firmware_backend_contract.py` and `tests/test_full_telemetry_lifecycle_e2e.py` awaiting `X-Device-Token` header updates — see `TEST_RESULTS.md`).
 - **Frontend Build**: `tsc && vite build` compiled all `2,409` modules in `283ms` with zero errors.
-- **Documentation Portability**: Converted hardcoded local `file:///` links across `README.md`, `data/README.md`, `docs/README.md`, `firmware/`, and `hardware/` into repo-relative Markdown links.
+### Documentation Structurisation & Portability
+- Consolidated historical phase, audit, migration, and Track 4 reports into [`docs/reports/`](docs/README.md#9-phase-completion--audit-archive-docsreports).
+- Created [`hardware/README.md`](hardware/README.md) indexing bench assembly, HIL testing, and Unit 01 commissioning dossiers.
+- Standardized repository-relative Markdown navigation across [`README.md`](README.md), [`backend/README.md`](backend/README.md), [`frontend/README.md`](frontend/README.md), [`firmware/README.md`](firmware/README.md), [`data/README.md`](data/README.md), [`docs/README.md`](docs/README.md), [`SYSTEM_STATUS.md`](SYSTEM_STATUS.md), [`TEST_RESULTS.md`](TEST_RESULTS.md), [`DATA_DICTIONARY.md`](DATA_DICTIONARY.md), and [`SYNTHETIC_DATA_DOCUMENTATION.md`](SYNTHETIC_DATA_DOCUMENTATION.md).

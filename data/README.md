@@ -1,50 +1,58 @@
 # 📊 AgriN Data Pipeline, Provenance & Synthetic Engine
 
-This directory houses the foundational datasets, agricultural reference models, and the reproducible synthetic data generation engine for the AgriN platform.
+> **Navigation:** [Root README](../README.md) · [Data Dictionary](../DATA_DICTIONARY.md) · [Synthetic Docs](../SYNTHETIC_DATA_DOCUMENTATION.md) · [Docs Hub](../docs/README.md)
+
+This directory houses the raw/processed training datasets, agricultural reference provenance, and reproducible constrained synthetic data generation engine for AgriN.
 
 ---
 
-## 🏛 Scientific Provenance & Sources
-
-AgriN’s agronomic rules, crop suitability thresholds, and soil diagnostic curves are benchmarked against official agricultural repositories:
-
-1. **Indian Council of Agricultural Research (ICAR)**:
-   - Handbook of Agriculture (7th Edition)
-   - Agro-climatic zone classifications across 15 distinct planning regions
-   - Micronutrient deficiency thresholds for Indian soils
-2. **Directorate of Economics and Statistics (DES)**, Ministry of Agriculture & Farmers Welfare:
-   - Historical state-wise and district-wise crop yields, sowing seasons, and major producing belts
-3. **National Soil Health Card (SHC) Scheme**, Department of Agriculture & Cooperation:
-   - 12-parameter diagnostic boundaries (Low, Medium, High / Deficient vs. Sufficient)
-4. **Food and Agriculture Organization (FAO)**:
-   - Irrigation and Drainage Paper 56 (Crop Evapotranspiration and Water Requirements)
+## 📑 Table of Contents
+- [1. Directory Structure](#1-directory-structure)
+- [2. Scientific Provenance & Sources](#2-scientific-provenance--sources)
+- [3. Synthetic Data Engine](#3-synthetic-data-engine)
+- [4. CLI Usage & Anomaly Scenarios](#4-cli-usage--anomaly-scenarios)
+- [5. Complete Reference Links](#5-complete-reference-links)
 
 ---
 
-## 🔬 Synthetic Data Engine (`data/synthetic/`)
+## 1. Directory Structure
 
-To solve **Flaw 01 (ML Data Credibility)** identified in the technical review, AgriN clearly decouples empirical field observations from generated test data. Synthetic data is generated using a reproducible engine combining **Python Faker** (for realistic farmer identities and farm parcels) with **ICAR agronomic constraints**.
-
-### Key Rules:
-- **Zero Confusion**: Every generated record explicitly contains:
-  `"is_synthetic": true`, `"synthetic_version": "v1.0"`, `"faker_seed": <int>`
-- **Agronomic Validity**: Sensor readings are not purely random; they conform to statistical distributions established for the 7 major Indian soil orders.
-
-### Soil Profiles (`data/synthetic/profiles/soil_profiles.json`):
-1. **Vertisols (Black Soils)**: Central & Western India (Maharashtra, Gujarat, MP) — high montmorillonite clay, high potassium, alkaline pH tendency.
-2. **Alluvial Soils**: Indo-Gangetic Plains (Punjab, Haryana, UP, Bihar) — balanced NPK, low zinc, neutral pH.
-3. **Alfisols (Red Soils)**: Southern & Eastern India (AP, Karnataka, Odisha) — coarse texture, low phosphorus, slightly acidic.
-4. **Laterite Soils**: Coastal & high-rainfall belts (Konkan, Kerala, Assam) — high acidity (pH 4.8 - 5.8), phosphorus-fixing, low bases.
-5. **Aridisols (Desert Soils)**: Rajasthan, Northern Gujarat — low nitrogen and organic matter, high salinity risk.
-6. **Saline & Alkaline Soils**: Sodic pockets in canal command areas — high EC (>2.0 dS/m) or high pH (>8.2).
-7. **Mountain / Forest Soils**: Himalayan belt — high organic carbon (>1.0%), acidic, shallow depth.
+```text
+data/
+├── README.md                  # Pipeline & provenance guide (this file)
+├── raw/                       # Upstream reference crop/soil datasets
+├── processed/                 # Cleaned ML-ready feature sets & provenance JSON
+├── scripts/                   # Training dataset builder (`build_training_dataset.py`)
+└── synthetic/
+    ├── profiles/              # `soil_profiles.json`, `seasonal_profiles.json`
+    ├── scripts/               # `synthetic_engine.py`, `run_synthetic_engine.py`
+    └── generated/             # Generated JSON/CSV records & manifest (`is_synthetic: true`)
+```
 
 ---
 
-## 💻 CLI Usage: Generating Synthetic Data
+## 2. Scientific Provenance & Sources
+
+AgriN agronomic bounds and Soil Health Card evaluation curves are benchmarked against:
+1. **Indian Council of Agricultural Research (ICAR)** — Handbook of Agriculture (7th Edition), 15 agro-climatic planning zones, and micronutrient deficiency cutoffs.
+2. **Directorate of Economics and Statistics (DES)** — State- and district-level crop yields, cropping seasons, and production belts.
+3. **National Soil Health Card (SHC) Scheme** — 12-parameter diagnostic thresholds (`N`, `P`, `K`, `S`, `Zn`, `Fe`, `Cu`, `Mn`, `B`, `pH`, `EC`, `OC`).
+4. **Food and Agriculture Organization (FAO)** — Irrigation and Drainage Paper 56 (crop water requirements).
+
+---
+
+## 3. Synthetic Data Engine
+
+Synthetic profiles are generated independently via **Python Faker** + **ICAR soil order constraints** across 7 major Indian soil orders (`Vertisols`, `Alluvial`, `Alfisols`, `Laterite`, `Aridisols`, `Saline/Alkaline`, `Mountain/Forest`):
+- **Mandatory Provenance Tagging**: Every synthetic record carries `"is_synthetic": true`, `"synthetic_version": "v1.0"`, and `"faker_seed"`.
+- **No Mixing Policy**: Synthetic data is never conflated with empirical holdout evaluations.
+
+---
+
+## 4. CLI Usage & Anomaly Scenarios
 
 ```bash
-# Generate 500 validated synthetic farm records to CSV and JSON
+# Generate 500 validated synthetic farm records to JSON
 python data/synthetic/scripts/run_synthetic_engine.py \
   --records 500 \
   --seed 42 \
@@ -54,13 +62,11 @@ python data/synthetic/scripts/run_synthetic_engine.py \
   --format json
 ```
 
-### Supported Anomaly Scenarios:
-- `extreme_drought`: Simulates rainfall < 30% of normal with depleted soil moisture (<15%).
-- `salinity_flash`: High EC spike (>3.5 dS/m) simulating saline groundwater intrusion.
-- `flash_flood`: Water-logged anaerobic root zone (moisture > 90%).
-- `severe_zinc_deficiency`: Micronutrient collapse (<0.2 ppm) triggering agronomic alerts.
+Supported stress scenarios: `extreme_drought`, `salinity_flash`, `flash_flood`, and `severe_zinc_deficiency`.
 
 ---
 
-## 📖 Complete Data Dictionary
-Refer to [DATA_DICTIONARY.md](../DATA_DICTIONARY.md) for full parameter definitions, physical units, acceptable ranges, and ICAR rating curves.
+## 5. Complete Reference Links
+- [DATA_DICTIONARY.md](../DATA_DICTIONARY.md) — Complete 12-parameter soil, IoT telemetry, satellite & decision schema dictionary.
+- [SYNTHETIC_DATA_DOCUMENTATION.md](../SYNTHETIC_DATA_DOCUMENTATION.md) — Detailed soil order parameters and Python API examples.
+- [docs/dataset_card.md](../docs/dataset_card.md) — Dataset card & distribution caveats.
