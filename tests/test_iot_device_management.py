@@ -173,7 +173,11 @@ def test_telemetry_ingest_valid_measured(test_farm_and_device):
             "uptime_seconds": 3600
         }
     }
-    resp = client.post("/api/telemetry/ingest", json=payload)
+    resp = client.post(
+        "/api/telemetry/ingest",
+        json=payload,
+        headers={"X-Device-Token": dev["api_key"]},
+    )
     assert resp.status_code == 201
     data = resp.json()
     assert data["status"] in ("SUCCESS", "PROCESSED")
@@ -200,7 +204,11 @@ def test_telemetry_ingest_synthetic_flagged(test_farm_and_device):
             }
         ]
     }
-    resp = client.post("/api/telemetry/ingest", json=payload)
+    resp = client.post(
+        "/api/telemetry/ingest",
+        json=payload,
+        headers={"X-Device-Token": dev["api_key"]},
+    )
     assert resp.status_code == 201
     data = resp.json()
     assert data["status"] in ("SUCCESS", "PROCESSED")
@@ -227,11 +235,19 @@ def test_telemetry_duplicate_detection(test_farm_and_device):
         ]
     }
     # First post succeeds
-    resp1 = client.post("/api/telemetry/ingest", json=payload)
+    resp1 = client.post(
+        "/api/telemetry/ingest",
+        json=payload,
+        headers={"X-Device-Token": dev["api_key"]},
+    )
     assert resp1.status_code == 201
 
     # Exact duplicate post returns DUPLICATE status
-    resp2 = client.post("/api/telemetry/ingest", json=payload)
+    resp2 = client.post(
+        "/api/telemetry/ingest",
+        json=payload,
+        headers={"X-Device-Token": dev["api_key"]},
+    )
     assert resp2.status_code == 201
     data2 = resp2.json()
     assert data2["status"] == "DUPLICATE"
@@ -257,7 +273,11 @@ def test_telemetry_impossible_sensor_value_rejected(test_farm_and_device):
             }
         ]
     }
-    resp = client.post("/api/telemetry/ingest", json=invalid_payload)
+    resp = client.post(
+        "/api/telemetry/ingest",
+        json=invalid_payload,
+        headers={"X-Device-Token": dev["api_key"]},
+    )
     assert resp.status_code == 422
 
 
@@ -275,7 +295,11 @@ def test_device_heartbeat_and_status(test_farm_and_device):
         "free_memory_bytes": 178000,
         "firmware_version": "1.0.0"
     }
-    hb_resp = client.post(f"/api/devices/{dev['device_id']}/heartbeat", json=heartbeat_payload)
+    hb_resp = client.post(
+        f"/api/devices/{dev['device_id']}/heartbeat",
+        json=heartbeat_payload,
+        headers={"X-Device-Token": dev["api_key"]},
+    )
     assert hb_resp.status_code == 201
     hb_data = hb_resp.json()
     assert hb_data["device_id"] == dev["device_id"]

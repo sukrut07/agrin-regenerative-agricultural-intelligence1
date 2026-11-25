@@ -1,45 +1,50 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { useLanguage } from '../context/LanguageContext'
 import { getLiveWeather } from '../services/api'
-import { Info, Thermometer, Droplets, CloudRain, Radio } from 'lucide-react'
+import {
+  Info, Thermometer, Droplets, CloudRain, Radio,
+  MapPin, ArrowLeft, ArrowRight
+} from 'lucide-react'
 import StepLayout from '../components/StepLayout'
 
 const ENV_PARAMS = [
   {
     key: 'temperature', label: 'Average Temperature',
     unit: '°C', min: -5, max: 50, step: 0.5, placeholder: 'e.g. 28',
-    icon: <Thermometer size={18} style={{ color: '#E07B3A' }} />,
-    color: '#E07B3A', bg: '#FFF4EE',
-    tip: 'Average temperature during the growing season. Can be obtained from IMD website or local weather station.',
+    icon: <Thermometer size={17} style={{ color: '#C88A14' }} />,
+    color: '#C88A14', bg: '#FDF6E2',
+    tip: 'Average temperature during the growing season. Obtainable from IMD or local weather station.',
   },
   {
-    key: 'humidity', label: 'Average Relative Humidity',
+    key: 'humidity', label: 'Relative Humidity',
     unit: '%', min: 0, max: 100, step: 1, placeholder: 'e.g. 65',
-    icon: <Droplets size={18} style={{ color: 'var(--ff-info)' }} />,
-    color: '#3978B8', bg: '#EDF4FF',
+    icon: <Droplets size={17} style={{ color: '#2E6CA4' }} />,
+    color: '#2E6CA4', bg: '#EDF4FA',
     tip: 'Average relative humidity. Typical: Coastal 70–90%, Semi-arid 40–65%, Arid < 45%.',
   },
   {
     key: 'rainfall', label: 'Annual Rainfall',
     unit: 'mm/yr', min: 0, max: 5000, step: 10, placeholder: 'e.g. 750',
-    icon: <CloudRain size={18} style={{ color: 'var(--ff-primary)' }} />,
-    color: 'var(--ff-primary)', bg: 'var(--ff-soft)',
-    tip: 'Total annual rainfall in mm. Indian range: 150mm (Western Rajasthan) to 3500mm+ (Western Ghats / Northeast). Check IMD data.',
+    icon: <CloudRain size={17} style={{ color: '#183B2A' }} />,
+    color: '#183B2A', bg: '#EAF3EC',
+    tip: 'Total annual rainfall in mm. Indian range: 150mm (Western Rajasthan) to 3500mm+ (Western Ghats / NE).',
   },
 ]
 
 const TYPICAL_VALUES = [
-  { region: 'Trans-Gangetic (Punjab/Haryana)', temp: 24, humidity: 60, rainfall: 650  },
-  { region: 'Western Dry (Rajasthan)',         temp: 27, humidity: 42, rainfall: 350  },
-  { region: 'Middle Gangetic (UP/Bihar)',       temp: 26, humidity: 68, rainfall: 1100 },
-  { region: 'Western Plateau (Maharashtra/MP)',temp: 29, humidity: 55, rainfall: 750  },
-  { region: 'Southern Plateau (Karnataka/AP)',  temp: 26, humidity: 62, rainfall: 820  },
-  { region: 'West Coast / Konkan / Kerala',     temp: 28, humidity: 80, rainfall: 2800 },
+  { region: 'Trans-Gangetic (Punjab/Haryana)', temp: 24, humidity: 60, rainfall: 650 },
+  { region: 'Western Dry (Rajasthan)', temp: 27, humidity: 42, rainfall: 350 },
+  { region: 'Middle Gangetic (UP/Bihar)', temp: 26, humidity: 68, rainfall: 1100 },
+  { region: 'Western Plateau (Maharashtra/MP)', temp: 29, humidity: 55, rainfall: 750 },
+  { region: 'Southern Plateau (Karnataka/AP)', temp: 26, humidity: 62, rainfall: 820 },
+  { region: 'West Coast / Konkan / Kerala', temp: 28, humidity: 80, rainfall: 2800 },
 ]
 
 export default function Environment() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const { farmData, envData, setEnvData } = useApp()
   const [tooltip, setTooltip] = useState(null)
   const [fetchingLive, setFetchingLive] = useState(false)
@@ -61,7 +66,7 @@ export default function Environment() {
         humidity: res.humidity,
         rainfall: res.rainfall
       })
-      setLiveNotice(`Fetched live weather for ${res.district}, ${res.state || 'India'} (${res.source}): Temp ${res.temperature}°C, Humidity ${res.humidity}%`)
+      setLiveNotice(`Synced live weather for ${res.district}, ${res.state || 'India'} (${res.source}): ${res.temperature}°C · ${res.humidity}% RH`)
     } catch (err) {
       setLiveNotice('Failed to fetch live weather. Please enter values manually.')
     } finally {
@@ -70,90 +75,102 @@ export default function Environment() {
   }
 
   return (
-    <StepLayout step={3} title="Environmental Conditions" subtitle="Temperature, humidity, and rainfall in your growing area">
-
-      {/* Live weather banner */}
-      <div className="ff-card" style={{ padding: '16px 20px', marginBottom: 20, background: 'linear-gradient(135deg, #F0FDF4 0%, #E6F4EA 100%)', border: '1px solid #BBF7D0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div style={{ fontWeight: 600, color: '#166534', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Radio size={16} className="pulse-icon" /> Live Real-Time Weather Sync
+    <StepLayout
+      step={3}
+      title={t('env_title', 'Environmental Conditions')}
+      subtitle={t('env_subtitle', 'Temperature, relative humidity, and seasonal rainfall for your growing area')}
+    >
+      {/* Live Weather Sync Banner */}
+      <div className="bg-[#EEF5EE] border border-[#C6DBC9] rounded-[18px] p-5 mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#183B2A] text-[#E7D927] flex items-center justify-center shrink-0">
+              <Radio size={17} />
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#15803D', marginTop: 2 }}>
-              Automatically fetch real-time climate data for {farmData.district || 'selected district'}, {farmData.state || 'India'}
+            <div>
+              <div className="text-sm font-bold text-[#183B2A]">
+                Live Open-Meteo Weather Sync
+              </div>
+              <div className="text-xs text-[#3C5B49] mt-0.5">
+                Fetch current climate baseline for {farmData.district || 'your selected district'}, {farmData.state || 'India'}.
+              </div>
             </div>
           </div>
+
           <button
-            className="btn-primary"
-            style={{ fontSize: '0.82rem', padding: '8px 16px' }}
+            type="button"
+            className="btn-agrin-dark shrink-0"
+            style={{ padding: '10px 20px', fontSize: '13px' }}
             onClick={handleFetchLiveWeather}
             disabled={fetchingLive}
           >
-            {fetchingLive ? 'Fetching Live Data...' : '📡 Fetch Live Weather'}
+            <Radio size={14} className={fetchingLive ? 'animate-spin' : ''} />
+            <span>{fetchingLive ? 'Fetching...' : 'Fetch Live Weather'}</span>
           </button>
         </div>
+
         {liveNotice && (
-          <div style={{ marginTop: 10, fontSize: '0.78rem', color: '#166534', fontWeight: 500 }}>
+          <div className="mt-3 pt-3 border-t border-[#C6DBC9] text-xs font-semibold text-[#183B2A]">
             {liveNotice}
           </div>
         )}
       </div>
 
-      {/* Info notice */}
-      <div className="ff-alert-info" style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-        <span style={{ fontSize: '1rem', flexShrink: 0 }}>ℹ️</span>
-        <span>
-          Values can be obtained from the{' '}
-          <strong>India Meteorological Department (IMD)</strong> website, local weather stations, or your district agricultural office.
-          All fields are optional.
+      {/* Info Notice */}
+      <div className="bg-[#EDF4FA] border border-[#C5DCED] rounded-[14px] px-4 py-3 mb-5 flex items-start gap-2.5 text-xs text-[#2E6CA4]">
+        <Info size={16} className="shrink-0 mt-0.5" />
+        <span className="leading-relaxed">
+          Climate figures can be sourced from the{' '}
+          <strong>India Meteorological Department (IMD)</strong> or district agricultural offices. All three fields are optional.
         </span>
       </div>
 
-      {/* Quick-fill region pills */}
-      <div className="ff-card" style={{ padding: '16px 20px', marginBottom: 20 }}>
-        <p style={{ fontSize: '0.82rem', color: 'var(--ff-text-secondary)', marginBottom: 10, fontWeight: 500 }}>
-          Quick-fill with typical Indian Agro-Climatic Zone values:
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {/* Quick-fill Region Pills */}
+      <div className="ff-card p-5 mb-5">
+        <div className="text-xs font-bold text-[#171814] mb-3">
+          Quick-Fill Indian Agro-Climatic Zone Averages:
+        </div>
+        <div className="flex flex-wrap gap-2">
           {TYPICAL_VALUES.map(v => (
             <button
               key={v.region}
-              className="region-pill"
+              type="button"
+              className="region-pill gap-1.5"
               onClick={() => prefill(v)}
             >
-              📍 {v.region} ({v.rainfall}mm, {v.temp}°C)
+              <MapPin size={12} className="text-[#183B2A]" />
+              <span>{v.region} ({v.rainfall}mm · {v.temp}°C)</span>
             </button>
           ))}
         </div>
-        <p style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)', marginTop: 8 }}>
-          These are approximate regional averages — enter your actual local values for best results.
+        <p className="text-[11px] text-[#9B9C92] mt-2.5">
+          Regional averages only — enter measured local values when available.
         </p>
       </div>
 
-
-      {/* Parameter cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="env-grid">
+      {/* Parameter Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {ENV_PARAMS.map(param => (
           <div
             key={param.key}
-            className="ff-card"
-            style={{ padding: 20, borderTop: `3px solid ${param.color}`, position: 'relative' }}
+            className="ff-card p-5 relative"
+            style={{ borderTop: `3px solid ${param.color}` }}
           >
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: 9,
-                background: param.bg,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+            <div className="flex items-center gap-2.5 mb-3.5">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: param.bg }}
+              >
                 {param.icon}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ff-text)' }}>{param.label}</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)' }}>Optional</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-[#171814] truncate">{param.label}</div>
+                <div className="text-[11px] text-[#9B9C92]">Optional</div>
               </div>
               <button
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ff-text-muted)', padding: 2 }}
+                type="button"
+                aria-label={`Info about ${param.label}`}
+                className="text-[#77786F] hover:text-[#183B2A] p-1 cursor-pointer"
                 onMouseEnter={() => setTooltip(param.key)}
                 onMouseLeave={() => setTooltip(null)}
               >
@@ -161,53 +178,42 @@ export default function Environment() {
               </button>
             </div>
 
-            {/* Tooltip */}
             {tooltip === param.key && (
-              <div style={{
-                position: 'absolute', zIndex: 20, bottom: '100%', left: 0, marginBottom: 6, right: 0,
-                background: 'white', border: '1px solid var(--ff-border)',
-                borderRadius: 10, padding: '10px 12px', fontSize: '0.75rem',
-                color: 'var(--ff-text-secondary)', boxShadow: '0 8px 24px rgba(20,50,30,0.12)', lineHeight: 1.5,
-              }}>
+              <div className="absolute z-20 bottom-full left-0 right-0 mb-2 bg-white border border-[#E5E5DC] rounded-xl p-3 text-xs text-[#77786F] shadow-lg leading-relaxed">
                 {param.tip}
               </div>
             )}
 
-            {/* Input */}
-            <div style={{ position: 'relative' }}>
+            <div className="relative">
               <input
                 id={`env-${param.key}`}
-                className="farm-input"
+                className="farm-input font-mono-num"
                 type="number"
                 min={param.min} max={param.max} step={param.step}
                 placeholder={param.placeholder}
                 value={envData[param.key]}
                 onChange={e => update(param.key, e.target.value)}
-                style={{ paddingRight: 56 }}
+                style={{ paddingRight: 60 }}
               />
-              <span style={{
-                position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                fontSize: '0.75rem', color: 'var(--ff-text-muted)', pointerEvents: 'none',
-              }}>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#77786F] pointer-events-none">
                 {param.unit}
               </span>
             </div>
 
-            {/* Mini range bar */}
             {envData[param.key] !== '' && (
-              <div style={{ marginTop: 10 }}>
+              <div className="mt-3">
                 <div className="score-bar">
                   <div
                     className="score-bar-fill"
                     style={{
-                      width: `${Math.min(100, ((parseFloat(envData[param.key]) - param.min) / (param.max - param.min)) * 100)}%`,
+                      width: `${Math.min(100, Math.max(0, ((parseFloat(envData[param.key]) - param.min) / (param.max - param.min)) * 100))}%`,
                       background: param.color,
                     }}
                   />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--ff-text-muted)' }}>{param.min}{param.unit}</span>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--ff-text-muted)' }}>{param.max}{param.unit}</span>
+                <div className="flex justify-between mt-1 text-[10px] font-mono-num text-[#9B9C92]">
+                  <span>{param.min}{param.unit}</span>
+                  <span>{param.max}{param.unit}</span>
                 </div>
               </div>
             )}
@@ -216,16 +222,16 @@ export default function Environment() {
       </div>
 
       {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 28 }}>
-        <button className="btn-secondary" onClick={() => navigate('/soil-test')}>← Back</button>
-        <button className="btn-primary" onClick={() => navigate('/analysis')}>
-          Analyse My Farm →
+      <div className="flex items-center justify-between gap-4">
+        <button type="button" className="btn-agrin-outline" onClick={() => navigate('/soil-test')}>
+          <ArrowLeft size={15} />
+          <span>{t('btn_back', 'Back')}</span>
+        </button>
+        <button type="button" className="btn-agrin-cta" onClick={() => navigate('/analysis')}>
+          <span>{t('btn_analyse_farm', 'Analyse My Farm')}</span>
+          <ArrowRight size={15} />
         </button>
       </div>
-
-      <style>{`
-        @media (max-width: 768px) { .env-grid { grid-template-columns: 1fr !important; } }
-      `}</style>
     </StepLayout>
   )
 }

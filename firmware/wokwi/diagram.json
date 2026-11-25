@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "author": "AgriN Engineering Team",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot_moisture", "top": -120, "left": -180, "attrs": { "label": "Soil Moisture Probe" } },
+    { "type": "wokwi-potentiometer", "id": "pot_ph", "top": -120, "left": -20, "attrs": { "label": "Soil pH Probe (Buffer Sim)" } },
+    { "type": "wokwi-potentiometer", "id": "pot_ec", "top": -120, "left": 140, "attrs": { "label": "Soil EC Probe (KCl Sim)" } },
+    { "type": "wokwi-ds18b20", "id": "temp_sensor", "top": 180, "left": -180, "attrs": { "label": "DS18B20 Soil Temp" } },
+    { "type": "wokwi-resistor", "id": "r_pullup", "top": 120, "left": -140, "attrs": { "value": "4700" } },
+    { "type": "wokwi-led", "id": "led_status", "top": 160, "left": 80, "attrs": { "color": "green", "label": "Telemetry Ingest Active" } }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:3V3", "pot_moisture:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.1", "pot_moisture:GND", "black", [ "v0" ] ],
+    [ "esp:3V3", "pot_ph:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.1", "pot_ph:GND", "black", [ "v0" ] ],
+    [ "esp:3V3", "pot_ec:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.1", "pot_ec:GND", "black", [ "v0" ] ],
+    [ "pot_moisture:SIG", "esp:34", "blue", [ "h0" ] ],
+    [ "pot_ph:SIG", "esp:35", "green", [ "h0" ] ],
+    [ "pot_ec:SIG", "esp:32", "orange", [ "h0" ] ],
+    [ "esp:3V3", "temp_sensor:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.2", "temp_sensor:GND", "black", [ "v0" ] ],
+    [ "temp_sensor:DQ", "esp:4", "purple", [ "v0" ] ],
+    [ "esp:3V3", "r_pullup:1", "red", [ "h0" ] ],
+    [ "temp_sensor:DQ", "r_pullup:2", "purple", [ "h0" ] ],
+    [ "esp:2", "led_status:A", "green", [ "v0" ] ],
+    [ "esp:GND.2", "led_status:C", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}

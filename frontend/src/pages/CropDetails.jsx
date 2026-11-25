@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { checkFeasibility } from '../services/api'
+import HeaderNav from '../components/HeaderNav'
 import { ArrowLeft, Sprout, Zap, Shield, CheckCircle, XCircle, AlertCircle, HelpCircle, Printer, FileText, Info } from 'lucide-react'
 import SuitabilityMeter from '../components/SuitabilityMeter'
 
@@ -61,15 +62,20 @@ export default function CropDetails() {
 
   if (loading) {
     return (
-      <div className="page-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-        <div className="ff-card" style={{ padding: 40, textAlign: 'center', maxWidth: 400, width: '100%' }}>
-          <div className="pulse-icon" style={{ fontSize: 32, marginBottom: 16 }}>🌾</div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ff-text)', marginBottom: 8 }}>
-            Analyzing Crop Suitability for {formattedCropName}...
-          </h2>
-          <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.85rem' }}>
-            Fetching soil compatibility and agricultural benchmarks...
-          </p>
+      <div className="page-bg min-h-screen flex flex-col">
+        <HeaderNav />
+        <div className="flex-1 flex items-center justify-center p-5">
+          <div className="ff-card p-10 text-center max-w-sm w-full">
+            <div className="w-12 h-12 rounded-2xl bg-[#183B2A] text-[#E7D927] flex items-center justify-center mx-auto mb-4">
+              <Sprout size={22} />
+            </div>
+            <h2 className="text-lg font-extrabold text-[#171814] mb-2">
+              Analyzing Crop Suitability for {formattedCropName}...
+            </h2>
+            <p className="text-xs text-[#77786F]">
+              Fetching soil compatibility and agricultural benchmarks...
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -77,22 +83,27 @@ export default function CropDetails() {
 
   if (!crop) {
     return (
-      <div className="page-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-        <div className="ff-card" style={{ padding: 36, textAlign: 'center', maxWidth: 420, width: '100%' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ff-text)', marginBottom: 8 }}>
-            Crop Information Not Found
-          </h2>
-          <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.88rem', marginBottom: 20 }}>
-            {fetchError || 'Please select a crop from your recommendations list or run a new farm analysis.'}
-          </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-            <button className="btn-secondary" onClick={() => navigate('/recommendations')}>
-              ← Back to Recommendations
-            </button>
-            <button className="btn-primary" onClick={() => navigate('/farm-details')}>
-              Start New Analysis
-            </button>
+      <div className="page-bg min-h-screen flex flex-col">
+        <HeaderNav />
+        <div className="flex-1 flex items-center justify-center p-5">
+          <div className="ff-card p-9 text-center max-w-md w-full">
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF6E2] text-[#C88A14] flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={22} />
+            </div>
+            <h2 className="text-lg font-extrabold text-[#171814] mb-2">
+              Crop Information Not Found
+            </h2>
+            <p className="text-sm text-[#77786F] mb-5">
+              {fetchError || 'Please select a crop from your recommendations list or run a new farm analysis.'}
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <button type="button" className="btn-agrin-outline" onClick={() => navigate('/recommendations')}>
+                ← Back to Recommendations
+              </button>
+              <button type="button" className="btn-agrin-cta" onClick={() => navigate('/farm-details')}>
+                Start New Analysis
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -100,9 +111,9 @@ export default function CropDetails() {
   }
 
   const supporting = crop.supporting_factors?.filter(f => f.status === 'suitable') || []
-  const limiting   = crop.limiting_factors || []
-  const moderate   = crop.moderate_factors || []
-  const missing    = crop.missing_factors || []
+  const limiting = crop.limiting_factors || []
+  const moderate = crop.moderate_factors || []
+  const missing = crop.missing_factors || []
 
   const score = crop.final_score || 50
   const scoreColor = score >= 90 ? '#138A4B' : score >= 70 ? '#20A65A' : score >= 50 ? '#D89B18' : score >= 30 ? '#E07B3A' : '#D94B4B'
@@ -119,47 +130,52 @@ export default function CropDetails() {
   }
 
   return (
-    <div className="page-bg" style={{ minHeight: '100vh' }}>
+    <div className="page-bg min-h-screen">
+      <div className="no-print"><HeaderNav /></div>
 
-      {/* ── Top bar ──────────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-4 flex items-center gap-3 no-print" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <button
-          onClick={() => navigate('/recommendations')}
-          style={{
-            background: 'var(--ff-soft)', border: '1px solid var(--ff-border)',
-            borderRadius: 10, padding: '6px 10px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center',
-            color: 'var(--ff-text-secondary)',
-          }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--ff-text)' }}>{crop.common_name} — Detailed Analysis Report</h1>
-          {crop.local_name && <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>{crop.local_name}</p>}
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            className="btn-secondary"
-            onClick={handlePrint}
-            style={{ padding: '8px 14px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6, borderColor: 'var(--ff-primary)', color: 'var(--ff-primary)' }}
-          >
-            <Printer size={15} /> Print / Export PDF
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => navigate('/what-if')}
-            style={{ padding: '8px 14px', fontSize: '0.82rem' }}
-          >
-            <Zap size={14} /> What-If
-          </button>
-          <button
-            className="btn-want"
-            onClick={() => navigate('/i-want-to-grow')}
-            style={{ padding: '8px 14px', fontSize: '0.82rem' }}
-          >
-            <Sprout size={14} /> I Want to Grow This
-          </button>
+      {/* ── Secondary Action Bar ──────────────────────────────────── */}
+      <div className="bg-white border-b border-[#E5E5DC] no-print">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/recommendations')}
+              className="w-9 h-9 rounded-xl bg-[#F7F7F2] border border-[#E5E5DC] flex items-center justify-center text-[#171814] hover:border-[#183B2A] cursor-pointer transition-colors"
+              aria-label="Back to recommendations"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div>
+              <h1 className="text-sm sm:text-base font-extrabold text-[#171814]">{crop.common_name} — Detailed Analysis Report</h1>
+              {crop.local_name && <p className="text-xs text-[#77786F]">{crop.local_name}</p>}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={handlePrint}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              <Printer size={14} /> Print / PDF
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={() => navigate('/what-if')}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              <Zap size={14} /> What-If
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-cta"
+              onClick={() => navigate('/i-want-to-grow')}
+              style={{ padding: '8px 18px', fontSize: '12px' }}
+            >
+              <Sprout size={14} /> I Want to Grow This
+            </button>
+          </div>
         </div>
       </div>
 
@@ -169,7 +185,7 @@ export default function CropDetails() {
         <div className="print-header print-only">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <h1 style={{ fontSize: '18pt', fontWeight: 800, color: '#075C35', margin: 0 }}>FarmFriend AI</h1>
+              <h1 style={{ fontSize: '18pt', fontWeight: 800, color: '#183B2A', margin: 0 }}>AgriN</h1>
               <p style={{ fontSize: '10pt', fontWeight: 700, color: '#138A4B', margin: '2px 0 0 0' }}>
                 Detailed Crop Suitability & Agronomic Advisory Report: {crop.common_name}
               </p>
@@ -341,7 +357,7 @@ export default function CropDetails() {
 function renderParameterRow(label, userValue, factorObj) {
   const status = factorObj?.status || 'suitable'
   const note = factorObj?.note || 'Within reference range for crop growth'
-  
+
   const statusColor = status === 'suitable' ? '#138A4B' : status === 'limiting' ? '#D94B4B' : status === 'moderate' ? '#D89B18' : '#9CA3AF'
   const statusBadge = status === 'suitable' ? '✓ Adequate' : status === 'limiting' ? '✗ Deficient / Limiting' : status === 'moderate' ? '⚠ Moderate' : '? Unknown'
 

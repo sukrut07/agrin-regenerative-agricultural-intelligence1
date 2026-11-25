@@ -114,6 +114,7 @@ class Device(Base):
     description      = Column(Text, nullable=True)
     firmware_version = Column(String(50), nullable=True)
     hardware_profile = Column(String(100), nullable=True)
+    api_key          = Column(String(64), nullable=True, index=True)
     wifi_ssid        = Column(String(100), nullable=True)
     ip_address       = Column(String(45), nullable=True)
     is_active        = Column(Boolean, default=True)

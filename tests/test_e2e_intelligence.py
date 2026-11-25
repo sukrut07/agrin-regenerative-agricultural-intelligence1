@@ -288,3 +288,98 @@ def test_farm_history_and_feedback_flow():
     fb_data = fb_resp.json()
     assert fb_data["success"] is True
     assert "feedback_id" in fb_data
+
+
+def test_analyze_lowercase_ph_and_unified_context_shapes():
+    """Verifies /api/analyze recognizes lowercase 'ph' and returns complete structured contexts."""
+    payload = {
+        "farm_data": {
+            "country": "India",
+            "state": "Maharashtra",
+            "district": "Pune",
+            "season": "kharif",
+            "soil_type": "heavy_black",
+            "irrigation_available": "yes",
+            "drainage": "good",
+        },
+        "soil_data": {
+            "N": 280.0,
+            "P": 18.5,
+            "K": 240.0,
+            "ph": 6.8,
+            "EC": 0.42,
+            "OC": 0.64,
+            "Zn": 0.85,
+            "S": 12.0,
+        },
+        "env_data": {
+            "temperature": 27.0,
+            "humidity": 65.0,
+            "rainfall": 750.0,
+        },
+    }
+    resp = client.post("/api/analyze", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["success"] is True
+
+    # Ensure lowercase 'ph' is never falsely flagged missing
+    assert "pH" not in data["confidence"]["metadata"]["missing_core_fields"]
+    assert "pH" not in data["pipeline_execution"]["missing_data"]
+
+    # Ensure location & weather contexts keep documented structure
+    acz = data["location_context"]["agro_climatic_zone"]
+    assert isinstance(acz, dict) and "name" in acz
+    assert isinstance(data["weather_context"]["temperature"]["value"], (int, float))
+    assert data["soil_health"]["chemical_properties"]["pH"]["value"] == 6.8
+    assert len(data["ranked_crops"]) > 0
+
+
+def test_crop_comparison_feasibility_and_whatif_endpoints():
+    """Validates /api/crops/compare, /api/feasibility, and /api/whatif live execution."""
+    farm_data = {
+        "country": "India",
+        "state": "Maharashtra",
+        "district": "Pune",
+        "season": "kharif",
+        "soil_type": "heavy_black",
+        "irrigation_available": "yes",
+        "drainage": "good",
+    }
+    soil_data = {"N": 280.0, "P": 18.5, "K": 240.0, "ph": 6.8, "EC": 0.42, "OC": 0.64}
+    env_data = {"temperature": 27.0, "humidity": 65.0, "rainfall": 750.0}
+
+    comp_resp = client.post(
+        "/api/crops/compare",
+        json={
+            "candidate_crops": ["maize", "soybean"],
+            "farm_data": farm_data,
+            "soil_data": soil_data,
+            "env_data": env_data,
+        },
+    )
+    assert comp_resp.status_code == 200
+    comp = comp_resp.json()
+    assert len(comp.get("crop_evaluations", [])) == 2
+
+    feas_resp = client.post(
+        "/api/feasibility",
+        json={"farm_data": farm_data, "soil_data": soil_data, "env_data": env_data, "chosen_crop": "soybean"},
+    )
+    assert feas_resp.status_code == 200
+    assert 0 <= feas_resp.json()["result"]["final_score"] <= 100
+
+    whatif_resp = client.post(
+        "/api/whatif",
+        json={
+            "crop_name": "soybean",
+            "original_soil": soil_data,
+            "original_env": env_data,
+            "farm_data": farm_data,
+            "simulated_changes": {"ph": 4.2, "EC": 4.5},
+        },
+    )
+    assert whatif_resp.status_code == 200
+    wi = whatif_resp.json()
+    assert wi["is_simulation"] is True
+    assert wi["after"]["score"] < wi["before"]["score"]

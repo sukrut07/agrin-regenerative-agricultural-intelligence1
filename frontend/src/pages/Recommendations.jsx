@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import HeaderNav from '../components/HeaderNav'
 import {
   ChevronRight, ChevronDown, Sprout, AlertTriangle, Leaf, BarChart3,
   Printer, FileText, CheckCircle, XCircle, Shield, Info, Send,
@@ -8,13 +9,25 @@ import {
 } from 'lucide-react'
 import { submitFeedback, runAnalysis, compareCrops } from '../services/api'
 import { DEMO_SCENARIOS } from '../services/demoScenarios'
+import {
+  ReportKpiVisualStrip,
+  CropSuitabilityChartCard,
+  CropComparisonCharts,
+  ActionQueueVisuals,
+  WhyExplanationVisuals,
+  SoilHealthCharts,
+  RegenerativeOpportunitiesVisuals,
+  classifyRegenFocus,
+  ResilienceVisuals,
+  ConfidenceVisuals,
+} from '../components/ReportCharts'
 
 export default function Recommendations() {
   const navigate = useNavigate()
   const {
     analysisResult, setAnalysisResult, setSelectedCrop,
     farmData, setFarmData, soilData, setSoilData, envData, setEnvData,
-    sessionId, setSessionId
+    sessionId, setSessionId, dataSource, setDataSource, prepareForApi
   } = useApp()
 
   const [expandedCrop, setExpandedCrop] = useState(null)
@@ -26,8 +39,11 @@ export default function Recommendations() {
   const [comparingCrops, setComparingCrops] = useState(false)
   const [comparisonResult, setComparisonResult] = useState(null)
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
+  const [priorityFilter, setPriorityFilter] = useState('ALL')
+  const [regenFocusFilter, setRegenFocusFilter] = useState('ALL')
+  const [regenPriorityFilter, setRegenPriorityFilter] = useState('ALL')
 
-  // Feedback state (Phase 12)
+  // Farmer Feedback state (Phase 12)
   const [didFollow, setDidFollow] = useState('')
   const [outcome, setOutcome] = useState('')
   const [yieldObs, setYieldObs] = useState('')
@@ -36,9 +52,27 @@ export default function Recommendations() {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [submittingFeedback, setSubmittingFeedback] = useState(false)
 
+  useEffect(() => {
+    if (!analysisResult) {
+      navigate('/farm-details', { replace: true })
+    }
+  }, [analysisResult, navigate])
+
   if (!analysisResult) {
-    navigate('/farm-details')
-    return null
+    return (
+      <div className="page-bg min-h-screen flex flex-col">
+        <HeaderNav />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="ff-card p-8 text-center max-w-md w-full">
+            <h2 className="text-lg font-extrabold text-[#171814] mb-2">No Soil Assessment Loaded</h2>
+            <p className="text-sm text-[#77786F] mb-5">Enter your farm and Soil Health Card details to generate a crop suitability report.</p>
+            <button type="button" className="btn-agrin-cta" onClick={() => navigate('/farm-details')}>
+              Start Soil Analysis
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Unified response fields (Phase 3)
@@ -61,17 +95,65 @@ export default function Recommendations() {
     data_quality = {},
     country_neutral_advisory = {},
     weather_reasoning = [],
+    pipeline_execution = null,
+    warnings = [],
     session_id
   } = analysisResult
 
 
   const activeSessionId = session_id || sessionId || 'LOCAL-SESSION'
-  const isDemoMode = Boolean(farmData?.farm_id?.startsWith('DEMO-') || farm_context?.farm_id?.startsWith('DEMO-') || selectedDemoId)
+  const isDemoMode = dataSource === 'sample' || Boolean(farmData?.farm_id?.startsWith('DEMO-') || farm_context?.farm_id?.startsWith('DEMO-') || selectedDemoId)
 
   const district = location_context.district || farmData.district || 'Your District'
   const state = location_context.state || farmData.state || 'India'
   const season = farm_context.season || farmData.season || 'Kharif'
   const reportDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  // Safely resolve nested backend objects (never render raw objects in JSX)
+  const rawZone = location_context.agro_climatic_zone
+  const zoneLabel = typeof rawZone === 'object' && rawZone !== null
+    ? `${rawZone.name || 'Agro-Climatic Zone'}${rawZone.id ? ` (${rawZone.id})` : ''}`
+    : (rawZone || 'Standard Agro-Ecological Zone')
+
+  const tempValue = weather_context?.temperature && typeof weather_context.temperature === 'object'
+    ? weather_context.temperature.value
+    : (weather_context?.temperature ?? envData.temperature)
+  const humidityValue = weather_context?.humidity && typeof weather_context.humidity === 'object'
+    ? weather_context.humidity.value
+    : (weather_context?.humidity ?? envData.humidity)
+  const rainfallValue = weather_context?.rainfall && typeof weather_context.rainfall === 'object'
+    ? weather_context.rainfall.value
+    : (weather_context?.rainfall ?? envData.rainfall)
+  const weatherSource = weather_context?.source
+    || (typeof weather_context?.temperature === 'object' ? weather_context.temperature?.source : null)
+    || weather_context?.weather_source
+    || 'Open-Meteo Real-Time Weather API'
+  const weatherFreshness = weather_context?.is_live
+    ? 'LIVE'
+    : (weather_context?.freshness_level || (typeof weather_context?.temperature === 'object' ? weather_context.temperature?.freshness : null) || 'CLIMATOLOGY')
+  const weatherObservedAt = typeof weather_context?.temperature === 'object' && weather_context.temperature?.observed_at
+    ? new Date(weather_context.temperature.observed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    : null
+
+  const soilPhVal = soil_health?.chemical_properties?.pH?.value ?? soil_health?.ph?.value ?? soilData.ph
+  const soilPhStatus = soil_health?.chemical_properties?.pH?.classification ?? soil_health?.ph?.status ?? (soilPhVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilOcVal = soil_health?.organic_matter?.value ?? soil_health?.organic_carbon?.value ?? soilData.OC
+  const soilOcStatus = soil_health?.organic_matter?.classification ?? soil_health?.organic_carbon?.status ?? (soilOcVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilEcVal = soil_health?.chemical_properties?.EC?.value ?? soil_health?.electrical_conductivity?.value ?? soilData.EC
+  const soilEcStatus = soil_health?.chemical_properties?.EC?.classification ?? soil_health?.electrical_conductivity?.status ?? (soilEcVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilNVal = soil_health?.nutrient_status?.N?.value ?? soil_health?.nitrogen?.value ?? soilData.N
+  const soilNStatus = soil_health?.nutrient_status?.N?.status ?? soil_health?.nitrogen?.status ?? (soilNVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilPVal = soil_health?.nutrient_status?.P?.value ?? soil_health?.phosphorus?.value ?? soilData.P
+  const soilPStatus = soil_health?.nutrient_status?.P?.status ?? soil_health?.phosphorus?.status ?? (soilPVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilKVal = soil_health?.nutrient_status?.K?.value ?? soil_health?.potassium?.value ?? soilData.K
+  const soilKStatus = soil_health?.nutrient_status?.K?.status ?? soil_health?.potassium?.status ?? (soilKVal ? 'EVALUATED' : 'NOT PROVIDED')
+  const soilOverallStatus = soil_health?.status || soil_health?.overall_status || soil_health?.overall_rating || 'EVALUATED'
+  const soilConstraintsList = soil_health?.soil_constraints || soil_health?.constraints || []
+  const resilienceScore = farm_resilience?.score ?? farm_resilience?.overall_resilience_score
+  const resilienceTier = (farm_resilience?.resilience_tier || 'MODERATE').replace(/_/g, ' ')
+  const missingFieldsList = (confidence?.metadata?.missing_core_fields && confidence.metadata.missing_core_fields.length >= 0)
+    ? confidence.metadata.missing_core_fields
+    : (confidence?.missing_fields || [])
 
   // Crops to display (prefer crop_suitability with rich scores; fallback to ranked_crops)
   const cropsToDisplay = crop_suitability.length > 0 ? crop_suitability : ranked_crops
@@ -102,6 +184,7 @@ export default function Recommendations() {
     setFarmData(scenario.farmData)
     setSoilData(scenario.soilData)
     setEnvData(scenario.envData)
+    setDataSource('sample')
 
     const payload = {
       farm_id: scenario.farmData.farm_id,
@@ -159,9 +242,9 @@ export default function Recommendations() {
     try {
       const res = await compareCrops({
         candidate_crops: selectedForCompare,
-        farm_data: farmData,
-        soil_data: soilData,
-        env_data: envData
+        farm_data: prepareForApi(farmData),
+        soil_data: prepareForApi(soilData),
+        env_data: prepareForApi(envData)
       })
       setComparisonResult(res)
     } catch (err) {
@@ -198,79 +281,106 @@ export default function Recommendations() {
 
   return (
     <div className="page-bg" style={{ minHeight: '100vh' }}>
+      <div className="no-print"><HeaderNav /></div>
 
-      {/* ── Top Navigation Bar ───────────────────────────────────────────── */}
-      <div className="ff-nav px-6 py-4 flex items-center justify-between no-print" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="ff-logo-icon">
-            <Leaf size={16} className="text-white" />
-          </div>
+      {/* ── Top Action Toolbar ───────────────────────────────────────────── */}
+      <div className="bg-white border-b border-[#E5E5DC] no-print">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ff-text)' }}>AgriN Agricultural Intelligence Report</h1>
-            <p style={{ fontSize: '0.75rem', color: 'var(--ff-text-secondary)' }}>{district}, {state} · {season.toUpperCase()} season</p>
+            <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#77772B]">
+              [ AGRIN SUITABILITY DECISION REPORT ]
+            </div>
+            <h1 className="text-base sm:text-lg font-extrabold text-[#171814] mt-0.5">
+              Crop Suitability &amp; Soil Analysis Report
+            </h1>
+            <p className="text-xs text-[#77786F] mt-0.5">
+              {district}, {state} · {season.toUpperCase()} season · Source: <strong className="text-[#171814]">{isDemoMode ? 'Sample Dataset' : 'Manual Input'}</strong> · ID: <code className="font-mono-num">{activeSessionId.slice(0, 12)}</code>
+            </p>
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button
-            className="btn-secondary"
-            onClick={handlePrint}
-            style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6, borderColor: 'var(--ff-primary)', color: 'var(--ff-primary)' }}
-          >
-            <Printer size={15} /> Print / Export PDF
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => navigate('/farm-details')}
-            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-          >
-            ← Edit Inputs
-          </button>
-          <button
-            className="btn-want"
-            onClick={() => navigate('/i-want-to-grow')}
-            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-          >
-            <Sprout size={15} /> I Want to Grow This
-          </button>
+          <div className="flex flex-wrap gap-2 items-center">
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={handlePrint}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              <Printer size={14} /> Print / PDF
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={() => navigate('/dashboard')}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              My Reports
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-outline"
+              onClick={() => navigate('/farm-details')}
+              style={{ padding: '8px 16px', fontSize: '12px' }}
+            >
+              New Assessment
+            </button>
+            <button
+              type="button"
+              className="btn-agrin-cta"
+              onClick={() => navigate('/i-want-to-grow')}
+              style={{ padding: '8px 18px', fontSize: '12px' }}
+            >
+              <Sprout size={14} /> Check Specific Crop
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="ff-container-narrow" style={{ paddingTop: 20, paddingBottom: 48 }}>
+      {/* Pipeline Status & Degraded Warnings Strip */}
+      {warnings && warnings.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 no-print">
+          <div className="bg-[#FDF6E2] border border-[#E8D59B] rounded-xl px-4 py-2.5 text-xs text-[#8A5D0A]">
+            <strong>Pipeline Notice ({pipeline_execution?.status || 'PARTIAL_DEGRADED'}):</strong> {warnings.join(' · ')}
+          </div>
+        </div>
+      )}
 
-        {/* ── DEMO SCENARIO TOOLBAR (Phase 19) ─────────────────────────────────── */}
-        <div className="no-print" style={{
-          background: isDemoMode ? '#FEF3C7' : '#F3F4F6',
-          border: isDemoMode ? '2px dashed #D97706' : '1px solid #E5E7EB',
-          borderRadius: 12, padding: '12px 16px', marginBottom: 20,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: '1.2rem' }}>🧪</span>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: isDemoMode ? '#92400E' : '#374151' }}>
-                {isDemoMode ? '⚠️ DEMO DATA — NOT REAL FARM DATA' : 'Demonstration Scenario Mode'}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+        {/* ── SAMPLE SCENARIO TOOLBAR ──────────────────────────────────── */}
+        <div className={`no-print rounded-2xl px-4 py-3.5 mb-5 flex flex-wrap items-center justify-between gap-3 ${
+          isDemoMode
+            ? 'bg-[#FDF6E2] border-2 border-dashed border-[#C88A14]'
+            : 'bg-white border border-[#E5E5DC]'
+        }`}>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              isDemoMode ? 'bg-[#C88A14] text-white' : 'bg-[#F2F5EE] text-[#77772B]'
+            }`}>
+              <Sparkles size={16} />
+            </div>
+            <div className="min-w-0">
+              <div className={`font-bold text-xs sm:text-sm ${isDemoMode ? 'text-[#8A5D0A]' : 'text-[#171814]'}`}>
+                {isDemoMode ? 'Sample Dataset Active — Illustrative Data Only' : 'Sample Regional Farm Profiles'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: isDemoMode ? '#B45309' : '#6B7280' }}>
-                Switch between pre-configured regional agricultural scenarios to evaluate intelligence behaviors.
+              <div className={`text-xs ${isDemoMode ? 'text-[#9B6A00]' : 'text-[#77786F]'}`}>
+                Switch regional sample scenarios to inspect suitability behavior.
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <select
+              aria-label="Load a sample scenario"
               value={selectedDemoId}
               onChange={(e) => handleLoadDemo(e.target.value)}
               disabled={loadingDemo}
-              style={{
-                fontSize: '0.8rem', padding: '6px 12px', borderRadius: 8,
-                border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#1F2937'
-              }}
+              className="farm-input w-full sm:w-64 text-xs sm:text-sm"
+              style={{ padding: '7px 12px', minHeight: 38 }}
             >
-              <option value="">Load a Demo Scenario...</option>
+              <option value="">Load a sample scenario...</option>
               {DEMO_SCENARIOS.map(sc => (
                 <option key={sc.id} value={sc.id}>{sc.title}</option>
               ))}
             </select>
-            {loadingDemo && <RefreshCw size={14} className="animate-spin text-amber-700" />}
+            {loadingDemo && <RefreshCw size={14} className="animate-spin text-[#8A5D0A]" />}
           </div>
         </div>
 
@@ -294,39 +404,45 @@ export default function Recommendations() {
         {/* =================================================================== */}
         {/* PHASE 3: SINGLE UNIFIED "FARM INTELLIGENCE REPORT" (Requirement 2)  */}
         {/* =================================================================== */}
-        <div className="ff-card animate-fade-in" style={{
-          marginBottom: 28, padding: 24, border: '2px solid #059669',
-          background: 'linear-gradient(180deg, #F9FDFB 0%, #FFFFFF 100%)', borderRadius: 14,
-          boxShadow: '0 4px 20px -2px rgba(5, 150, 105, 0.12)'
+        <div className="ff-card animate-fade-in p-6 mb-7" style={{
+          border: '2px solid #183B2A',
+          background: '#FFFFFF',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #E5E7EB', paddingBottom: 14, marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E5DC] pb-4 mb-5">
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', color: '#059669', textTransform: 'uppercase' }}>
-                AGRIN PRIMARY RESULT EXPERIENCE
+              <div className="text-[11px] font-bold tracking-[0.1em] text-[#77772B] uppercase">
+                [ AGRIN PRIMARY RESULT EXPERIENCE ]
               </div>
-              <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--ff-text)', margin: '2px 0 0 0' }}>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-[#171814] mt-0.5">
                 AgriN Farm Intelligence Report
               </h2>
-              <div style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginTop: 4 }}>
-                📍 {district}, {state}, India · Season: <strong>{season}</strong> · Generated: {reportDate}
+              <div className="text-xs text-[#77786F] mt-1">
+                {district}, {state}, India · Season: <strong className="text-[#171814]">{season}</strong> · Generated: {reportDate}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                fontSize: '0.78rem', fontWeight: 700, padding: '6px 12px', borderRadius: 20,
-                background: data_quality?.data_quality_level === 'HIGH' ? '#DCFCE7' : data_quality?.data_quality_level === 'MEDIUM' ? '#FEF3C7' : '#FEE2E2',
-                color: data_quality?.data_quality_level === 'HIGH' ? '#166534' : data_quality?.data_quality_level === 'MEDIUM' ? '#92400E' : '#991B1B'
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{
+                background: data_quality?.data_quality_level === 'HIGH' ? '#EAF5EE' : data_quality?.data_quality_level === 'MEDIUM' ? '#FDF6E2' : '#FDECEC',
+                color: data_quality?.data_quality_level === 'HIGH' ? '#183B2A' : data_quality?.data_quality_level === 'MEDIUM' ? '#8A5D0A' : '#C93F3F'
               }}>
                 Data Quality: {data_quality?.data_quality_level || 'MEDIUM'}
               </span>
-              <span style={{
-                fontSize: '0.78rem', fontWeight: 700, padding: '6px 12px', borderRadius: 20,
-                background: '#E0F2FE', color: '#0369A1'
-              }}>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-[#EDF4FA] text-[#2E6CA4]">
                 Confidence: {confidence?.confidence_level || 'MEDIUM'}
               </span>
             </div>
           </div>
+
+          <ReportKpiVisualStrip
+            topCropName={cropsToDisplay[0]?.common_name || cropsToDisplay[0]?.crop}
+            topCropScore={cropsToDisplay[0]?.overall_score ?? cropsToDisplay[0]?.final_score}
+            soilScore={soil_health?.score}
+            soilStatus={soilOverallStatus}
+            resilienceScore={resilienceScore}
+            resilienceTier={resilienceTier}
+            qualityPct={data_quality?.score != null ? (data_quality.score <= 1 ? data_quality.score * 100 : data_quality.score) : (confidence?.confidence_score != null ? (confidence.confidence_score <= 1 ? confidence.confidence_score * 100 : confidence.confidence_score) : undefined)}
+            confidenceLevel={confidence?.confidence_level}
+          />
 
           {/* 6 Canonical Sections Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 16 }}>
@@ -354,10 +470,10 @@ export default function Recommendations() {
                 <span>🧪</span> SOIL HEALTH
               </div>
               <div style={{ fontSize: '0.82rem', color: '#713F12', marginBottom: 6 }}>
-                Overall Condition: <strong>{soil_health.overall_rating || 'MODERATE'}</strong> ({soil_health.score || 70}/100)
+                Overall Condition: <strong>{soilOverallStatus}</strong> ({soil_health.score != null ? Math.round(soil_health.score) : 70}/100)
               </div>
               <div style={{ fontSize: '0.78rem', color: '#713F12', lineHeight: 1.5 }}>
-                <div><strong>Constraints:</strong> {soil_health.soil_constraints?.length > 0 ? soil_health.soil_constraints.map(c => c.name).join(', ') : 'None critical detected'}</div>
+                <div><strong>Constraints:</strong> {soilConstraintsList.length > 0 ? soilConstraintsList.map(c => c.name || c.factor || String(c)).join(', ') : 'None critical detected'}</div>
                 <div style={{ marginTop: 4 }}><strong>Improvement Opportunity:</strong> {soil_health.recommended_improvement_areas?.[0] || 'Maintain balanced organic matter incorporation.'}</div>
               </div>
             </div>
@@ -385,7 +501,7 @@ export default function Recommendations() {
                 <span>🌦️</span> CLIMATE & WEATHER
               </div>
               <div style={{ fontSize: '0.82rem', color: '#0C4A6E', marginBottom: 4 }}>
-                Conditions: Temp {weather_context.temperature?.value ?? (envData.temperature || 28)}°C · RH {weather_context.humidity?.value ?? (envData.humidity || 65)}% · Rain {weather_context.rainfall?.value ?? (envData.rainfall || 750)} mm
+                Conditions: Temp {tempValue ?? 'N/A'}°C · RH {humidityValue ?? 'N/A'}% · Rain {rainfallValue ?? 'N/A'} mm
               </div>
               <div style={{ fontSize: '0.78rem', color: '#0369A1', lineHeight: 1.5, marginTop: 4 }}>
                 <div><strong>Upcoming Risk:</strong> {weather_context.risk_alerts?.[0] || 'No extreme meteorological thresholds breached.'}</div>
@@ -399,11 +515,11 @@ export default function Recommendations() {
                 <span>🛡️</span> FARM RESILIENCE
               </div>
               <div style={{ fontSize: '0.82rem', color: '#581C87', marginBottom: 6 }}>
-                Resilience Score: <strong>{farm_resilience.overall_resilience_score || farm_resilience.score || 70}/100</strong> ({farm_resilience.resilience_tier || 'MODERATE'})
+                Resilience Score: <strong>{resilienceScore != null ? Math.round(resilienceScore) : 70}/100</strong> ({resilienceTier})
               </div>
               <div style={{ fontSize: '0.78rem', color: '#581C87', lineHeight: 1.5 }}>
-                <div><strong>Weakest Dimension:</strong> {farm_resilience.weakest_pillar || 'Soil Organic Carbon buffer'}</div>
-                <div style={{ marginTop: 2 }}><strong>Intervention:</strong> {farm_resilience.improvement_opportunities?.[0] || 'In-situ rainwater conservation and mulching.'}</div>
+                <div><strong>Weakest Dimension:</strong> {farm_resilience.weakest_pillar || farm_resilience.vulnerabilities?.[0] || farm_intelligence_report?.farm_resilience?.weakest_dimensions || 'No critical weakness detected'}</div>
+                <div style={{ marginTop: 2 }}><strong>Intervention:</strong> {farm_resilience.improvement_opportunities?.[0] || farm_intelligence_report?.farm_resilience?.improvement_opportunities?.[0] || 'In-situ rainwater conservation and mulching.'}</div>
               </div>
             </div>
 
@@ -413,11 +529,11 @@ export default function Recommendations() {
                 <span>📊</span> DATA CONFIDENCE
               </div>
               <div style={{ fontSize: '0.82rem', color: '#1E293B', marginBottom: 4 }}>
-                Quality Rating: <strong>{data_quality?.data_quality_level || 'MEDIUM'}</strong> ({data_quality?.score ? Math.round(data_quality.score * 100) : 75}%)
+                Quality Rating: <strong>{data_quality?.data_quality_level || 'MEDIUM'}</strong> ({data_quality?.score != null ? Math.round(data_quality.score * 100) : 75}%)
               </div>
               <div style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.5 }}>
-                <div><strong>What is Known:</strong> {data_quality?.missing_data_guidance?.known_inputs?.slice(0, 2)?.join(', ') || 'District agro-climatic baseline, season'}</div>
-                <div style={{ marginTop: 2 }}><strong>Missing to Improve:</strong> {data_quality?.missing_data_guidance?.missing_inputs?.[0] || 'None critical'}</div>
+                <div><strong>What is Known:</strong> {(data_quality?.missing_data_guidance?.known_parameters || data_quality?.missing_data_guidance?.known_inputs)?.slice(0, 3)?.join(', ') || 'District agro-climatic baseline, season'}</div>
+                <div style={{ marginTop: 2 }}><strong>Missing to Improve:</strong> {(data_quality?.missing_data_guidance?.missing_parameters || data_quality?.missing_data_guidance?.missing_inputs)?.[0] || 'All core inputs provided'}</div>
               </div>
             </div>
           </div>
@@ -447,25 +563,30 @@ export default function Recommendations() {
               <div style={{ fontSize: '0.72rem', color: '#6B7280', marginTop: 4 }}>
                 Sub-District: {location_context.sub_district || farmData.sub_district || 'District Centroid'}
               </div>
-              <div style={{ fontSize: '0.68rem', color: '#059669', marginTop: 4 }}>
-                Zone: {location_context.agro_climatic_zone || 'Standard Agro-Ecological Zone'}
+              <div style={{ fontSize: '0.68rem', color: '#183B2A', fontWeight: 600, marginTop: 4 }}>
+                Zone: {zoneLabel}
               </div>
             </div>
 
-            {/* Weather Card with Freshness (Phase 9) */}
+            {/* Weather Card with Freshness */}
             <div style={{ background: '#F0F9FF', padding: '12px 14px', borderRadius: 10, border: '1px solid #BAE6FD' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '0.72rem', color: '#0369A1', fontWeight: 600 }}>Weather Observation</div>
-                <FreshnessBadge freshness={weather_context?.freshness_level || 'RECENT'} />
+                <FreshnessBadge freshness={weatherFreshness} />
               </div>
               <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0C4A6E', marginTop: 3 }}>
-                {weather_context.temperature != null ? `${weather_context.temperature}°C` : `${envData.temperature || 28}°C`}
+                {tempValue != null && tempValue !== '' ? `${tempValue}°C` : 'N/A'}
                 <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#0284C7', marginLeft: 8 }}>
-                  RH: {weather_context.humidity != null ? `${weather_context.humidity}%` : `${envData.humidity || 65}%`}
+                  RH: {humidityValue != null && humidityValue !== '' ? `${humidityValue}%` : 'N/A'}
                 </span>
+                {rainfallValue != null && rainfallValue !== '' && (
+                  <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#0369A1', marginLeft: 8 }}>
+                    · {rainfallValue}mm
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: '0.72rem', color: '#0369A1', marginTop: 4 }}>
-                Source: {weather_context.weather_source || 'Open-Meteo & Climatology'}
+                Source: {weatherSource}{weatherObservedAt ? ` (${weatherObservedAt})` : ''}
               </div>
               {weather_context.forecast_summary && (
                 <div style={{ fontSize: '0.68rem', color: '#075985', marginTop: 2 }}>
@@ -478,10 +599,10 @@ export default function Recommendations() {
             <div style={{ background: '#FEFCE8', padding: '12px 14px', borderRadius: 10, border: '1px solid #FEF08A' }}>
               <div style={{ fontSize: '0.72rem', color: '#854D0E', fontWeight: 600 }}>Soil Foundation</div>
               <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#713F12', marginTop: 2, textTransform: 'capitalize' }}>
-                {farm_context.soil_type || farmData.soil_type || 'Regional Vertisol / Alluvium'}
+                {String(farm_context.soil_type || farmData.soil_type || 'Regional Vertisol / Alluvium').replace(/_/g, ' ')}
               </div>
               <div style={{ fontSize: '0.72rem', color: '#854D0E', marginTop: 4 }}>
-                pH: {soil_health.ph?.value != null ? soil_health.ph.value : (soilData.ph || '7.2')} · OC: {soil_health.organic_carbon?.value != null ? `${soil_health.organic_carbon.value}%` : (soilData.OC ? `${soilData.OC}%` : '0.50%')}
+                pH: {soilPhVal != null && soilPhVal !== '' ? soilPhVal : 'Not provided'} · OC: {soilOcVal != null && soilOcVal !== '' ? `${soilOcVal}%` : 'Not provided'}
               </div>
               <div style={{ fontSize: '0.68rem', color: '#A16207', marginTop: 4 }}>
                 Water: {farm_context.water_source || farmData.water_source || (farmData.irrigation_available === 'yes' ? 'Irrigated' : 'Rainfed')}
@@ -491,7 +612,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 2. WHAT SHOULD I CONSIDER? (TOP CROPS) ──────────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-crops" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Sprout size={20} className="text-emerald-700" />
@@ -503,6 +624,8 @@ export default function Recommendations() {
               Top Viable Cultivars & Compatibility Breakdowns
             </span>
           </div>
+
+          <CropSuitabilityChartCard crops={cropsToDisplay} onSelectCrop={handleCropClick} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {cropsToDisplay.map((crop, i) => (
@@ -577,6 +700,7 @@ export default function Recommendations() {
               <h4 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#111827', marginBottom: 10 }}>
                 Side-by-Side Fit Matrix
               </h4>
+              <CropComparisonCharts evaluations={comparisonResult.crop_evaluations || []} />
               <div style={{ overflowX: 'auto', marginBottom: 14 }}>
                 <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
                   <thead>
@@ -642,7 +766,7 @@ export default function Recommendations() {
 
         {/* ── PRIORITIZED ADVISORY & RISK MANAGEMENT QUEUE (Requirement 3, 4, 5) ─ */}
         <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Shield size={20} className="text-emerald-700" />
               <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-text)', margin: 0 }}>
@@ -654,16 +778,58 @@ export default function Recommendations() {
             </span>
           </div>
 
+          {prioritized_advisories.length > 0 && (
+            <>
+              <ActionQueueVisuals
+                advisories={prioritized_advisories}
+                selectedPriority={priorityFilter}
+                onSelectPriority={setPriorityFilter}
+              />
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((level) => {
+                  const count = level === 'ALL'
+                    ? prioritized_advisories.length
+                    : prioritized_advisories.filter(a => a.priority === level).length
+                  const active = priorityFilter === level
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setPriorityFilter(level)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-[#183B2A] text-white border-[#183B2A]'
+                          : 'bg-[#F7F7F2] text-[#4C5340] border-[#E5E5DC] hover:bg-[#EFEFE6]'
+                      }`}
+                    >
+                      <span>{level}</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-white text-[#171814]'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {(prioritized_advisories.length > 0 ? prioritized_advisories : []).map((adv, idx) => {
+            {priorityFilter !== 'ALL' && prioritized_advisories.filter(a => a.priority === priorityFilter).length === 0 && (
+              <div className="text-xs text-[#77786F] bg-[#F7F7F2] border border-[#E5E5DC] rounded-lg px-4 py-3">
+                No {priorityFilter} priority advisories recorded for this soil and crop profile.
+              </div>
+            )}
+            {(prioritized_advisories.length > 0 ? prioritized_advisories : [])
+              .filter(adv => priorityFilter === 'ALL' || adv.priority === priorityFilter)
+              .map((adv, idx) => {
               const prioColor = adv.priority === 'CRITICAL' ? { bg: '#FEE2E2', border: '#F87171', text: '#991B1B' } :
                                 adv.priority === 'HIGH' ? { bg: '#FEF3C7', border: '#FBBF24', text: '#92400E' } :
                                 adv.priority === 'MEDIUM' ? { bg: '#E0F2FE', border: '#7DD3FC', text: '#0369A1' } :
                                 { bg: '#F3F4F6', border: '#D1D5DB', text: '#374151' }
               return (
-                <div key={idx} style={{
+                <div key={idx} className="agrin-interactive-card" style={{
                   background: '#FFFFFF', border: `1px solid ${prioColor.border}`, borderLeft: `6px solid ${prioColor.border}`,
-                  borderRadius: 8, padding: 14
+                  borderRadius: 12, padding: 14
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -708,32 +874,52 @@ export default function Recommendations() {
         </div>
 
         {/* ── 3. WHY? (EXPLANATION ENGINE - PHASE 8) ───────────────────────── */}
-        <div className="ai-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-why" className="ai-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div className="ai-sparkle">✦</div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-primary)', margin: 0 }}>
-              3. Why AgriN Recommends This
-            </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="ai-sparkle">✦</div>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-primary)', margin: 0 }}>
+                3. Why AgriN Recommends This
+              </h2>
+            </div>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-white border border-[#E5E5DC] text-[#183B2A]">
+              Explainable Hybrid Reasoning
+            </span>
           </div>
 
+          <WhyExplanationVisuals
+            topCrop={cropsToDisplay[0] || {}}
+            explanation={explanation}
+            confidence={confidence}
+            soilHealth={soil_health}
+          />
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 12 }}>
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>WHAT</div>
               <div style={{ fontSize: '0.85rem', color: 'var(--ff-text)', marginTop: 4, lineHeight: 1.5 }}>
                 {explanation.what || `Cultivate high-suitability cultivars adapted to ${district}'s ${season} agro-climate.`}
               </div>
             </div>
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>WHY</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--ff-text)', marginTop: 4, lineHeight: 1.5 }}>
-                {explanation.why || recommendation_explanation || 'Soil attributes and seasonal precipitation align with physiological thresholds.'}
-              </div>
+              {Array.isArray(explanation.why) ? (
+                <ul style={{ paddingLeft: 16, margin: '4px 0 0 0', fontSize: '0.82rem', color: 'var(--ff-text)', lineHeight: 1.55 }}>
+                  {explanation.why.map((line, idx) => (
+                    <li key={idx}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ fontSize: '0.85rem', color: 'var(--ff-text)', marginTop: 4, lineHeight: 1.5 }}>
+                  {explanation.why || recommendation_explanation || 'Soil attributes and seasonal precipitation align with physiological thresholds.'}
+                </div>
+              )}
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>BASED ON</div>
               <ul style={{ paddingLeft: 16, margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--ff-text-secondary)', lineHeight: 1.5 }}>
                 {(explanation.based_on || [
@@ -746,12 +932,12 @@ export default function Recommendations() {
               </ul>
             </div>
 
-            <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E5E7EB' }}>
+            <div className="agrin-interactive-card" style={{ background: '#FFFFFF', padding: 14, borderRadius: 12, border: '1px solid #E5E5DC' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ff-primary)', textTransform: 'uppercase' }}>CONFIDENCE & LIMITATIONS</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginTop: 4, lineHeight: 1.5 }}>
                 <strong>Reliability:</strong> {explanation.confidence || `${confidence.confidence_level || 'MODERATE'} confidence based on available data.`}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: 4 }}>
+              <div style={{ fontSize: '0.75rem', color: '#77786F', marginTop: 4 }}>
                 {explanation.limitations?.join('; ') || 'Continuous soil testing improves precision.'}
               </div>
             </div>
@@ -759,7 +945,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 4. SOIL HEALTH & ACTIONABLE CONSTRAINTS ──────────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-soil" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Leaf size={20} className="text-emerald-700" />
@@ -768,30 +954,32 @@ export default function Recommendations() {
               </h2>
             </div>
             <span style={{ fontSize: '0.72rem', background: '#D1FAE5', color: '#065F46', padding: '4px 10px', borderRadius: 20, fontWeight: 700 }}>
-              {soil_health.overall_status || 'Evaluated Condition'}
+              {soilOverallStatus}{soil_health.score != null ? ` (${Math.round(soil_health.score)}/100)` : ''}
             </span>
           </div>
 
+          <SoilHealthCharts soilHealth={soil_health} soilData={soilData} />
+
           {/* Indicators Matrix */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
-            <SoilIndicatorCard label="pH Reaction" val={soil_health.ph?.value != null ? soil_health.ph.value : soilData.ph} status={soil_health.ph?.status || 'OPTIMAL'} />
-            <SoilIndicatorCard label="Organic Carbon" val={soil_health.organic_carbon?.value != null ? `${soil_health.organic_carbon.value}%` : (soilData.OC ? `${soilData.OC}%` : 'N/A')} status={soil_health.organic_carbon?.status || 'LOW'} />
-            <SoilIndicatorCard label="EC (Salinity)" val={soil_health.electrical_conductivity?.value != null ? `${soil_health.electrical_conductivity.value} dS/m` : (soilData.EC ? `${soilData.EC} dS/m` : 'NORMAL')} status={soil_health.electrical_conductivity?.status || 'NORMAL'} />
-            <SoilIndicatorCard label="Nitrogen (N)" val={soil_health.nitrogen?.value != null ? `${soil_health.nitrogen.value} kg/ha` : (soilData.N ? `${soilData.N} kg/ha` : 'MEDIUM')} status={soil_health.nitrogen?.status || 'MEDIUM'} />
-            <SoilIndicatorCard label="Phosphorus (P)" val={soil_health.phosphorus?.value != null ? `${soil_health.phosphorus.value} kg/ha` : (soilData.P ? `${soilData.P} kg/ha` : 'MEDIUM')} status={soil_health.phosphorus?.status || 'MEDIUM'} />
-            <SoilIndicatorCard label="Potassium (K)" val={soil_health.potassium?.value != null ? `${soil_health.potassium.value} kg/ha` : (soilData.K ? `${soilData.K} kg/ha` : 'SUFFICIENT')} status={soil_health.potassium?.status || 'HIGH'} />
+            <SoilIndicatorCard label="pH Reaction" val={soilPhVal != null && soilPhVal !== '' ? soilPhVal : 'N/A'} status={soilPhStatus} />
+            <SoilIndicatorCard label="Organic Carbon" val={soilOcVal != null && soilOcVal !== '' ? `${soilOcVal}%` : 'N/A'} status={soilOcStatus} />
+            <SoilIndicatorCard label="EC (Salinity)" val={soilEcVal != null && soilEcVal !== '' ? `${soilEcVal} dS/m` : 'N/A'} status={soilEcStatus} />
+            <SoilIndicatorCard label="Nitrogen (N)" val={soilNVal != null && soilNVal !== '' ? `${soilNVal} kg/ha` : 'N/A'} status={soilNStatus} />
+            <SoilIndicatorCard label="Phosphorus (P)" val={soilPVal != null && soilPVal !== '' ? `${soilPVal} kg/ha` : 'N/A'} status={soilPStatus} />
+            <SoilIndicatorCard label="Potassium (K)" val={soilKVal != null && soilKVal !== '' ? `${soilKVal} kg/ha` : 'N/A'} status={soilKStatus} />
           </div>
 
           {/* Actionable Constraints & Targeted Amendments */}
-          {soil_health.constraints && soil_health.constraints.length > 0 ? (
+          {soilConstraintsList.length > 0 ? (
             <div style={{ background: '#FFFBEB', borderRadius: 8, padding: 12, border: '1px solid #FDE68A', marginBottom: 10 }}>
               <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#92400E', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <AlertTriangle size={15} /> Identified Soil Constraints & Targeted Amendments:
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {soil_health.constraints.map((c, idx) => (
+                {soilConstraintsList.map((c, idx) => (
                   <div key={idx} style={{ fontSize: '0.78rem', color: '#78350F' }}>
-                    <strong>• {c.factor}:</strong> {c.condition} → <em>Action: {c.actionable_remediation}</em>
+                    <strong>• {c.name || c.factor}</strong>{c.severity ? ` (${c.severity})` : ''}: {c.condition || (c.value != null ? `Measured ${c.value}` : 'Threshold breached')} → <em>Action: {c.remediation || c.actionable_remediation}</em>
                   </div>
                 ))}
               </div>
@@ -804,41 +992,89 @@ export default function Recommendations() {
         </div>
 
         {/* ── 5. REGENERATIVE OPPORTUNITIES ───────────────────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, borderLeft: '4px solid #059669' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div id="section-regen" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, borderLeft: '4px solid #183B2A' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Sparkles size={20} className="text-emerald-700" />
+              <Sparkles size={20} className="text-[#183B2A]" />
               <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ff-text)', margin: 0 }}>
                 5. Regenerative Agriculture Opportunities
               </h2>
             </div>
-            <span style={{ fontSize: '0.72rem', background: '#D1FAE5', color: '#065F46', padding: '4px 10px', borderRadius: 20, fontWeight: 700 }}>
-              Ecological Stewardship
+            <span style={{ fontSize: '0.72rem', background: '#EAF5EE', color: '#183B2A', padding: '4px 12px', borderRadius: 999, fontWeight: 700 }}>
+              Ecological Stewardship ({regenerative_opportunities?.length || 0} Practices)
             </span>
           </div>
 
           {regenerative_opportunities && regenerative_opportunities.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-              {regenerative_opportunities.map((opp, idx) => (
-                <div key={idx} style={{ background: '#F0FDF4', borderRadius: 10, padding: 14, border: '1px solid #BBF7D0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#065F46' }}>{opp.practice}</div>
-                    <span style={{ fontSize: '0.68rem', background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>
-                      {opp.confidence || 'HIGH'}
-                    </span>
+            <>
+              <RegenerativeOpportunitiesVisuals
+                opportunities={regenerative_opportunities}
+                activeFocus={regenFocusFilter}
+                activePriority={regenPriorityFilter}
+                onSelectFocus={setRegenFocusFilter}
+                onSelectPriority={setRegenPriorityFilter}
+              />
+
+              {(() => {
+                const filteredOpps = regenerative_opportunities.filter((opp) => {
+                  const focusMatch = regenFocusFilter === 'ALL' || classifyRegenFocus(opp) === regenFocusFilter
+                  const prioMatch = regenPriorityFilter === 'ALL' || String(opp.confidence || 'HIGH').toUpperCase() === regenPriorityFilter
+                  return focusMatch && prioMatch
+                })
+                if (filteredOpps.length === 0) {
+                  return (
+                    <div className="text-xs text-[#77786F] bg-[#F7F7F2] border border-[#E5E5DC] rounded-xl px-4 py-3">
+                      No regenerative practices match the active filter combination. Click <strong>Clear filters</strong> above to view all {regenerative_opportunities.length} opportunities.
+                    </div>
+                  )
+                }
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {filteredOpps.map((opp, idx) => {
+                      const focusLabel = classifyRegenFocus(opp)
+                      const prioLevel = String(opp.confidence || 'HIGH').toUpperCase()
+                      return (
+                        <div
+                          key={`${opp.practice}-${idx}`}
+                          style={{ animationDelay: `${idx * 55}ms` }}
+                          className="bg-[#F5FAF6] border border-[#C7E5D0] rounded-2xl p-4 flex flex-col justify-between gap-2.5 agrin-interactive-card animate-chart-reveal"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <div className="text-sm font-extrabold text-[#183B2A] leading-snug">
+                                {opp.practice}
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  prioLevel === 'HIGH' ? 'bg-[#183B2A] text-[#E7D927]' : 'bg-[#FDF6E2] text-[#8A5D0A] border border-[#FDE68A]'
+                                }`}>
+                                  {opp.confidence || 'High'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="inline-block text-[10px] font-bold uppercase tracking-wider text-[#398653] bg-white border border-[#C7E5D0] px-2 py-0.5 rounded-full mb-2">
+                              {focusLabel}
+                            </div>
+
+                            <div className="text-xs text-[#183B2A] font-semibold mb-1.5">
+                              Trigger: {opp.trigger}
+                            </div>
+                            <div className="text-xs text-[#4C5340] leading-relaxed">
+                              {opp.why}
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-[#183B2A] bg-[#DCFCE7] border border-[#BBF7D0] px-3 py-2 rounded-xl">
+                            <strong>Objective:</strong> {opp.objective}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#15803D', fontWeight: 600, marginBottom: 4 }}>
-                    Trigger: {opp.trigger}
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--ff-text)', lineHeight: 1.5, marginBottom: 6 }}>
-                    {opp.why}
-                  </div>
-                  <div style={{ fontSize: '0.74rem', color: '#047857', background: '#DCFCE7', padding: '6px 10px', borderRadius: 6 }}>
-                    <strong>Objective:</strong> {opp.objective}
-                  </div>
-                </div>
-              ))}
-            </div>
+                )
+              })()}
+            </>
           ) : (
             <p style={{ fontSize: '0.85rem', color: 'var(--ff-text-secondary)' }}>
               Standard conservation tillage and legume cover crops recommended to sustain baseline organic carbon.
@@ -847,7 +1083,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 6. FARM RESILIENCE (DECOUPLED FROM CONFIDENCE - PHASE 7) ─────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
+        <div id="section-resilience" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Shield size={20} className="text-emerald-700" />
@@ -869,6 +1105,8 @@ export default function Recommendations() {
           <p style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginBottom: 14 }}>
             {farm_resilience.tier_description || 'Evaluates 5 biophysical pillars independently of data completeness.'}
           </p>
+
+          <ResilienceVisuals components={farm_resilience?.components || {}} weights={farm_resilience?.weights || {}} />
 
           {/* 5 Components */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
@@ -897,7 +1135,7 @@ export default function Recommendations() {
         </div>
 
         {/* ── 7. DATA CONFIDENCE (DECOUPLED FROM RESILIENCE) ────────────────── */}
-        <div className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, background: '#F8FAFC' }}>
+        <div id="section-confidence" className="ff-card animate-fade-in" style={{ marginBottom: 24, padding: 20, background: '#F8FAFC' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <BarChart3 size={20} className="text-slate-700" />
@@ -917,11 +1155,14 @@ export default function Recommendations() {
             Data Confidence measures input completeness, sensor freshness, and administrative resolution — strictly separated from biological soil resilience.
           </p>
 
+          <ConfidenceVisuals confidence={confidence || {}} dataQuality={data_quality || {}} />
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
-            <ConfidenceDimCard label="Input Completeness" score={confidence.dimensions?.input_completeness} />
-            <ConfidenceDimCard label="Geographic Resolution" score={confidence.dimensions?.geographic_resolution} />
-            <ConfidenceDimCard label="Sensor Freshness" score={confidence.dimensions?.sensor_freshness} />
-            <ConfidenceDimCard label="Model Calibration" score={confidence.dimensions?.model_calibration} />
+            <ConfidenceDimCard label="Input Completeness" score={confidence.factors?.completeness ?? confidence.dimensions?.input_completeness} />
+            <ConfidenceDimCard label="Geographic Resolution" score={confidence.factors?.geographic_precision ?? confidence.dimensions?.geographic_resolution} />
+            <ConfidenceDimCard label="Data Freshness" score={confidence.factors?.freshness ?? confidence.dimensions?.sensor_freshness} />
+            <ConfidenceDimCard label="Model Evidence" score={confidence.factors?.model_confidence ?? confidence.dimensions?.model_calibration} />
+            <ConfidenceDimCard label="Rule Coverage" score={confidence.factors?.rule_coverage} />
           </div>
         </div>
 
@@ -934,15 +1175,15 @@ export default function Recommendations() {
             </h2>
           </div>
 
-          {confidence.missing_fields && confidence.missing_fields.length > 0 ? (
+          {missingFieldsList.length > 0 ? (
             <div>
               <p style={{ fontSize: '0.8rem', color: 'var(--ff-text-secondary)', marginBottom: 8 }}>
                 The following parameters were missing and filled via regional agro-climatic averages:
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-                {confidence.missing_fields.map((f, i) => (
+                {missingFieldsList.map((f, i) => (
                   <span key={i} style={{ fontSize: '0.72rem', background: '#EFF6FF', color: '#1D4ED8', padding: '3px 8px', borderRadius: 6, border: '1px solid #BFDBFE' }}>
-                    {f}
+                    {typeof f === 'object' ? (f.name || JSON.stringify(f)) : f}
                   </span>
                 ))}
               </div>
@@ -979,7 +1220,7 @@ export default function Recommendations() {
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#166534', marginBottom: 4 }}>INPUTS USED:</div>
               <div style={{ fontSize: '0.78rem', color: '#14532D', lineHeight: 1.6 }}>
                 <div>✓ Soil Profile ({soil_health.score != null ? 'Lab/SHC Card' : 'Parameters'})</div>
-                <div>✓ Meteorological NWP ({weather_context.temperature?.value ?? (envData.temperature || 28)}°C)</div>
+                <div>✓ Weather ({weatherSource}: {tempValue ?? 'N/A'}°C)</div>
                 <div>✓ Location ({district}, {state})</div>
                 <div>✓ Season ({season})</div>
               </div>
@@ -990,15 +1231,15 @@ export default function Recommendations() {
               <div style={{ fontSize: '0.78rem', color: '#7F1D1D', lineHeight: 1.6 }}>
                 <div>○ Satellite Earth Observation (Disconnected)</div>
                 <div>○ Vision Pathology (Model not deployed)</div>
-                <div>○ Subsoil Moisture Sensor (NWP estimate applied)</div>
+                <div>○ Subsoil Moisture Sensor (Unlinked)</div>
               </div>
             </div>
 
             <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0369A1', marginBottom: 4 }}>DECISION METHOD:</div>
               <div style={{ fontSize: '0.78rem', color: '#0C4A6E', lineHeight: 1.6 }}>
-                <div>• 60% Decoupled Random Forest ML</div>
-                <div>• 40% ICAR Agronomic Rule Gates</div>
+                <div>• 50% Decoupled Random Forest ML</div>
+                <div>• 50% ICAR Agronomic Rule Gates</div>
                 <div>• Evidence-Grounded Risk Detection</div>
               </div>
             </div>
@@ -1316,10 +1557,10 @@ function SubScoreBadge({ label, val }) {
 }
 
 function FreshnessBadge({ freshness }) {
-  const isFresh = freshness === 'FRESH'
+  const isFresh = freshness === 'FRESH' || freshness === 'LIVE' || String(freshness).toUpperCase().includes('FRESH')
   return (
     <span style={{
-      fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+      fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: 4,
       background: isFresh ? '#D1FAE5' : '#FEF3C7',
       color: isFresh ? '#065F46' : '#92400E'
     }}>
@@ -1329,7 +1570,8 @@ function FreshnessBadge({ freshness }) {
 }
 
 function SoilIndicatorCard({ label, val, status }) {
-  const isOptimal = status === 'OPTIMAL' || status === 'SUFFICIENT' || status === 'NORMAL'
+  const normStatus = String(status || '').toUpperCase()
+  const isOptimal = ['OPTIMAL', 'SUFFICIENT', 'NORMAL', 'NEUTRAL', 'NON_SALINE', 'HEALTHY', 'ADEQUATE'].includes(normStatus)
   return (
     <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', textAlign: 'center' }}>
       <div style={{ fontSize: '0.68rem', color: '#6B7280' }}>{label}</div>
@@ -1340,7 +1582,7 @@ function SoilIndicatorCard({ label, val, status }) {
         color: isOptimal ? '#065F46' : '#92400E',
         display: 'inline-block', marginTop: 3
       }}>
-        {status}
+        {String(status || 'N/A').replace(/_/g, ' ')}
       </span>
     </div>
   )

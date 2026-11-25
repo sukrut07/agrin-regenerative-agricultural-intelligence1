@@ -1,5 +1,6 @@
-"""FarmFriend AI — Farm & Validation Routes"""
+"""AgriN — Farm, Validation & Unified Analysis Routes"""
 
+import logging
 import uuid
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
@@ -15,14 +16,13 @@ from backend.app.services.validation import (
     validate_farm_inputs, validate_soil_inputs, validate_env_inputs,
     compute_data_confidence, count_missing_soil_fields
 )
-from backend.app.services.crop_prediction import get_ranked_crops
-from backend.app.services.nlg_explainer import explain_top_recommendations
 from backend.app.services.weather_service import fetch_live_weather
 try:
     from backend.app.services.agrin_intelligence import run_full_agricultural_intelligence
 except ImportError:
     from app.services.agrin_intelligence import run_full_agricultural_intelligence
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -90,50 +90,74 @@ def analyze(request: AnalysisRequest, db: Session = Depends(get_db)):
         "session_id": session_id
     }
     
-    full_intel = None
     try:
         full_intel = run_full_agricultural_intelligence(full_payload)
     except Exception as intel_err:
-        print(f"Notice: Unified intelligence orchestrator fallback: {intel_err}")
+        logger.error(
+            "Unified agricultural intelligence orchestrator failed for session %s: %s",
+            session_id, intel_err, exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Unified agricultural intelligence pipeline failed",
+                "session_id": session_id,
+                "error": str(intel_err),
+            }
+        )
 
-    if full_intel and full_intel.get("crop_suitability"):
-        ranked_crops = full_intel["crop_suitability"]
-        from ml.predict import predictor
-        model_info = predictor.get_model_info() if hasattr(predictor, "get_model_info") else {
-            "model_type": "Decoupled Hybrid (60% Random Forest v1 + 40% ICAR Agronomic Rules)",
-            "model_version": "random_forest_v1",
-            "n_features": 15,
-            "n_classes": len(ranked_crops),
-            "metrics": {"accuracy": 0.993, "f1_weighted": 0.993}
-        }
-        feature_importance = predictor.get_feature_importances() if hasattr(predictor, "get_feature_importances") else []
-        n_missing, missing = count_missing_soil_fields(soil_dict)
-        data_completeness = {
-            "n_provided_soil": 12 - n_missing,
-            "n_missing_soil": n_missing,
-            "missing_soil_fields": missing,
-            "completeness_pct": round(((12 - n_missing) / 12) * 100, 1),
-            "confidence_level": compute_data_confidence(soil_dict, env_dict)
-        }
-        exp_obj = full_intel.get("explanation", {})
-        explanation = exp_obj.get("what", "") + "\n\n" + "\n".join(exp_obj.get("why", []))
+    pipeline_exec = full_intel.get("pipeline_execution", {}) if full_intel else {}
+    subsystem_statuses = pipeline_exec.get("subsystem_statuses", {})
+    if subsystem_statuses.get("soil") == "FAILED" or subsystem_statuses.get("crop_suitability") == "FAILED":
+        logger.error(
+            "Critical subsystem failure in unified pipeline %s (session %s): %s",
+            pipeline_exec.get("pipeline_id"), session_id, pipeline_exec.get("errors")
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Critical agricultural intelligence subsystem unavailable",
+                "session_id": session_id,
+                "pipeline_execution": pipeline_exec,
+            }
+        )
+
+    ranked_crops = full_intel.get("crop_suitability") or []
+    from ml.predict import predictor
+    m_info = {}
+    feature_importance = []
+    try:
+        predictor.load()
+        m_info = predictor.get_model_info() or {}
+        feature_importance = predictor.get_feature_importance()
+    except FileNotFoundError as model_err:
+        logger.warning("ML model metadata unavailable during /api/analyze: %s", model_err)
+    except Exception as model_err:
+        logger.warning("Failed to load ML metadata during /api/analyze: %s", model_err)
+
+    if m_info and m_info.get("metrics"):
+        model_info = m_info
     else:
-        try:
-            result = get_ranked_crops(soil_dict, env_dict, farm_dict)
-            ranked_crops = result["ranked_crops"]
-            model_info = result["model_info"]
-            feature_importance = result["feature_importance"]
-            data_completeness = result["data_completeness"]
-            explanation = explain_top_recommendations(
-                ranked_crops, farm_dict, soil_dict
-            )
-        except FileNotFoundError as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"ML model not found. Please train the model first: {str(e)}"
-            )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        model_info = {
+            "model_type": m_info.get("model_type") if m_info else None,
+            "model_version": m_info.get("model_version") if m_info else None,
+            "training_date": m_info.get("training_date") if m_info else None,
+            "n_classes": m_info.get("n_classes") if m_info else None,
+            "metrics": None,
+            "metrics_status": "UNAVAILABLE",
+            "reason": "Trained model metadata or evaluation metrics could not be loaded from disk.",
+        }
+
+    n_missing, missing = count_missing_soil_fields(soil_dict)
+    data_completeness = {
+        "n_provided_soil": 12 - n_missing,
+        "n_missing_soil": n_missing,
+        "missing_soil_fields": missing,
+        "completeness_pct": round(((12 - n_missing) / 12) * 100, 1),
+        "confidence_level": compute_data_confidence(soil_dict, env_dict)
+    }
+    exp_obj = full_intel.get("explanation", {})
+    explanation = exp_obj.get("what", "") + "\n\n" + "\n".join(exp_obj.get("why", []))
 
     # Persist to database
     try:
@@ -179,7 +203,7 @@ def analyze(request: AnalysisRequest, db: Session = Depends(get_db)):
         top_crop = ranked_crops[0] if ranked_crops else {}
         pred_rec = PredictionRecord(
             session_id=session_id,
-            model_version=model_info.get("model_version", "random_forest_v1"),
+            model_version=model_info.get("model_version") or "unavailable",
             top_crop=top_crop.get("crop", "Unknown"),
             top_score=top_crop.get("final_score", 0.0),
             ranked_crops_json=[c for c in ranked_crops],
@@ -218,5 +242,7 @@ def analyze(request: AnalysisRequest, db: Session = Depends(get_db)):
         data_quality=full_intel.get("data_quality") if full_intel else None,
         weather_reasoning=full_intel.get("weather_reasoning") if full_intel else None,
         country_neutral_advisory=full_intel.get("country_neutral_advisory") if full_intel else None,
+        pipeline_execution=pipeline_exec,
+        warnings=full_intel.get("warnings") if full_intel else None,
     )
 

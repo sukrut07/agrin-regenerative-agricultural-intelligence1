@@ -1,29 +1,32 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { runAnalysis } from '../services/api'
-import { Leaf } from 'lucide-react'
+import HeaderNav from '../components/HeaderNav'
+import { Leaf, AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react'
 
 const ANALYSIS_STEPS = [
-  { text: 'Validating your soil and farm data...', emoji: '📋' },
-  { text: 'Running ML model prediction...', emoji: '🤖' },
-  { text: 'Applying ICAR/TNAU agricultural rules...', emoji: '📚' },
-  { text: 'Computing suitability scores for 22 crops...', emoji: '🌾' },
-  { text: 'Ranking crops by combined score...', emoji: '📊' },
-  { text: 'Generating analysis explanations...', emoji: '✍️' },
-  { text: 'Preparing your results...', emoji: '✅' },
+  { text: 'Validating soil readings, units & farm parameters...', code: '01' },
+  { text: 'Processing soil characteristics & ICAR thresholds...', code: '02' },
+  { text: 'Evaluating crop suitability via Random Forest ML (23 crops)...', code: '03' },
+  { text: 'Calculating suitability rationale, constraints & confidence...', code: '04' },
+  { text: 'Preparing your Crop Suitability Report...', code: '05' },
 ]
 
 export default function Analysis() {
   const navigate = useNavigate()
-  const { getApiPayload, setAnalysisResult, setSessionId } = useApp()
+  const { getApiPayload, setAnalysisResult, setSessionId, dataSource } = useApp()
   const [step, setStep] = useState(0)
   const [error, setError] = useState(null)
+  const submittedRef = useRef(false)
 
   useEffect(() => {
+    if (submittedRef.current) return
+    submittedRef.current = true
+
     const interval = setInterval(() => {
       setStep(s => s < ANALYSIS_STEPS.length - 1 ? s + 1 : s)
-    }, 600)
+    }, 550)
 
     const payload = getApiPayload()
     runAnalysis(payload)
@@ -42,26 +45,33 @@ export default function Analysis() {
   }, [])
 
   if (error) return (
-    <div className="page-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div className="ff-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: 36, textAlign: 'center' }}>
-        <div style={{
-          width: 64, height: 64, borderRadius: 16,
-          background: 'var(--ff-error-bg)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 20px', fontSize: 28,
-        }}>⚠️</div>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 10 }}>
-          We couldn't complete the analysis
-        </h2>
-        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem', marginBottom: 24, lineHeight: 1.6 }}>
-          {error}
-        </p>
-        <p style={{ color: 'var(--ff-text-muted)', fontSize: '0.8rem', marginBottom: 20 }}>
-          Please check your inputs and try again.
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <button className="btn-secondary" onClick={() => navigate('/soil-test')}>← Edit Inputs</button>
-          <button className="btn-primary" onClick={() => window.location.reload()}>Try Again</button>
+    <div className="min-h-screen flex flex-col bg-[#F7F7F2] text-[#171814]">
+      <HeaderNav />
+      <div className="flex-1 flex items-center justify-center p-5">
+        <div className="ff-card animate-fade-in max-w-md w-full p-8 sm:p-10 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#FDECEC] text-[#C93F3F] flex items-center justify-center mx-auto mb-5">
+            <AlertTriangle size={28} />
+          </div>
+          <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77772B] mb-1.5">
+            [ ANALYSIS INTERRUPTED ]
+          </div>
+          <h2 className="text-xl font-extrabold text-[#171814] mb-2.5">
+            We couldn&apos;t complete the analysis
+          </h2>
+          <p className="text-sm text-[#77786F] mb-3 leading-relaxed">
+            {error}
+          </p>
+          <p className="text-xs text-[#9B9C92] mb-6">
+            Please check your soil and farm inputs and try again.
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <button type="button" className="btn-agrin-outline" onClick={() => navigate('/soil-test')}>
+              <ArrowLeft size={14} /> Edit Inputs
+            </button>
+            <button type="button" className="btn-agrin-cta" onClick={() => window.location.reload()}>
+              <RefreshCw size={14} /> Try Again
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -70,64 +80,67 @@ export default function Analysis() {
   const progress = ((step + 1) / ANALYSIS_STEPS.length) * 100
 
   return (
-    <div className="hero-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div className="ff-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '44px 36px', textAlign: 'center' }}>
-
-        {/* Animated leaf icon */}
-        <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 28px' }}>
-          {/* Outer pulse ring */}
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            background: 'rgba(19, 138, 75, 0.1)',
-            animation: 'pulse 2s ease-in-out infinite',
-          }} />
-          {/* Inner circle */}
-          <div style={{
-            position: 'absolute', inset: 8, borderRadius: '50%',
-            background: 'var(--ff-soft)',
-            border: '2px solid rgba(19,138,75,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Leaf size={38} style={{ color: 'var(--ff-primary)', animation: 'leafPulse 1.8s ease-in-out infinite' }} />
+    <div className="min-h-screen flex flex-col bg-[#F7F7F2] text-[#171814]">
+      <HeaderNav />
+      <div className="flex-1 flex items-center justify-center p-5">
+        <div className="ff-card animate-fade-in max-w-md w-full p-8 sm:p-10 text-center">
+          {/* Animated forest emblem */}
+          <div className="relative w-24 h-24 mx-auto mb-7">
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{ background: 'rgba(24, 59, 42, 0.08)', animation: 'pulse 2s ease-in-out infinite' }}
+            />
+            <div className="absolute inset-2.5 rounded-full bg-[#183B2A] text-[#E7D927] flex items-center justify-center shadow-md">
+              <Leaf size={34} style={{ animation: 'leafPulse 1.8s ease-in-out infinite' }} />
+            </div>
           </div>
-        </div>
 
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ff-text)', marginBottom: 8 }}>
-          Analysing Your Farm
-        </h2>
-        <p style={{ color: 'var(--ff-text-secondary)', fontSize: '0.9rem', marginBottom: 28 }}>
-          Running ML model + agricultural rules for 22 crops...
-        </p>
+          <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#77772B] mb-1.5">
+            [ STEP 04 OF 04 · INTELLIGENCE ENGINE ]
+          </div>
+          <h2 className="text-2xl font-extrabold tracking-tight text-[#171814] mb-2">
+            Analysing Your Soil
+          </h2>
+          <p className="text-xs sm:text-sm text-[#77786F] mb-4 leading-relaxed">
+            Evaluating 23 crops using trained Random Forest ML + ICAR agronomic rules
+          </p>
 
-        {/* Current step text */}
-        <div style={{
-          height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'var(--ff-soft)', borderRadius: 12,
-          border: '1px solid rgba(19,138,75,0.15)',
-          padding: '0 16px', marginBottom: 20,
-          transition: 'all 0.4s ease',
-        }}>
-          <span style={{ fontSize: '0.85rem' }}>{ANALYSIS_STEPS[step].emoji}</span>
-          <p style={{ color: 'var(--ff-primary)', fontSize: '0.85rem', fontWeight: 500, marginLeft: 8 }}>
-            {ANALYSIS_STEPS[step].text}
+          <div className="mb-6">
+            <span className={`ff-badge ${dataSource === 'sample' ? 'ff-badge-amber' : 'ff-badge-green'}`}>
+              Source: {dataSource === 'sample' ? 'Sample Dataset' : 'Manual Input'}
+            </span>
+          </div>
+
+          {/* Current step status */}
+          <div className="min-h-[52px] flex items-center justify-center gap-2.5 bg-[#F2F5EE] border border-[#E5E5DC] rounded-xl px-4 py-2.5 mb-5">
+            <span className="text-[11px] font-extrabold font-mono-num px-2 py-0.5 rounded bg-[#183B2A] text-[#E7D927] shrink-0">
+              {ANALYSIS_STEPS[step].code}
+            </span>
+            <p className="text-xs sm:text-sm font-semibold text-[#183B2A] text-left">
+              {ANALYSIS_STEPS[step].text}
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="score-bar">
+            <div
+              className="score-bar-fill"
+              style={{
+                width: `${progress}%`,
+                background: 'linear-gradient(90deg, #183B2A, #398653)',
+                transition: 'width 0.5s ease',
+              }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-xs font-mono-num">
+            <span className="text-[#9B9C92]">Step {step + 1} of {ANALYSIS_STEPS.length}</span>
+            <span className="text-[#183B2A] font-bold">{Math.round(progress)}%</span>
+          </div>
+
+          <p className="text-[11px] text-[#9B9C92] mt-5">
+            No external AI API called — analysis runs directly on your farm data
           </p>
         </div>
-
-        {/* Progress bar */}
-        <div className="score-bar">
-          <div
-            className="score-bar-fill score-gradient-high"
-            style={{ width: `${progress}%`, transition: 'width 0.5s ease' }}
-          />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-          <span style={{ fontSize: '0.72rem', color: 'var(--ff-text-muted)' }}>Step {step + 1} of {ANALYSIS_STEPS.length}</span>
-          <span style={{ fontSize: '0.72rem', color: 'var(--ff-primary)', fontWeight: 600 }}>{Math.round(progress)}%</span>
-        </div>
-
-        <p style={{ color: 'var(--ff-text-muted)', fontSize: '0.75rem', marginTop: 20 }}>
-          No external AI API called — analysis runs entirely on your data
-        </p>
       </div>
     </div>
   )

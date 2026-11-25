@@ -189,13 +189,16 @@ def make_synthetic_telemetry(
     return payload
 
 
-def send_http_post(url: str, payload: dict) -> dict:
-    """Sends JSON POST request via standard library urllib."""
+def send_http_post(url: str, payload: dict, api_key: str | None = None) -> dict:
+    """Sends JSON POST request via standard library urllib with optional X-Device-Token."""
     data = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["X-Device-Token"] = api_key
     req = urllib.request.Request(
         url,
         data=data,
-        headers={"Content-Type": "application/json"}
+        headers=headers,
     )
     with urllib.request.urlopen(req, timeout=10) as response:
         resp_body = response.read().decode("utf-8")
@@ -203,9 +206,11 @@ def send_http_post(url: str, payload: dict) -> dict:
 
 
 def main():
+    import os
     parser = argparse.ArgumentParser(description="AgriSense IoT Hardware Telemetry Simulator")
     parser.add_argument("--url", default="http://localhost:8000/api/telemetry/ingest", help="Ingestion API endpoint")
     parser.add_argument("--device-id", default=None, help="Device UUID (generated if omitted)")
+    parser.add_argument("--api-key", default=os.getenv("AGRIN_DEVICE_TOKEN"), help="Registered device API key (X-Device-Token)")
     parser.add_argument("--farm-id", default="farm-demo-parbhani", help="Farm / Session UUID")
     parser.add_argument("--field-id", default="field-plot-01", help="Field UUID")
     parser.add_argument("--scenario", choices=list(SCENARIOS.keys()), default="optimal_field", help="Simulation scenario")
@@ -243,7 +248,7 @@ def main():
                 print(f"  ├─ {m['sensor_type']:18s}: {m['calibrated_value']:6.1f} {m['unit']} (Provenance: {m['data_source']})")
 
             try:
-                resp = send_http_post(args.url, payload)
+                resp = send_http_post(args.url, payload, api_key=args.api_key)
                 status = resp.get("status", "SUCCESS")
                 telemetry_id = resp.get("telemetry_id", "N/A")
                 print(f"  └─ Response: HTTP 201 OK | Status: {status} | Telemetry ID: {telemetry_id[:8]}...")

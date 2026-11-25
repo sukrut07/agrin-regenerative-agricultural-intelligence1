@@ -129,3 +129,38 @@ python -m platformio run -e native
 - [Build, Flash, & Debugging Guide](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/BUILD_AND_FLASH_GUIDE.md)
 - [Hardware Team Pre-Flight Checklist](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/HARDWARE_TEAM_CHECKLIST.md)
 - [Phase 02 Completion Report](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/PHASE_02_COMPLETION_REPORT.md)
+
+---
+
+## 6. 🧪 Wokwi Virtual Sensor Lab
+
+To enable end-to-end testing without requiring physical breadboards for every test, AgriSense includes a complete **Wokwi Simulation Environment** in `firmware/wokwi/`:
+
+### Files in `firmware/wokwi/`:
+1. **`diagram.json`**: Virtual ESP32 circuit wired with:
+   - 10kΩ Potentiometer on `GPIO 34` simulating Capacitive Soil Moisture
+   - DS18B20 digital probe on `GPIO 4` with 4.7kΩ pullup
+   - 10kΩ Potentiometer on `GPIO 35` simulating Soil pH
+   - Status LED on `GPIO 2` flashing on transmission
+2. **`wokwi.toml`**: Simulator configuration and firmware binary path.
+3. **`src/main_simulation.cpp`**: Complete Arduino/C++ sketch executing the full cycle:
+   - Samples virtual sensors
+   - Formats JSON telemetry payload
+   - Attaches `X-Device-Token: agrin_dev_test_wokwi_token_993`
+   - Transmits HTTP POST to AgriN backend `/api/telemetry/ingest`
+   - Enters deep sleep for simulated battery preservation
+
+### Running the Wokwi Simulation:
+- **In VS Code**: Install the Wokwi extension and press `F1 -> Wokwi: Start Simulator`.
+- **In Browser**: Upload `firmware/wokwi/` files to [Wokwi Web](https://wokwi.com) and test live telemetry streaming.
+
+---
+
+## 7. 🔋 Power Management & Field Battery Life
+
+In remote agricultural fields without grid power, AgriSense is powered by a **3.7V 3000mAh 18650 Li-ion cell** coupled with a 5V 2W monocrystalline solar panel and TP4056 charge controller.
+
+- **Active Measurement & Transmission Window**: ~4.2 seconds @ 120 mA peak current (~0.14 mAh per cycle).
+- **Deep Sleep Current**: 15 µA (RTC and ULP co-processor active).
+- **Wake Interval**: Every 15 minutes (4 transmissions per hour = 96 packets per day).
+- **Calculated Autonomous Battery Life**: **62+ days** without any solar recharging under overcast conditions.

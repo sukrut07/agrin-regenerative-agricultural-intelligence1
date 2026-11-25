@@ -18,7 +18,8 @@ from backend.app.database.db import init_db
 from backend.app.api import (
     routes_farmer, routes_prediction, routes_whatif,
     routes_ai, routes_analytics, routes_feedback, routes_intelligence,
-    routes_iot
+    routes_iot, routes_crops, routes_synthetic,
+    routes_soil_intelligence, routes_marketplace, routes_farmer_economics
 )
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
@@ -51,13 +52,27 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS
+# CORS — explicit trusted origins only (never wildcard "*" alongside allow_credentials=True)
+_EXTRA_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()
+]
+ALLOWED_ORIGINS = list(dict.fromkeys([
+    FRONTEND_URL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    *_EXTRA_ORIGINS,
+]))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000", "http://localhost:5173", "*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Device-Token", "X-Request-ID"],
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
@@ -69,6 +84,11 @@ app.include_router(routes_analytics.router, prefix="/api", tags=["Analytics"])
 app.include_router(routes_feedback.router, prefix="/api", tags=["Feedback"])
 app.include_router(routes_intelligence.router, prefix="/api", tags=["Agricultural Intelligence & Provenance"])
 app.include_router(routes_iot.router, prefix="/api", tags=["IoT & Hardware"])
+app.include_router(routes_crops.router, prefix="/api", tags=["Crop Catalogue & Knowledge"])
+app.include_router(routes_synthetic.router, prefix="/api", tags=["Synthetic Data Engine"])
+app.include_router(routes_soil_intelligence.router, prefix="/api", tags=["Soil Intelligence"])
+app.include_router(routes_marketplace.router, prefix="/api", tags=["AgriMarket"])
+app.include_router(routes_farmer_economics.router, prefix="/api", tags=["Farm Economics (AgriLedger)"])
 
 
 @app.get("/", tags=["Health"])
