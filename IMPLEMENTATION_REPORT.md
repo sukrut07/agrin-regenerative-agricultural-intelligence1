@@ -1,8 +1,8 @@
 # 📋 AgriN — Comprehensive Implementation & Technical Audit Report
 
 **Project**: AgriN — Regenerative Agricultural Intelligence Network (BRICS Track 4)  
-**Date**: November 24, 2026  
-**Status**: All Technical Flaws Remediated • High-Priority Add-ons Implemented • 156 Tests Passing (100%)
+**Date**: November 26, 2026  
+**Status**: Upstream Hardware Readiness Merged • Editorial UI & Recharts Visual Suite Added • Backend `176 passed / 4 failed`, Frontend `2,409 modules` (`0` errors)
 
 ---
 
@@ -109,8 +109,15 @@ This report documents the resolution of all identified architectural flaws, the 
 
 ---
 
-## 🧪 Part 4: Quality Assurance & Verification
+## 🧪 Part 4: Quality Assurance & Recent Updates (Nov 25–26, 2026)
 
-- **Backend Pytest Suite**: 156 passed in 28.31s (`pytest tests/ -v`).
-- **Frontend Build**: Vite v8.2.1 compiled all 2,405 modules in 1.01s with zero errors (`tsc && vite build`).
-- **Documentation**: Standardized root `README.md`, `backend/README.md`, `frontend/README.md`, `firmware/README.md`, `data/README.md`, `docs/README.md`, and `SYSTEM_STATUS.md`.
+### UI Overhaul, Interactive Analytics & Pipeline Reliability
+- **Editorial Design System**: Rebuilt `frontend/src/index.css` under clean Tailwind v4 `@layer` ordering with `Manrope` + `JetBrains Mono` typography and warm botanical palette (`#F7F7F2`, `#183B2A`, `#E7D927`) across `Home.jsx`, `HeaderNav.jsx`, `StepLayout.jsx`, and core workflow pages.
+- **Interactive Animated Recharts Suite (`frontend/src/components/ReportCharts.jsx`)**: Added scroll-triggered (`IntersectionObserver`) animated visualizations in `Recommendations.jsx` covering Executive KPI gauges, Crop Suitability mode switcher (`Overall` / `Rule vs ML` / `4-Factor`), Multi-Crop Radar & Grouped Bars, clickable Action Queue Severity & Domain Breakdown bars, Explainable Why Scoring Drivers & Evidence Signals, Soil Health ICAR Benchmarks + pH Spectrum gauge, Regenerative Pillar & Priority Donut filters, 5-Pillar Farm Resilience Polygon, and Data Confidence vs Quality Metrics.
+- **Pipeline Bug Fixes & Tests (`tests/test_e2e_intelligence.py`)**: Fixed object rendering crashes for `location_context.agro_climatic_zone` and weather objects, aligned lowercase `ph` / `pH` parameter aliases in `confidence_engine.py` and `agrin_intelligence.py`, and suppressed spurious unregistered device polling in `DeviceMonitor.jsx`.
+- **Upstream Hardware & Commissioning Merge (`hardware/`, `firmware/`)**: Integrated Phase 02.2 / Phase 03.1 ESP32 analog bring-up safety gate (`HardwareBringup`) and Prototype Unit 01 cold-check documentation (`Stage A`).
+
+### Verification Snapshot
+- **Backend Pytest Suite**: `176 passed, 4 failed` in `27.39s` (`180` collected items; the 4 failures are in upstream pre-token firmware fixtures in `tests/test_firmware_backend_contract.py` and `tests/test_full_telemetry_lifecycle_e2e.py` awaiting `X-Device-Token` header updates — see `TEST_RESULTS.md`).
+- **Frontend Build**: `tsc && vite build` compiled all `2,409` modules in `283ms` with zero errors.
+- **Documentation Portability**: Converted hardcoded local `file:///` links across `README.md`, `data/README.md`, `docs/README.md`, `firmware/`, and `hardware/` into repo-relative Markdown links.

@@ -1,93 +1,78 @@
 # 🎨 AgriN Frontend — React 19 + Vite Web Application
 
-The AgriN frontend is a responsive, modern single-page application built on **React 19**, **Vite**, **Tailwind CSS**, and **Recharts**. It provides an intuitive interface for farmers, agronomists, and researchers to explore field intelligence, analyze soil health, plan crop rotations, and monitor IoT telemetry.
+The AgriN frontend is a responsive single-page application built on **React 19**, **Vite v8**, **Tailwind CSS v4**, and **Recharts v3**. It pairs an agricultural editorial design system (`Manrope` + `JetBrains Mono`, warm `#F7F7F2` canvas, `#183B2A` forest green, `#E7D927` harvest yellow accents) with interactive data visualizations across all core farmer decision workflows.
 
 ---
 
-## 🌐 Multilingual i18n Architecture
+## 🌐 Multilingual i18n & User Modes
 
-The entire user interface supports dynamic runtime language switching across:
-- 🇬🇧 **English (en)**
-- 🇮🇳 **Hindi (`हिन्दी` - hi)**
-- 🇮🇳 **Marathi (`मराठी` - mr)**
+- **Trilingual UI Support**: Runtime language switching across **English (`en`)**, **Hindi (`हिन्दी` - `hi`)**, and **Marathi (`मराठी` - `mr`)** via `src/i18n/translations.js`, `src/context/LanguageContext.jsx`, and `src/components/LanguageSelector.jsx`.
+- **Simple vs Advanced Mode**: Controlled via `src/context/UserModeContext.jsx` to let farmers focus on essential workflows or inspect deeper agronomic and technical diagnostics.
 
-### Implementation:
-- **`src/i18n/translations.js`**: Centralized trilingual dictionary covering all navigation items, page headers, KPI labels, buttons, badges, categories, and agronomic disclaimers.
-- **`src/context/LanguageContext.jsx`**: Global React Context providing:
-  - `language`: Currently selected language code (`'en'`, `'hi'`, `'mr'`).
-  - `setLanguage(lang)`: Updates active language and persists preference in `localStorage`.
-  - `t(key, fallback)`: Translation helper resolving nested keys with safe fallbacks.
-- **`src/components/LanguageSelector.jsx`**: Accessible dropdown component available in both the top navigation bar and mobile drawer.
+---
+
+## 📊 Interactive Visualization Suite (`src/components/ReportCharts.jsx`)
+
+The unified **AgriN Farm Intelligence Report** (`src/pages/Recommendations.jsx`) embeds scroll-triggered, animated Recharts visualizations built directly from `/api/analyze` and `/api/crops/compare` responses:
+
+- **`ReportKpiVisualStrip`**: Animated SVG progress rings (`EditorialRing`) and count-up counters (`useCountUp`) linking directly to report sections.
+- **`CropSuitabilityChartCard`**: Interactive top-crop bar chart switching between **Overall Score**, **Rule Engine vs ML (50/50)**, and **Soil / Climate / Water / Season** factors, with bar click-to-inspect.
+- **`CropComparisonCharts`**: Side-by-side multi-dimensional `RadarChart` and grouped `BarChart` comparing 2–4 candidate crops.
+- **`ActionQueueVisuals`**: Clickable risk severity horizontal `BarChart` (`Critical`, `High`, `Medium`, `Low`) synchronized with the advisory queue filter pills, plus an agronomic domain mix bar chart.
+- **`WhyExplanationVisuals`**: Explainable hybrid score breakdown + evidence vs caveat signal counters and assessment trust profile for Section 3.
+- **`SoilHealthCharts`**: Animated component breakdown bars, pH spectrum position indicator, and horizontal ICAR nutrient benchmark comparison chart (`% of ICAR Optimal`).
+- **`RegenerativeOpportunitiesVisuals`**: Ecological pillar bar chart + interactive intervention priority `PieChart` donut (`High`, `Medium`, `Low`) synchronized with practice filters.
+- **`ResilienceVisuals` & `ConfidenceVisuals`**: 5-pillar biophysical resilience `RadarChart` + bar chart, and interactive switcher between 5-dimension Confidence Factors and 4-dimension Data Quality Metrics.
+
+Viewport scroll reveals use `IntersectionObserver` (`useInViewAnimation`) and honor `@media (prefers-reduced-motion: reduce)` in `src/index.css`.
 
 ---
 
 ## 📱 Page & Component Hierarchy
 
-```
+```text
 frontend/src/
 ├── components/
-│   ├── HeaderNav.jsx              # Forest-green top navigation with trilingual selector & Add Field button
-│   ├── LanguageSelector.jsx       # Language dropdown (EN, HI, MR)
-│   ├── AddYourFieldModal.jsx      # 3-step guided field onboarding modal
-│   ├── FactorBadges.jsx           # Supporting vs Limiting factor visual pills
-│   ├── SensorStatusBadge.jsx      # Sensor source tags (LIVE, SIMULATED, ESTIMATED)
-│   └── SuitabilityMeter.jsx       # Visual gauge for crop suitability score
+│   ├── AddYourFieldModal.jsx      # Guided 3-step field onboarding modal
+│   ├── FactorBadges.jsx           # Supporting vs limiting factor indicators
+│   ├── HeaderNav.jsx              # Editorial sticky header, navigation, mode toggle, EN/HI/MR selector
+│   ├── LanguageSelector.jsx       # Trilingual switcher component
+│   ├── ReportCharts.jsx           # Interactive scroll-animated Recharts visualization suite
+│   ├── SensorStatusBadge.jsx      # Provenance tags (MEASURED, SIMULATED, ESTIMATED)
+│   ├── StepLayout.jsx             # 4-step soil & crop assessment flow wrapper
+│   └── SuitabilityMeter.jsx       # Circular crop suitability score gauge
 │
 ├── pages/
-│   ├── FieldIntelligence.jsx      # Primary field workspace: SVG boundary map, soil cards, weather telemetry
-│   ├── CropExplorer.jsx           # Pan-India 65+ crop catalogue with 9 category chips and search
-│   ├── CropPlanner.jsx            # Multi-season rotation optimizer with N credits & water budget
-│   ├── SoilHealth.jsx             # 12-parameter Soil Health Card diagnostic and organic remedies
-│   ├── AgriVision.jsx             # Sentinel-2 vegetation indices (NDVI/NDMI/EVI) & leaf disease triage
-│   ├── RegenerativeScore.jsx      # 5-pillar regenerative score and carbon credit estimator
-│   ├── DeviceMonitor.jsx          # AgriSense IoT monitor with Wokwi virtual lab vs physical mode
-│   ├── DeviceRegistration.jsx     # ESP32 device onboarding and token issuance
-│   ├── Dashboard.jsx              # Analytics, model accuracy, and telemetry charts
-│   └── WhatIf.jsx                 # Interactive soil and weather sensitivity simulator
+│   ├── Home.jsx                   # Editorial landing page & sample scenarios launcher
+│   ├── FarmDetails.jsx            # Step 1: Pan-India state/district/season & sample profiles
+│   ├── SoilTest.jsx               # Step 2: 12-parameter Soil Health Card inputs
+│   ├── Environment.jsx            # Step 3: Live weather & seasonal parameters
+│   ├── Analysis.jsx               # Step 4: Validation summary & pipeline run trigger
+│   ├── Recommendations.jsx        # Unified Farm Intelligence Report + interactive charts
+│   ├── CropDetails.jsx            # Individual crop parameter audit & suitability breakdown
+│   ├── IWantToGrow.jsx            # Target crop feasibility checker
+│   ├── WhatIf.jsx                 # Dynamic soil/weather sensitivity simulator
+│   ├── FieldIntelligence.jsx      # Plot cockpit, boundary view, ambient & weather signals
+│   ├── CropExplorer.jsx           # 65+ scientific crops across 9 categories & filters
+│   ├── CropPlanner.jsx            # 3-season (Kharif → Rabi → Zaid) rotation planner
+│   ├── SoilHealth.jsx             # Soil Health Card analyzer with soil order presets
+│   ├── AgriVision.jsx             # Sentinel-2 vegetation indices & leaf disease screening
+│   ├── RegenerativeScore.jsx      # 5-pillar regenerative scorecard & practice simulator
+│   ├── AgriMarket.jsx             # Agricultural inputs & local market listings
+│   ├── FarmEconomics.jsx          # AgriLedger crop cost, yield & margin estimation
+│   ├── DeviceMonitor.jsx          # AgriSense ESP32 vs Wokwi telemetry console
+│   ├── DeviceRegistration.jsx     # Sensor node onboarding & API token issuance
+│   └── Dashboard.jsx              # System analytics, model metadata & telemetry charts
 │
-├── services/
-│   └── api.js                     # Unified REST API client with error handling
-└── context/
-    ├── AppContext.jsx             # Global farm assessment state
-    └── LanguageContext.jsx        # Trilingual state & translation hook
+├── context/
+│   ├── AppContext.jsx             # Global soil assessment & session state
+│   ├── LanguageContext.jsx        # Trilingual i18n context & persistence
+│   └── UserModeContext.jsx        # Simple vs Advanced interface mode
+│
+└── services/
+    ├── api.js                     # FastAPI REST client (`/api/*`)
+    └── demoScenarios.js           # Representative Indian regional farm archetypes
 ```
-
----
-
-## 🌟 Key Application Pages
-
-### 1. Field Intelligence Workspace (`/field-intelligence`)
-The primary operational dashboard for farmers:
-- **Interactive SVG Field Map**: Visual plot polygon displaying sensor node placements and canopy moisture gradients.
-- **Real-Time KPIs**: Soil moisture (%), temperature (°C), pH, and organic carbon.
-- **Dynamic Weather Telemetry**: 4-day rainfall forecast with rain probability alerts.
-- **Actionable Agronomic Advisories**: Immediate notices on irrigation requirements and micro-nutrient deficits.
-
-### 2. Crop Explorer (`/crop-explorer`)
-Comprehensive catalogue of **65+ scientific crops** spanning 9 agricultural categories:
-- Instant search across English, Hindi, Marathi, and botanical names.
-- Filters by Category (Cereals, Pulses, Oilseeds, Commercial, Vegetables, Fruits, Spices, Plantation, Cover/Fodder).
-- Filter by Season (Kharif, Rabi, Zaid, Perennial) and Indian State.
-- In-depth modal with duration, water requirements, optimal pH range, popular varieties, and regenerative benefits.
-
-### 3. Multi-Season Crop Planner (`/crop-planner`)
-Multi-season rotation optimizer designed around ICAR agronomic principles:
-- 3-season cycle (Kharif → Rabi → Zaid).
-- Calculates biological nitrogen credits (e.g. Chickpea or Cowpea fixes +60 to +75 kg N/ha).
-- Water budget balance preventing aquifer over-extraction.
-- Biological pest break targeting nematodes and soil-borne fungal pathogens.
-
-### 4. Soil Health Card Diagnostics (`/soil-health`)
-Complete 12-parameter diagnostic based on the Government of India Soil Health Card scheme:
-- Evaluates N, P, K, S, Zn, Fe, Cu, Mn, B, pH, EC, and SOC against ICAR rating curves.
-- Instant preset loading for 4 major Indian Soil Orders (Vertisols, Alluvial, Alfisols, Laterite).
-- Generates tailored biological amendments (Gypsum, Lime, Daincha green manuring, Rhizobium/PSB biofertilizers).
-
-### 5. AgriSense IoT Monitor (`/devices`)
-Honest hardware telemetry hub:
-- **Mode Switcher**: Easily toggle between **Wokwi Virtual Lab (Simulated)** and **Physical Hardware (ESP32)**.
-- **Honest States**: Displays unambiguous `SIMULATED WOKWI LAB` indicator in simulation mode and clear `NO LIVE SENSOR DATA` when physical hardware is disconnected.
-- Shows calibrated readings and 24-hour root-zone moisture trends.
 
 ---
 
@@ -99,7 +84,7 @@ cd frontend
 # Install dependencies
 npm install
 
-# Start local development server with Hot Module Replacement (HMR)
+# Start local dev server with HMR (http://localhost:5173)
 npm run dev
 
 # Run TypeScript checking and Vite production build
@@ -109,4 +94,4 @@ npm run build
 npm run preview
 ```
 
-Production builds compile in ~1.0 second into optimized static assets under `frontend/dist/`.
+Latest verified build (`tsc && vite build`): `2,409 modules transformed`, `0` errors (`283ms`).

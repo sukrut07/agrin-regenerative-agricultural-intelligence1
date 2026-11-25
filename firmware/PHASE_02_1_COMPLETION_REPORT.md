@@ -60,12 +60,12 @@ Phase 02.1 conducted an exhaustive code-level, protocol-level, electrical safety
 
 The complete technical findings are detailed across the audited reports:
 
-1. [firmware/FIRMWARE_SECURITY_AUDIT.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/FIRMWARE_SECURITY_AUDIT.md): Transport encryption, CA validation, credential handling, and replay prevention.
-2. [firmware/ELECTRICAL_SAFETY_AUDIT.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/ELECTRICAL_SAFETY_AUDIT.md): GPIO 5 strapping hazard resolution, 3.3V rail protection, and battery divider audit.
-3. [firmware/SENSOR_CALIBRATION_AUDIT.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/SENSOR_CALIBRATION_AUDIT.md): Physical conversion formulas, Nernst temperature compensation, and zero-division safeguards.
-4. [firmware/POWER_MANAGEMENT_AUDIT.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/POWER_MANAGEMENT_AUDIT.md): 12-point Li-ion OCV model, deep-sleep RTC recovery, and energy budget calculations.
-5. [firmware/BACKEND_CONTRACT_TEST_REPORT.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/BACKEND_CONTRACT_TEST_REPORT.md): Automated contract test suite results (`pytest tests/test_firmware_backend_contract.py`).
-6. [firmware/PHASE_02_1_COMPLETION_REPORT.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/PHASE_02_1_COMPLETION_REPORT.md): This master signoff document.
+1. [firmware/FIRMWARE_SECURITY_AUDIT.md](FIRMWARE_SECURITY_AUDIT.md): Transport encryption, CA validation, credential handling, and replay prevention.
+2. [firmware/ELECTRICAL_SAFETY_AUDIT.md](ELECTRICAL_SAFETY_AUDIT.md): GPIO 5 strapping hazard resolution, 3.3V rail protection, and battery divider audit.
+3. [firmware/SENSOR_CALIBRATION_AUDIT.md](SENSOR_CALIBRATION_AUDIT.md): Physical conversion formulas, Nernst temperature compensation, and zero-division safeguards.
+4. [firmware/POWER_MANAGEMENT_AUDIT.md](POWER_MANAGEMENT_AUDIT.md): 12-point Li-ion OCV model, deep-sleep RTC recovery, and energy budget calculations.
+5. [firmware/BACKEND_CONTRACT_TEST_REPORT.md](BACKEND_CONTRACT_TEST_REPORT.md): Automated contract test suite results (`pytest tests/test_firmware_backend_contract.py`).
+6. [firmware/PHASE_02_1_COMPLETION_REPORT.md](PHASE_02_1_COMPLETION_REPORT.md): This master signoff document.
 
 ---
 

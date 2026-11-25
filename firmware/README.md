@@ -121,14 +121,14 @@ python -m platformio run -e native
 
 ## 5. Technical Documentation Links
 
-- [Firmware Architecture Document](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/FIRMWARE_ARCHITECTURE.md)
-- [Sensor Integration Guide](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/SENSOR_INTEGRATION_GUIDE.md)
-- [Pin Configuration & Electrical Guide](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/PIN_CONFIGURATION_GUIDE.md)
-- [Sensor Calibration Procedures](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/CALIBRATION_PROCEDURES.md)
-- [Telemetry Communication & Protocol Spec](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/TELEMETRY_COMMUNICATION_GUIDE.md)
-- [Build, Flash, & Debugging Guide](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/BUILD_AND_FLASH_GUIDE.md)
-- [Hardware Team Pre-Flight Checklist](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/HARDWARE_TEAM_CHECKLIST.md)
-- [Phase 02 Completion Report](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/PHASE_02_COMPLETION_REPORT.md)
+- [Firmware Architecture Document](FIRMWARE_ARCHITECTURE.md)
+- [Sensor Integration Guide](SENSOR_INTEGRATION_GUIDE.md)
+- [Pin Configuration & Electrical Guide](PIN_CONFIGURATION_GUIDE.md)
+- [Sensor Calibration Procedures](CALIBRATION_PROCEDURES.md)
+- [Telemetry Communication & Protocol Spec](TELEMETRY_COMMUNICATION_GUIDE.md)
+- [Build, Flash, & Debugging Guide](BUILD_AND_FLASH_GUIDE.md)
+- [Hardware Team Pre-Flight Checklist](HARDWARE_TEAM_CHECKLIST.md)
+- [Phase 02 Completion Report](PHASE_02_COMPLETION_REPORT.md)
 
 ---
 

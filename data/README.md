@@ -63,4 +63,4 @@ python data/synthetic/scripts/run_synthetic_engine.py \
 ---
 
 ## 📖 Complete Data Dictionary
-Refer to [DATA_DICTIONARY.md](file:///Users/sukrutdusane/Documents/Projects/SY/Agrin/DATA_DICTIONARY.md) for full parameter definitions, physical units, acceptable ranges, and ICAR rating curves.
+Refer to [DATA_DICTIONARY.md](../DATA_DICTIONARY.md) for full parameter definitions, physical units, acceptable ranges, and ICAR rating curves.

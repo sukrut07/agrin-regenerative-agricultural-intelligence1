@@ -114,7 +114,7 @@ The hardware team must strictly verify the following assumptions against the phy
 > Applying power in the incorrect order or with inverted polarity will permanently destroy the ESP32 and ADS1115 silicon. Follow this sequence exactly:
 
 ### Power-On Procedure
-1. **Visual & Continuity Inspection**: Execute [hardware/PRE_POWER_ELECTRICAL_CHECKLIST.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/hardware/PRE_POWER_ELECTRICAL_CHECKLIST.md) completely.
+1. **Visual & Continuity Inspection**: Execute [hardware/PRE_POWER_ELECTRICAL_CHECKLIST.md](PRE_POWER_ELECTRICAL_CHECKLIST.md) completely.
 2. **Cold Bench Power Check (MCU Unpopulated)**:
    - Apply 3.7V from an adjustable current-limited bench power supply (set limit to 100 mA).
    - Measure 3.3V rail voltage on DevKit socket with a calibrated digital multimeter. **Target: $3.30\text{ V} \pm 0.05\text{ V}$**.

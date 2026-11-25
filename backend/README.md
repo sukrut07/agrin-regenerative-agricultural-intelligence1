@@ -1,103 +1,100 @@
 # ⚙️ AgriN Backend — FastAPI Core Intelligence Service
 
-The AgriN backend is a modular, high-performance REST microservice built on **FastAPI**, **SQLAlchemy**, and **scikit-learn**. It handles agricultural feasibility modeling, real-time IoT telemetry ingestion, Soil Health Card diagnostics, synthetic agronomic data generation, and BRICS country-neutral data interoperability.
+The AgriN backend (`backend/app/main.py`) is a modular FastAPI REST microservice backed by SQLAlchemy (SQLite by default) and `scikit-learn`. It serves crop suitability prediction, agronomic rule validation, Soil Health Card diagnostics, IoT device management and authenticated ingestion, synthetic agricultural data generation, AgriMarket & AgriLedger APIs, and BRICS interoperability schemas.
 
 ---
 
-## 🏗 Directory Architecture
+## 🏗 Actual Directory Architecture
 
+```text
+backend/app/
+├── main.py                         # FastAPI app factory, strict CORS, lifespan model load, 13 routers
+├── api/
+│   ├── routes_ai.py                # Explainability & NLG summary routes (`/api`)
+│   ├── routes_analytics.py         # Dashboard analytics, model metrics & assessment logs
+│   ├── routes_crops.py             # 65+ crop catalogue, categories & crop comparison
+│   ├── routes_farmer.py            # Core `/api/validate`, `/api/analyze`, `/api/weather`, etc.
+│   ├── routes_farmer_economics.py  # AgriLedger seasonal economics & cost-benefit APIs
+│   ├── routes_feedback.py          # Farmer outcome & advisory feedback submission
+│   ├── routes_intelligence.py      # Deep agro-ecological & provenance endpoints
+│   ├── routes_iot.py               # Device registration, heartbeat & telemetry ingestion
+│   ├── routes_marketplace.py       # AgriMarket biological/input directory routes
+│   ├── routes_prediction.py        # Direct ML prediction & target feasibility routes
+│   ├── routes_soil_intelligence.py # Soil Health Card 12-parameter evaluation routes
+│   ├── routes_synthetic.py         # Faker + ICAR synthetic data sampling & stress scenarios
+│   └── routes_whatif.py            # What-if soil & climate sensitivity simulator
+├── database/
+│   ├── db.py                       # SQLAlchemy engine initialization & session dependency
+│   ├── ecosystem_models.py         # Ecosystem, soil intelligence, marketplace & ledger ORM models
+│   └── iot_models.py               # Device, Field & Telemetry ORM tables (`Device.api_key`)
+├── models/
+│   ├── canonical_agri_model.py     # Country-neutral BRICS Track 4 schema models
+│   ├── ecosystem_schemas.py        # Marketplace, economics & soil intelligence contracts
+│   ├── farm_profile.py             # Farm location & context structures
+│   ├── intelligence_schemas.py     # Unified Farm Intelligence Report & resilience contracts
+│   ├── iot_schemas.py              # Hardware telemetry packet & heartbeat Pydantic v2 schemas
+│   └── schemas.py                  # Core validation, analysis & feedback request/response models
+└── services/
+    ├── agrin_intelligence.py       # Unified intelligence orchestrator
+    ├── advisory_service.py         # Prioritized risk & biological advisory generation
+    ├── agri_interoperability.py    # Country-neutral BRICS harmonization service
+    ├── agricultural_risk_engine.py # Severity-ranked agronomic & weather risk scoring
+    ├── confidence_engine.py        # Multi-dimension data completeness, freshness & rule coverage
+    ├── crop_comparison.py          # Multi-crop trade-off comparison engine
+    ├── crop_prediction.py          # Random Forest classifier wrapper
+    ├── disease_service.py          # Plant pathology triage helper
+    ├── farm_health_service.py      # Aggregate farm health snapshot logic
+    ├── farm_memory.py              # Assessment history & telemetry recall
+    ├── farm_resilience.py          # Decoupled 5-pillar biophysical resilience index
+    ├── feasibility.py              # Target crop feasibility logic
+    ├── geo_service.py              # Indian state/district & 15 ICAR agro-climatic zone resolver
+    ├── iot_service.py              # Token auth, farm ownership matching, replay & duplicate defense
+    ├── irrigation_intelligence.py  # Water balance & moisture deficit intelligence
+    ├── knowledge_graph.py          # Expanded crop agronomic rules & relationships
+    ├── nlg_explainer.py            # Farmer-readable What / Why / Based-On narrative builder
+    ├── observability.py            # Structured JSON telemetry logging
+    ├── regenerative_advisor.py     # Soil organic carbon & practice action plans
+    ├── regenerative_service.py     # Practice recommendations & impact confidence tagging
+    ├── satellite_service.py        # Sentinel-2 index provider abstraction
+    ├── soil_intelligence.py        # 12-parameter SHC rating curves & constraint diagnostics
+    ├── suitability_scorer.py       # Hybrid ML (50%) + ICAR agronomic rule (50%) scorer
+    ├── telemetry_to_intelligence.py# Maps validated IoT readings into suitability features
+    ├── unit_normalizer.py          # Physical unit normalization
+    ├── validation.py               # Agronomic parameter range & completeness checking
+    ├── weather_service.py          # Open-Meteo real-time fetcher & fallback cache
+    └── what_if.py                  # Parameter perturbation simulation engine
 ```
-backend/
-├── app/
-│   ├── main.py                     # FastAPI application factory, CORS, and router registration
-│   ├── api/                        # Route controllers
-│   │   ├── routes_farmer.py        # Core assessment, what-if, weather, and feasibility
-│   │   ├── routes_iot.py           # Device registration, telemetry ingestion, device status
-│   │   ├── routes_crops.py         # Expanded 65+ crop catalogue and categories
-│   │   ├── routes_synthetic.py     # Faker + ICAR synthetic data sampling and scenario APIs
-│   │   ├── routes_regenerative.py  # Regenerative advisory and resilience scoring
-│   │   ├── routes_soil.py          # Soil Health Card 12-parameter diagnostic endpoints
-│   │   └── routes_brics.py         # Country-neutral adapter mappings (Brazil, SA, etc.)
-│   ├── core/                       # Core configuration, logging, and security constants
-│   ├── database/                   # SQLite/PostgreSQL persistence
-│   │   ├── db.py                   # Engine initialization and session dependency
-│   │   ├── models.py               # Farm, Crop, SoilTest, and Feedback ORM models
-│   │   └── iot_models.py           # Device, Field, and Telemetry ORM entities with api_key
-│   ├── models/                     # Pydantic v2 schemas for request validation & response contracts
-│   │   ├── farmer_schemas.py       # Assessment request/response models
-│   │   └── iot_schemas.py          # Device registration and authenticated telemetry schemas
-│   └── services/                   # Domain logic and intelligence orchestrator
-│       ├── intelligence_orchestrator.py # Multi-source decision support aggregation
-│       ├── iot_service.py          # Token authentication, farm matching, telemetry persistence
-│       ├── soil_health_service.py  # 12-parameter SHC benchmark evaluator
-│       ├── weather_service.py      # Open-Meteo live telemetry fetcher and cache
-│       ├── advisory_service.py     # Tailored regenerative and fertilizer amendments
-│       └── brics_adapter.py        # Canonical harmonization layer
-```
 
 ---
 
-## 🔑 IoT Security & Authentication Model
+## 🔑 IoT Security & Ingestion Model
 
-In response to the technical security audit, the IoT ingestion pipeline enforces strict device identity and replay protection:
+The IoT ingestion pipeline (`backend/app/services/iot_service.py`) enforces authentication and replay checks:
 
-1. **Unique Device API Key Generation**:
-   - When a device is registered via `POST /api/devices/register`, the backend generates a cryptographically secure random token formatted as:
-     `agrin_dev_<32_random_hex_characters>`
-   - This key is stored in the `Device.api_key` column and returned in the registration response.
-
-2. **Telemetry Ingestion Authentication**:
-   - `POST /api/telemetry/ingest` requires the device token passed via either:
-     - Header: `X-Device-Token: <token>`
-     - Header: `Authorization: Bearer <token>`
-     - Payload: `"api_key": "<token>"`
-   - If missing or invalid, the request is rejected with `HTTP 401 Unauthorized`.
-
-3. **Farm Ownership Verification**:
-   - The payload `farm_id` must match the `farm_id` assigned to the device during registration. Cross-farm spoofing is rejected with `HTTP 403 Forbidden`.
-
-4. **Temporal Replay Attack Mitigation**:
-   - Telemetry timestamps are validated against server UTC time.
-   - Any packet with a timestamp more than 900 seconds (15 minutes) in the future is rejected with `HTTP 422 Unprocessable Entity`.
-   - Repeated identical timestamps for the same sensor node are rejected as duplicates.
+1. **Per-Device API Token**: `POST /api/devices/register` issues a secure random token (`agrin_dev_*`) persisted in `Device.api_key`.
+2. **Header / Payload Verification**: `POST /api/telemetry/ingest` and heartbeat routes require a valid token via `X-Device-Token` or `Authorization: Bearer` (or payload `api_key`); unauthenticated requests receive `HTTP 401 Unauthorized`.
+3. **Farm Ownership Check**: Telemetry `farm_id` must match the registered device's farm assignment (`HTTP 403 Forbidden` on mismatch).
+4. **Replay & Quality Filtering**: Timestamps more than 900 seconds in the future return `HTTP 422`; identical `(device_id, timestamp)` packets are flagged as duplicates; impossible values are rejected cleanly.
 
 ---
 
-## 📡 REST API Reference
+## 📡 Router Summary (Mounted under `/api` in `main.py`)
 
-### 1. Farm Assessment & Weather
-| Method | Endpoint | Description |
+| Router Module | Tag / Scope | Key Capabilities |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Service health status and timestamp |
-| `GET` | `/api/weather` | Open-Meteo live weather telemetry for latitude/longitude or district |
-| `POST` | `/api/validate` | Validates farm input bounds (pH, NPK, rainfall) |
-| `POST` | `/api/analyze` | Full ML crop suitability assessment + agronomic rule filter |
-| `POST` | `/api/whatif` | Dynamic soil/climate sensitivity simulation |
-| `POST` | `/api/feasibility` | Evaluates target crop suitability against farm soil & climate |
-| `GET` | `/api/model-info` | Exposes dynamic ML model evaluation metrics (accuracy, precision, recall) |
-
-### 2. IoT Device & Telemetry Management
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/devices/register` | Registers a sensor node and issues an `api_key` |
-| `GET` | `/api/devices/{device_id}` | Returns device connection status, firmware version, and battery |
-| `POST` | `/api/telemetry/ingest` | Ingests authenticated sensor readings with `X-Device-Token` |
-| `GET` | `/api/telemetry/{device_id}/latest` | Returns latest calibrated measurements and data source tags |
-| `GET` | `/api/telemetry/{device_id}/history` | Paginated 24-hour historical telemetry records |
-
-### 3. Expanded Crop Knowledge Base
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/crops/catalogue` | Returns 65+ scientific crops with filters (category, season, state) |
-| `GET` | `/api/crops/categories` | Returns 9 crop categories with metadata and crop counts |
-| `GET` | `/api/crops/{crop_id}` | Detailed agronomic profile, popular varieties, and ICAR bounds |
-
-### 4. Synthetic Data & Profiling Engine
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/synthetic/metadata` | Engine version, seed, Faker locale, and supported soil orders |
-| `GET` | `/api/synthetic/sample` | Generates a sample of synthetic farm records flagged `is_synthetic=True` |
-| `GET` | `/api/synthetic/scenarios` | Preconfigured agricultural stress scenarios (drought, salinity, etc.) |
+| `routes_farmer.py` | Farm & Validation | `/api/validate`, `/api/analyze`, `/api/weather` |
+| `routes_prediction.py` | Crop Prediction | `/api/model-info`, direct ML prediction endpoints |
+| `routes_whatif.py` | What-If Simulation | `/api/whatif` soil/climate perturbation |
+| `routes_crops.py` | Crop Catalogue | 65+ scientific crops, categories, `/api/crops/compare` |
+| `routes_iot.py` | IoT & Hardware | Device registration, latest & paginated history, ingest, heartbeat |
+| `routes_soil_intelligence.py` | Soil Intelligence | 12-parameter SHC diagnostics & zone benchmarks |
+| `routes_synthetic.py` | Synthetic Engine | Synthetic metadata, sampled profiles, anomaly scenarios |
+| `routes_analytics.py` | Analytics | Model metadata & aggregated analytics |
+| `routes_intelligence.py` | Intelligence & Provenance | Unified farm intelligence, satellite/disease status |
+| `routes_marketplace.py` | AgriMarket | Input & regenerative partner directory |
+| `routes_farmer_economics.py` | Farm Economics | AgriLedger crop budget & ROI calculations |
+| `routes_feedback.py` | Feedback | Farmer recommendation outcome logging |
+| `routes_ai.py` | AI Explanation | Explainability summaries |
 
 ---
 
@@ -108,19 +105,18 @@ In response to the technical security audit, the IoT ingestion pipeline enforces
 source .venv/bin/activate
 
 # Start Uvicorn development server
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Interactive documentation is automatically generated:
-- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-- OpenAPI JSON: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- OpenAPI JSON: `http://127.0.0.1:8000/openapi.json`
 
 ---
 
 ## 🧪 Testing
 
-Run backend tests using pytest:
 ```bash
-pytest tests/ -v
+.venv/bin/pytest tests/ -q
 ```
-All 156 tests covering agricultural validation, IoT security, synthetic engine, and E2E intelligence execute with 100% pass rate.
+
+See [../TEST_RESULTS.md](../TEST_RESULTS.md) for the exact per-file verification log (`176 passed, 4 failed` on the merged `main` branch, including the 4 upstream firmware contract tests currently missing `X-Device-Token` auth headers).

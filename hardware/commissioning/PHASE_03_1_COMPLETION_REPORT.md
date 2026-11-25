@@ -39,7 +39,7 @@ In strict compliance with engineering safety principles:
 
 ### 3.1 Inconsistent Battery Voltage Divider Documentation
 - **Defect:** In earlier draft notes, the battery voltage divider was inconsistently described with either $R_1 = 100\text{ k}\Omega, R_2 = 75\text{ k}\Omega$ (GPIO 35) or $R_1 = 100\text{ k}\Omega, R_2 = 100\text{ k}\Omega$ (GPIO 34).
-- **Resolution:** Standardized on the BOM in [AGRISENSE_BENCH_ASSEMBLY_GUIDE.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/hardware/AGRISENSE_BENCH_ASSEMBLY_GUIDE.md) and [pins.h](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/firmware/include/pins.h):
+- **Resolution:** Standardized on the BOM in [AGRISENSE_BENCH_ASSEMBLY_GUIDE.md](../AGRISENSE_BENCH_ASSEMBLY_GUIDE.md) and [pins.h](../../firmware/include/pins.h):
   - **Pin:** `GPIO 34` (`PIN_BATTERY_ADC`, ADC1_CH6, input-only).
   - **Resistors:** $R_1 = 100\text{ k}\Omega$ (1%), $R_2 = 100\text{ k}\Omega$ (1%).
   - **Divider Ratio:** $K = \frac{100\text{k} + 100\text{k}}{100\text{k}} = 2.000$.
@@ -47,7 +47,7 @@ In strict compliance with engineering safety principles:
 
 ### 3.2 I2C Bus Pull-Up Resistance in Parallel
 - **Defect:** Adding external 4.7 kΩ pull-ups when commercial ADS1115 breakout boards already incorporate 10 kΩ pull-ups creates a parallel resistance of $\approx 3.2\text{ k}\Omega$. If multiple modules with pull-ups are added, effective resistance could drop below 1.5 kΩ, overloading the open-drain drivers.
-- **Resolution:** Documented in [UNIT_01_MEASUREMENT_REGISTER.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/hardware/commissioning/UNIT_01_MEASUREMENT_REGISTER.md) Section 4. Established an acceptable resistance band of $2.0\text{ k}\Omega \le R \le 4.8\text{ k}\Omega$.
+- **Resolution:** Documented in [UNIT_01_MEASUREMENT_REGISTER.md](UNIT_01_MEASUREMENT_REGISTER.md) Section 4. Established an acceptable resistance band of $2.0\text{ k}\Omega \le R \le 4.8\text{ k}\Omega$.
 
 ### 3.3 Premature Analog Sensor Excitation on Boot
 - **Defect:** Standard firmware initialized all sensor drivers and sampled ADC channels immediately on startup before the operator could verify that sensor board outputs stayed within safe limits.
@@ -114,7 +114,7 @@ The board is currently in **Stage A (Unpowered Cold Verification)**.
 ### Immediate Action Required from Hardware Team:
 1. Keep the prototype board **completely disconnected from power**.
 2. Set your multimeter to **Resistance ($\Omega$) / Continuity mode**.
-3. Measure and record the actual values for **Items 1.1 through 1.8** in [UNIT_01_MEASUREMENT_REGISTER.md](file:///s:/AgriN-Regenerative-Agricultural-Intelligence/hardware/commissioning/UNIT_01_MEASUREMENT_REGISTER.md):
+3. Measure and record the actual values for **Items 1.1 through 1.8** in [UNIT_01_MEASUREMENT_REGISTER.md](UNIT_01_MEASUREMENT_REGISTER.md):
    - **1.1:** Star Ground Continuity ($< 0.5\ \Omega$)
    - **1.2:** 3.3V Rail to GND Resistance ($> 1\text{ k}\Omega$)
    - **1.3:** 5.0V Rail to GND Resistance ($> 5\text{ k}\Omega$)
