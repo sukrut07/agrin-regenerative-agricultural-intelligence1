@@ -1,166 +1,130 @@
-# AgriSense IoT ESP32 Firmware — AgriN Platform
+# 🔌 AgriSense IoT ESP32 Firmware — AgriN Platform
 
-**Firmware Version**: `2.0.0`  
-**Target Hardware**: ESP32 DevKit V1 (ESP32-WROOM-32, 30-pin & 36-pin)  
-**Framework**: Arduino on ESP-IDF / PlatformIO  
-**Platform**: `espressif32 @ ^6.5.0`  
-**Communication**: Native Wi-Fi 802.11 b/g/n, HTTPS REST API (TLS 1.2/1.3)  
+> **Navigation:** [Root README](../README.md) · [Hardware & Commissioning](../hardware/README.md) · [Wokwi Lab](wokwi/README.md) · [Backend](../backend/README.md) · [Docs Hub](../docs/README.md)
+
+**Firmware Version:** `2.0.0`  
+**Target Hardware:** ESP32 DevKit V1 (`ESP32-WROOM-32`)  
+**Framework:** Arduino on ESP-IDF / PlatformIO (`espressif32 @ ^6.5.0`)  
+**Communication:** Wi-Fi `802.11 b/g/n`, HTTPS REST API (`TLS 1.2/1.3`, ISRG Root X1 verification)
 
 ---
 
-## 1. Overview
+## 📑 Table of Contents
+- [1. Overview & Bus Topology](#1-overview--bus-topology)
+- [2. Key Safety & Acquisition Features](#2-key-safety--acquisition-features)
+- [3. Directory Layout](#3-directory-layout)
+- [4. Quick Start & Host Tests](#4-quick-start--host-tests)
+- [5. Firmware & Audit Documentation Index](#5-firmware--audit-documentation-index)
+- [6. Wokwi Virtual Sensor Lab](#6-wokwi-virtual-sensor-lab)
+- [7. Power Management](#7-power-management)
 
-The **AgriSense IoT Firmware** connects field-deployed soil and environmental sensors directly to the **AgriN — Regenerative Agricultural Intelligence Network** cloud backend. Designed for harsh agricultural environments, the firmware features robust sensor failover, non-blocking telemetry ingestion, offline FIFO flash buffering, dynamic laboratory calibration profiles, and deep battery power monitoring.
+---
 
-```
+## 1. Overview & Bus Topology
+
+```text
        +-------------------------------------------------------+
        |                  AgriSense IoT Node                   |
        |                   (ESP32 DevKit V1)                   |
        +-------------------------------------------------------+
         |         |             |            |               |
-     (Analog) (OneWire)     (Analog)     (Analog)       (RS485 Modbus)
+     (I2C)     (OneWire)      (I2C)        (I2C)       (RS485 UART2)
         |         |             |            |               |
      ADS1115   DS18B20       ADS1115      ADS1115         MAX3485
-     Ch 0      GPIO 4        Ch 1         Ch 2         GPIO 16/17/5
+     Ch 0      GPIO 4        Ch 1         Ch 2         GPIO 16/17/27
         |         |             |            |               |
     Capacitive  Soil          Soil         Soil           Soil NPK
-     Moisture   Temp           pH           EC          (N-P-K-pH-EC)
+     Moisture   Temp           pH           EC        (Optional Modbus)
 ```
+
+> Pin allocations match [include/pins.h](include/pins.h): RS485 `DE/RE` uses non-strapping **`GPIO 27`** (avoiding `GPIO 5` boot PWM contention), and battery monitoring reads **`GPIO 34`** (`100kΩ / 100kΩ` divider).
 
 ---
 
-## 2. Key Features
+## 2. Key Safety & Acquisition Features
 
-- **Multi-Sensor Bus Support**:
-  - **Capacitive Moisture Sensor v1.2 / v2.0**: High-precision 16-bit analog sampling via ADS1115 (Ch 0) with Exponential Moving Average (EMA) noise filtering and open/short detection.
-  - **DS18B20 Digital Temperature**: 12-bit OneWire protocol with full CRC-8 validation, disconnection fallback (-127°C trap), and 85°C power-on transient filter.
-  - **Analog Soil pH Probe**: Glass electrode signal conditioning board sampled via ADS1115 (Ch 1) with live Nernst equation temperature compensation.
-  - **Analog Soil EC Probe**: Conductivity interface sampled via ADS1115 (Ch 2) with 25°C temperature normalization.
-  - **RS485 Modbus RTU NPK Probe (Optional)**: Hardware Serial2 with MAX3485 transceiver, DE/RE direction switching, CRC-16 Modbus checking, and graceful `UNAVAILABLE` fallback when hardware is omitted.
-- **Fail-Safe & Fault-Tolerant Architecture**:
-  - Modular driver design: Failure or disconnection of any single sensor never blocks or crashes remaining sensors or system loops.
-  - Strict data provenance: Every measurement is tagged with its origin (`SENSOR_MEASURED` vs. `SYNTHETIC`) and quality grade (`GOOD`, `DEGRADED`, `CALIBRATION_EXPIRED`, `OUT_OF_RANGE`, `SENSOR_OFFLINE`, `INVALID`).
-- **Offline Telemetry Buffering**:
-  - Ring FIFO queue in non-volatile flash memory (LittleFS) buffering up to 500 telemetry packets (~72 hours of hourly readings).
-  - Automatic FIFO drain upon Wi-Fi / backend reconnection.
-- **Power Management & Diagnostics**:
-  - Integrated battery voltage divider monitor with Li-ion discharge curve percentage calculation.
-  - Runtime diagnostic counters: heap memory tracking, Wi-Fi RSSI, reset reason extraction, transmission success/failure rates.
-  - Deep sleep cycle support with configurable wake-up intervals.
+- **Analog Bring-Up Safety Gate (`diagnostics/hardware_bringup.*`)**: All analog sensor channels boot in `DISABLED` / `AWAITING_VOLTAGE_VERIFICATION` state until verified within the `3.30V` ESP32 ADC limit.
+- **Multi-Sensor Drivers (`src/sensors/`)**:
+  - **Capacitive Moisture (`ADS1115 Ch 0`)**: 16-bit ADC sampling with EMA noise filtering and open/short fault trapping.
+  - **DS18B20 Temperature (`GPIO 4`)**: 1-Wire CRC-8 validation filtering `-127°C` disconnect and `85°C` power-on transient codes.
+  - **Soil pH (`ADS1115 Ch 1`) & EC (`ADS1115 Ch 2`)**: Nernst and `25°C` temperature compensation models.
+  - **RS485 Modbus RTU NPK (`MAX3485`, `GPIO 16/17/27`)**: CRC-16 Modbus checking and `1050 µs` TX-flush guard; reports `UNAVAILABLE` cleanly when omitted.
+- **Offline Flash Buffering (`LittleFS`)**: Ring FIFO journal buffering packets during connectivity drops and replaying cleanly on reconnect.
+- **Strict Provenance & Security**: Every packet carries calibrated provenance (`SENSOR_MEASURED` vs `SYNTHETIC`), quality grades, TLS CA validation (`setCACert`), and device auth headers.
 
 ---
 
 ## 3. Directory Layout
 
-```
+```text
 firmware/
-├── platformio.ini               # PlatformIO build definition (esp32dev + native unit test)
+├── platformio.ini                   # PlatformIO targets (`esp32dev` + `native` unit tests)
+├── hardware_profile.json            # Calibrated sensor bounds & hardware profile
 ├── include/
-│   ├── config.h                 # Firmware version, timing intervals, buffer limits
-│   ├── pins.h                   # 3.3V GPIO assignments and ADS1115 channel map
-│   ├── sensor_types.h           # Shared enums and data structures matching AgriN backend
-│   ├── calibration.h            # Calibration models (Moisture, Nernst pH, 25°C EC)
-│   ├── device_config.h          # NVS persistent runtime device configuration
-│   └── telemetry.h              # Telemetry and heartbeat serialization schemas
+│   ├── config.h                     # Firmware version, intervals, buffer limits
+│   ├── pins.h                       # Authoritative 3.3V GPIO & ADS1115 channel map
+│   ├── sensor_types.h               # Shared enums matching AgriN backend schemas
+│   ├── calibration.h                # Moisture, Nernst pH, 25°C EC & 12-pt Li-ion OCV models
+│   ├── device_config.h              # NVS persistent configuration structures
+│   ├── telemetry.h                  # JSON packet schemas
+│   └── diagnostics/hardware_bringup.h  # Safe Stage A commissioning diagnostics header
 ├── src/
-│   ├── main.cpp                 # Arduino setup() and loop() orchestration
-│   ├── core/
-│   │   ├── configuration_manager.* # NVS persistent storage manager
-│   │   ├── device_manager.*        # Central finite state machine (FSM)
-│   │   ├── diagnostics.*           # System health and memory monitor
-│   │   ├── sensor_manager.*        # Multi-sensor acquisition engine
-│   │   └── telemetry_serializer.cpp# Fast JSON encoder matching FastAPI schema
-│   ├── sensors/
-│   │   ├── sensor_base.h           # Abstract polymorphic sensor driver base
-│   │   ├── moisture_sensor.*       # Capacitive moisture driver with EMA filter
-│   │   ├── temperature_sensor.*    # DS18B20 OneWire driver with CRC check
-│   │   ├── ph_sensor.*             # Soil pH driver with Nernst slope compensation
-│   │   ├── ec_sensor.*             # Soil EC driver with 25°C normalization
-│   │   └── npk_sensor.*            # RS485 Modbus RTU NPK driver
-│   ├── communication/
-│   │   ├── wifi_manager.*          # Wi-Fi STA connection with exponential backoff
-│   │   ├── authentication.*        # Device header signing (X-Device-ID, X-API-Key)
-│   │   └── http_client.*           # HTTPS ingest & heartbeat REST client
-│   ├── storage/
-│   │   └── telemetry_buffer.*      # LittleFS non-volatile FIFO ring buffer
-│   └── power/
-│       └── battery_monitor.*       # Battery voltage divider & Li-ion fuel gauge
-├── test/
-│   └── test_firmware.cpp        # Native C++ unit tests (CRC16, math, buffers)
-└── docs/                        # Complete technical guides
+│   ├── main.cpp                     # Arduino setup/loop & diagnostic console dispatch
+│   ├── core/                        # configuration_manager, device_manager, diagnostics, sensor_manager, serializer
+│   ├── sensors/                     # sensor_base, moisture, temperature, ph, ec, npk
+│   ├── communication/               # wifi_manager, authentication, http_client (Root CA TLS)
+│   ├── storage/                     # telemetry_buffer (LittleFS FIFO journal)
+│   ├── power/                       # battery_monitor
+│   └── diagnostics/                 # hardware_bringup.cpp
+├── test/test_firmware.cpp           # Native C++ unit tests
+└── wokwi/                           # Browser / VS Code virtual ESP32 testbench
 ```
 
 ---
 
-## 4. Quick Start
+## 4. Quick Start & Host Tests
 
-### Prerequisites
-1. Install [Visual Studio Code](https://code.visualstudio.com/) with the [PlatformIO IDE Extension](https://platformio.org/platformio-ide) (or CLI).
-2. Connect ESP32 DevKit V1 via Micro-USB to your computer.
-
-### Build and Flash
 ```bash
 cd firmware
 
-# Build firmware for ESP32
+# Build embedded ESP32 firmware
 python -m platformio run -e esp32dev
 
-# Upload firmware to ESP32 (auto-detects COM port)
-python -m platformio run -e esp32dev --target upload
+# Run native C++ host unit tests
+python -m platformio run -e native
 
-# Open Serial Monitor (115200 baud)
+# Upload & monitor physical ESP32 over USB serial
+python -m platformio run -e esp32dev --target upload
 python -m platformio device monitor -b 115200
 ```
 
-### Run Native Host Tests
+Python firmware bring-up and backend contract tests:
 ```bash
-python -m platformio run -e native
+.venv/bin/pytest tests/test_firmware_diagnostics_unit.py -v
 ```
 
 ---
 
-## 5. Technical Documentation Links
+## 5. Firmware & Audit Documentation Index
 
-- [Firmware Architecture Document](FIRMWARE_ARCHITECTURE.md)
-- [Sensor Integration Guide](SENSOR_INTEGRATION_GUIDE.md)
-- [Pin Configuration & Electrical Guide](PIN_CONFIGURATION_GUIDE.md)
-- [Sensor Calibration Procedures](CALIBRATION_PROCEDURES.md)
-- [Telemetry Communication & Protocol Spec](TELEMETRY_COMMUNICATION_GUIDE.md)
-- [Build, Flash, & Debugging Guide](BUILD_AND_FLASH_GUIDE.md)
-- [Hardware Team Pre-Flight Checklist](HARDWARE_TEAM_CHECKLIST.md)
-- [Phase 02 Completion Report](PHASE_02_COMPLETION_REPORT.md)
+| Category | Documents |
+| :--- | :--- |
+| **Architecture & Hardware** | [FIRMWARE_ARCHITECTURE.md](FIRMWARE_ARCHITECTURE.md) · [AGRISENSE_FIRMWARE_SPEC.md](AGRISENSE_FIRMWARE_SPEC.md) · [PIN_CONFIGURATION_GUIDE.md](PIN_CONFIGURATION_GUIDE.md) · [SENSOR_INTEGRATION_GUIDE.md](SENSOR_INTEGRATION_GUIDE.md) |
+| **Setup, Calibration & Protocol** | [BUILD_AND_FLASH_GUIDE.md](BUILD_AND_FLASH_GUIDE.md) · [CALIBRATION_PROCEDURES.md](CALIBRATION_PROCEDURES.md) · [TELEMETRY_COMMUNICATION_GUIDE.md](TELEMETRY_COMMUNICATION_GUIDE.md) · [HARDWARE_TEAM_CHECKLIST.md](HARDWARE_TEAM_CHECKLIST.md) |
+| **Engineering Audits** | [FIRMWARE_SECURITY_AUDIT.md](FIRMWARE_SECURITY_AUDIT.md) · [ELECTRICAL_SAFETY_AUDIT.md](ELECTRICAL_SAFETY_AUDIT.md) · [SENSOR_CALIBRATION_AUDIT.md](SENSOR_CALIBRATION_AUDIT.md) · [POWER_MANAGEMENT_AUDIT.md](POWER_MANAGEMENT_AUDIT.md) · [BACKEND_CONTRACT_TEST_REPORT.md](BACKEND_CONTRACT_TEST_REPORT.md) |
+| **Phase Reports & Bench Links** | [PHASE_02_COMPLETION_REPORT.md](PHASE_02_COMPLETION_REPORT.md) · [PHASE_02_1_COMPLETION_REPORT.md](PHASE_02_1_COMPLETION_REPORT.md) · [Hardware Commissioning Hub](../hardware/README.md) |
 
 ---
 
-## 6. 🧪 Wokwi Virtual Sensor Lab
+## 6. Wokwi Virtual Sensor Lab
 
-To enable end-to-end testing without requiring physical breadboards for every test, AgriSense includes a complete **Wokwi Simulation Environment** in `firmware/wokwi/`:
-
-### Files in `firmware/wokwi/`:
-1. **`diagram.json`**: Virtual ESP32 circuit wired with:
-   - 10kΩ Potentiometer on `GPIO 34` simulating Capacitive Soil Moisture
-   - DS18B20 digital probe on `GPIO 4` with 4.7kΩ pullup
-   - 10kΩ Potentiometer on `GPIO 35` simulating Soil pH
-   - Status LED on `GPIO 2` flashing on transmission
-2. **`wokwi.toml`**: Simulator configuration and firmware binary path.
-3. **`src/main_simulation.cpp`**: Complete Arduino/C++ sketch executing the full cycle:
-   - Samples virtual sensors
-   - Formats JSON telemetry payload
-   - Attaches `X-Device-Token: agrin_dev_test_wokwi_token_993`
-   - Transmits HTTP POST to AgriN backend `/api/telemetry/ingest`
-   - Enters deep sleep for simulated battery preservation
-
-### Running the Wokwi Simulation:
-- **In VS Code**: Install the Wokwi extension and press `F1 -> Wokwi: Start Simulator`.
-- **In Browser**: Upload `firmware/wokwi/` files to [Wokwi Web](https://wokwi.com) and test live telemetry streaming.
+See [wokwi/README.md](wokwi/README.md) for instructions on launching `diagram.json` / `wokwi.toml` / `src/main_simulation.cpp` in VS Code or on [Wokwi.com](https://wokwi.com).
 
 ---
 
-## 7. 🔋 Power Management & Field Battery Life
+## 7. Power Management
 
-In remote agricultural fields without grid power, AgriSense is powered by a **3.7V 3000mAh 18650 Li-ion cell** coupled with a 5V 2W monocrystalline solar panel and TP4056 charge controller.
-
-- **Active Measurement & Transmission Window**: ~4.2 seconds @ 120 mA peak current (~0.14 mAh per cycle).
-- **Deep Sleep Current**: 15 µA (RTC and ULP co-processor active).
-- **Wake Interval**: Every 15 minutes (4 transmissions per hour = 96 packets per day).
-- **Calculated Autonomous Battery Life**: **62+ days** without any solar recharging under overcast conditions.
+Powered by a **3.7V 3000mAh 18650 Li-ion cell** with a `5V 2W` solar panel and charge controller:
+- Active measurement & Wi-Fi TX burst: `~4.2s @ 120 mA` peak (`~0.14 mAh` per cycle)
+- Deep sleep budget: `15 µA` target, `15-minute` wake intervals (`96` transmissions/day)
+- Autonomous overcast estimate: `62+ days` without solar recharge (full analysis in [POWER_MANAGEMENT_AUDIT.md](POWER_MANAGEMENT_AUDIT.md)).
